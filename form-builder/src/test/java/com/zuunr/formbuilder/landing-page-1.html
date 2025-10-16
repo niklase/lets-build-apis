@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fine-Grained Access Control for Platform Engineering</title>
+    <style>
+        /* Start of CSS */
+        :root {
+          --font-primary: 'Helvetica Neue', Arial, sans-serif;
+          --color-primary: #0052cc;
+          --color-secondary: #172b4d;
+          --color-accent: #36b37e;
+          --color-bg: #f4f5f7;
+          --color-text: #333333;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: var(--font-primary);
+          line-height: 1.6;
+          color: var(--color-text);
+          background-color: var(--color-bg);
+        }
+
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 15px;
+        }
+
+        .hero {
+          background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+          color: #ffffff;
+          text-align: center;
+          padding: 80px 15px;
+        }
+
+        .main-heading {
+          font-size: 2.5rem;
+          margin-bottom: 20px;
+        }
+
+        .subheading {
+          font-size: 1.25rem;
+          margin-bottom: 30px;
+        }
+
+        .cta-button {
+          display: inline-block;
+          background: var(--color-accent);
+          color: #ffffff;
+          padding: 15px 30px;
+          border-radius: 5px;
+          font-size: 1rem;
+          font-weight: bold;
+          text-decoration: none;
+          transition: background 0.3s ease;
+        }
+
+        .cta-button:hover {
+          background: var(--color-primary);
+        }
+
+        .cta-button.secondary {
+          background: #ffffff;
+          color: var(--color-primary);
+          border: 2px solid var(--color-primary);
+        }
+
+        .cta-button.secondary:hover {
+          background: var(--color-primary);
+          color: #ffffff;
+        }
+
+        section {
+          padding: 50px 0;
+        }
+
+        .problem-section,
+        .value-prop-section {
+          text-align: center;
+        }
+
+        h2 {
+          font-size: 2rem;
+          margin-bottom: 15px;
+          color: var(--color-secondary);
+        }
+
+        .features-list {
+          list-style: none;
+          margin-top: 20px;
+        }
+
+        .features-list li {
+          margin-bottom: 10px;
+          font-size: 1rem;
+        }
+
+        .testimonial-section blockquote {
+          font-size: 1.25rem;
+          font-style: italic;
+          color: var(--color-secondary);
+          border-left: 4px solid var(--color-primary);
+          padding-left: 15px;
+          margin: 20px 0;
+        }
+
+        .footer {
+          text-align: center;
+          background-color: var(--color-secondary);
+          color: #ffffff;
+          padding: 20px 0;
+          font-size: 0.9rem;
+        }
+        /* End of CSS */
+    </style>
+</head>
+
+<body>
+<header class="hero">
+    <div class="container">
+        <h1 class="main-heading">Scale Your APIs with Confidence</h1>
+        <p class="subheading">Decouple access logic from code and standardize access control across teams and services.</p>
+        <a href="#contact" class="cta-button">Get Started</a>
+    </div>
+</header>
+
+<main>
+    <section class="problem-section">
+        <div class="container">
+            <h2>The Problem</h2>
+            <p>Managing authorization at scale across teams and services has never been more complex. Custom access logic in every service leads to inconsistent APIs, security gaps, and rising technical debt.</p>
+        </div>
+    </section>
+
+    <section class="value-prop-section">
+        <div class="container">
+            <h2>The Solution</h2>
+            <p>Our platform decouples access logic from application code, allowing you to build secure, reusable APIs while streamlining how your teams enforce fine-grained access control policies across the entire stack.</p>
+            <ul class="features-list">
+                <li><strong>Team-wide Standardization:</strong> Enforce consistent access policies.</li>
+                <li><strong>Enterprise Scalability:</strong> Built for high-performance environments.</li>
+                <li><strong>Security Optimization:</strong> Eliminate custom, error-prone access logic.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="testimonial-section">
+        <div class="container">
+            <h2>What Leaders Are Saying</h2>
+            <blockquote>
+                <p>“By decoupling access control logic from our services, we’ve accelerated API development while increasing security across the board.”</p>
+                <footer>— Head of Platform Engineering, Acme Corp</footer>
+            </blockquote>
+        </div>
+    </section>
+
+    <section id="contact" class="cta-section">
+        <div class="container">
+            <h2>Ready to Simplify Access Control?</h2>
+            <p>Let’s discuss how you can scale securely with our declarative fine-grained access control product.</p>
+            <a href="#" class="cta-button secondary">Book a Demo</a>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2024 Your Company, Inc. All rights reserved.</p>
+    </div>
+</footer>
+</body>
+
+</html>
