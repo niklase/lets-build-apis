@@ -1,0 +1,11 @@
+{
+  "given": {
+    "balance": 270
+  },
+  "when": {
+    "withdrawal": 240
+  },
+  "then": {
+    "balance": 30
+  }
+}

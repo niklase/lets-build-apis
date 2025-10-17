@@ -1,0 +1,39 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"name\": \"Peter\"}"
+    }
+  },
+  "then": {
+    "errors": {
+      "/request/body": {
+        "rejectedValue": {
+          "name": "Peter"
+        },
+        "violations": {
+          "/properties/request/properties/body/type": "string"
+        }
+      }
+    },
+    "ok": false
+  }
+}

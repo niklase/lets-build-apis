@@ -1,0 +1,40 @@
+steps:
+  # Step 1: Build the specific Maven module
+  - name: 'maven:3.9.2-eclipse-temurin-17'
+    id: 'Build Maven Submodule'
+    entrypoint: 'mvn'
+    args:
+      - 'clean'
+      - 'package'
+      - '-DskipTests'
+      - '-pl'
+      - 'zip-download'
+      - '-am'
+  - name: 'ubuntu'
+    id: 'Prepare Deployment Directory'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - | 
+        mkdir -p /workspace/deployment
+        cp -r zip-download/* /workspace/deployment/
+        cp -r zip-download/target/*.jar /workspace/deployment/
+
+  # Step 2: Automatically build and deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    dir: '/workspace/deployment'
+    args:
+      - 'gcloud'
+      - 'run'
+      - 'deploy'
+      - 'zip-download'
+      - '--source'
+      - '.'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - 'europe-west1'
+      - '--allow-unauthenticated'
+options:
+  logging: CLOUD_LOGGING_ONLY

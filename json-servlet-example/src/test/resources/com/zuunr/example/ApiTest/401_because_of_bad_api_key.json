@@ -1,0 +1,36 @@
+{
+  "given": null,
+  "when": {
+    "method": "POST",
+    "uri": "/test?",
+    "headers": {
+      "content-type": [
+        "application/json"
+      ],
+      "accept": [
+        "application/json"
+      ],
+      "x-api-key": [
+        "wrong apisecret"
+      ]
+    },
+    "body": {
+      "hello": "you",
+      "not_allowed_in_request": "Something that will be rejected..."
+    }
+  },
+  "then": {
+    "headers": {
+      "content-type": [
+        "application/json;charset=ISO-8859-1"
+      ]
+    },
+    "status": 401,
+    "body": {
+
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

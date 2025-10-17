@@ -1,0 +1,36 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": "{this: is_not_json}"
+    }
+  },
+  "then": {
+    "errors": {
+      "/request/body": {
+        "violations": {
+          "/properties/request/properties/body/description": "Body must be of media type: application/json",
+          "/properties/request/properties/body/format": "json"
+        }
+      }
+    },
+    "ok": false
+  }
+}

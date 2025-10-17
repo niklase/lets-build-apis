@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) Zuunr AB. All rights reserved.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.zuunr</groupId>
+        <artifactId>databiit-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+
+    <artifactId>json-tester</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+
+    <name>json-tester</name>
+    <description>Generates OpenAPI documents from information models specified as JSON Schemas</description>
+    <url>https://bitbucket.org/zuunr/api-runtime</url>
+    <organization>
+        <name>Zuunr AB</name>
+        <url>https://www.zuunr.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Zuunr License, Draft 1.0</name>
+            <url>https://www.zuunr.com</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Zuunr</name>
+            <email>robot@zuunr.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://bitbucket.org/zuunr/openapi-generator.git</connection>
+        <developerConnection>scm:git:ssh://bitbucket.org:zuunr/openapi-generator.git</developerConnection>
+        <url>https://bitbucket.org/zuunr/openapi-generator/src</url>
+    </scm>
+
+    <properties>
+        <revision>SNAPSHOT</revision>
+        <graalvm.version>22.2.0</graalvm.version>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>com.zuunr.jsontester</Automatic-Module-Name> <!-- Choose your module name -->
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.zuunr</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

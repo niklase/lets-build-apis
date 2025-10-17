@@ -1,0 +1,49 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": "name",
+          "style": "form",
+          "allowReserved": false,
+          "explode": false,
+          "required": false,
+          "in": "query"
+        },
+        {
+          "schema": {
+            "type": "integer"
+          },
+          "name": "age",
+          "style": "form",
+          "allowReserved": false,
+          "explode": true,
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/hello?age=thirtythree&name=Peter%2CAndersson"
+    }
+  },
+  "then": {
+    "errors": {
+      "/request/query/age/0": {
+        "rejectedValue": "thirtythree",
+        "violations": {
+          "/properties/request/properties/query/properties/age/items/type": "integer"
+        }
+      }
+    },
+    "ok": false
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": "age",
+          "style": "form",
+          "allowReserved": false,
+          "explode": true,
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/hello?age=27&age=33"
+    }
+  },
+  "then": {
+    "ok": true,
+    "request": {
+      "query": {
+        "age": [
+          "27",
+          "33"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "request": {
+      "properties": {
+        "body": {
+          "properties": {
+            "hello": true
+          }
+        }
+      }
+    }
+  }
+}

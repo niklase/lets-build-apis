@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) Zuunr AB. All rights reserved.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+					  http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.zuunr</groupId>
+        <artifactId>databiit-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>openapi</artifactId>
+    <version>${databiit}</version>
+
+    <packaging>jar</packaging>
+
+    <name>openapi</name>
+    <description>OpenAPI related funtionality</description>
+    <organization>
+        <name>Zuunr AB</name>
+        <url>https://www.zuunr.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Zuunr License, Draft 1.0</name>
+            <url>https://www.zuunr.com</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Zuunr</name>
+            <email>robot@zuunr.com</email>
+        </developer>
+    </developers>
+    <properties>
+        <revision>SNAPSHOT</revision>
+        <graalvm.version>22.2.0</graalvm.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                    <compilerArgs>
+                        <arg>--module-path</arg>
+                        <arg>${project.build.directory}/modules</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED --patch-module ${project.artifactId}=${project.build.testOutputDirectory}</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/io.github.vzhn/netty-http-authenticator -->
+        <dependency>
+            <groupId>com.zuunr</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.zuunr</groupId>
+            <artifactId>json-tester</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver-dns-native-macos</artifactId>
+            <version>4.2.6.Final</version>
+            <classifier>osx-aarch_64</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

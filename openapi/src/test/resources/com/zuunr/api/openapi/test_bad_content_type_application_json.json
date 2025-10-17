@@ -1,0 +1,36 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": "{}"
+    }
+  },
+  "then": {
+    "errors": {
+      "/request/headers/content-type/0": {
+        "rejectedValue": "application/json",
+        "violations": {
+          "/properties/request/properties/headers/properties/content-type/items/anyOf/0/pattern": "^application[/]x-www-form-urlencoded([+;].*)?$"
+        }
+      }
+    },
+    "ok": false
+  }
+}

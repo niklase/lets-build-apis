@@ -1,0 +1,6 @@
+{
+  "given": null,
+  "when": {"a": [{"b": 1},{"c": 2}]},
+  "then": {"a": [{"b": 1},{}]},
+  "exactMatch": false
+}

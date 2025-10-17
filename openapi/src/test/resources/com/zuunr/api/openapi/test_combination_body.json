@@ -1,0 +1,51 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "properties": {
+                "a": {
+                  "type": "integer"
+                },
+                "b": {
+                  "type": "array",
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      },
+      "body": "b=true&b=false&a=1"
+    }
+  },
+  "then": {
+    "ok": true,
+    "request": {
+      "body": {
+        "b": [
+          true,
+          false
+        ],
+        "a": [
+          1
+        ]
+      },
+      "query": {}
+    }
+  }
+}

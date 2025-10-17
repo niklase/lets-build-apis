@@ -1,0 +1,44 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "properties": {
+                "b": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      },
+      "body": "b=true&b=false"
+    }
+  },
+  "then": {
+    "ok": false,
+    "errors": {
+      "/b": {
+        "rejectedValue": [
+          "true",
+          "false"
+        ],
+        "violations": {
+          "/properties/b/maxItems": 1
+        }
+      }
+    }
+  }
+}

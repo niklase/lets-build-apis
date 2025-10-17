@@ -1,0 +1,31 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "filter.name.eq",
+          "style": "form",
+          "allowReserved": false,
+          "explode": false,
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/hello"
+    }
+  },
+  "then": {
+    "ok": true,
+    "request": {
+      "query": {
+      }
+    }
+  }
+}

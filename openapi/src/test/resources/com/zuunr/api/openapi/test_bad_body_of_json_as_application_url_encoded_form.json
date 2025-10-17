@@ -1,0 +1,42 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      },
+      "body": "{\"name\": \"Peter\"}"
+    }
+  },
+  "then": {
+    "ok": false,
+    "errors": {
+      "/request/body": {
+        "rejectedValue": "{\"name\": \"Peter\"}",
+        "violations": {
+          "/properties/request/properties/body/pattern": "^([^&=]+=[^&]*)?(&[^&=]*=([^&]*))*$",
+          "/properties/request/properties/body/description": "Request body must be of media type: application/x-www-form-urlencoded"
+        }
+      }
+    }
+  }
+}

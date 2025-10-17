@@ -1,0 +1,71 @@
+{
+  "given": null,
+  "when": {
+    "method": "POST",
+    "uri": "/test?name=olle",
+    "headers": {
+      "content-type": [
+        "application/json"
+      ],
+      "accept": [
+        "application/json"
+      ],
+      "x-api-key": [
+        "apisecret"
+      ]
+    },
+    "body": {
+      "hello": "you",
+      "hidden_in_response": "I do not show!"
+    }
+  },
+  "then": {
+    "body": {
+      "errors": {
+        "/request/query/name": {
+          "rejectedValue": [
+            "olle"
+          ],
+          "violations": {
+            "/properties/request/properties/query/additionalProperties": false,
+            "description": "Property 'name' has not been defined and schema does not allow additional properties"
+          }
+        }
+      },
+      "ok": false
+    },
+    "status": 400,
+    "headers": {
+      "content-type": [
+        "application/json;charset=ISO-8859-1"
+      ],
+      "x-content-type-options": [
+        "nosniff"
+      ],
+      "content-length": [
+        "254"
+      ],
+      "x-frame-options": [
+        "DENY"
+      ],
+      "connection": [
+        "close"
+      ],
+      "pragma": [
+        "no-cache"
+      ],
+      "expires": [
+        "0"
+      ],
+      "x-xss-protection": [
+        "0"
+      ],
+      "cache-control": [
+        "no-cache, no-store, max-age=0, must-revalidate"
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

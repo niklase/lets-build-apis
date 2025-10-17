@@ -1,0 +1,51 @@
+{
+  "given": null,
+  "when": {
+    "method": "POST",
+    "uri": "/test?",
+    "headers": {
+      "content-type": [
+        "application/json"
+      ],
+      "accept": [
+        "application/json"
+      ],
+      "x-api-key": [
+        "apisecret"
+      ]
+    },
+    "body": {
+      "hello": "you",
+      "not_allowed_in_request": "Something that will be rejected..."
+    }
+  },
+  "then": {
+    "headers": {
+      "content-type": [
+        "application/json"
+      ]
+    },
+    "status": 403,
+    "body": {
+      "errors": [
+        {
+          "rejectedValue": "Something that will be rejected...",
+          "field": "/request/body/not_allowed_in_request",
+          "violations": [
+            {
+              "value": false,
+              "keyword": "/properties/request/properties/body/additionalProperties"
+            },
+            {
+              "value": "Property 'not_allowed_in_request' has not been defined and schema does not allow additional properties",
+              "keyword": "description"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

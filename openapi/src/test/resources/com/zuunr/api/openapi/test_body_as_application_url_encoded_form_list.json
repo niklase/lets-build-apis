@@ -1,0 +1,45 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "properties": {
+                "names": {
+                  "type": "array",
+                  "item": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      },
+      "body": "names=Peter&names=Rob"
+    }
+  },
+  "then": {
+    "ok": true,
+    "request": {
+      "body": {
+        "names": [
+          "Peter",
+          "Rob"
+        ]
+      },
+      "query": {}
+    }
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Class Diagram</title>
+    <script type="module" src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <h1>Mermaid Class Diagram</h1>
+    <div class="mermaid">
+      classDiagram
+
+      <#-- Loop through $defs in JSON schema -->
+      <#assign defs = jsonSchema["$defs"]>
+      <#list defs?keys as defName>
+        class ${defName} {
+          <#assign properties = defs[defName]?.properties>
+          <#list properties?keys as propertyName>
+            + ${propertyName} : ${properties[propertyName]?.type!}
+          </#list>
+        }
+      </#list>
+
+      <#-- Generate root class -->
+      class ${jsonSchema.title} {
+        <#assign rootProperties = jsonSchema.properties>
+        <#list rootProperties?keys as propertyName>
+          <#if rootProperties[propertyName]?.type??>
+            + ${propertyName} : ${rootProperties[propertyName]?.type!}
+          </#if>
+          <#if rootProperties[propertyName]?has_key("\$ref")>
+            + ${propertyName} : ${rootProperties[propertyName]["$ref"]?split("/")[3]}
+          </#if>
+        </#list>
+      }
+
+      <#-- Add relationships between root and $defs -->
+      <#list rootProperties?keys as propertyName>
+        <#if rootProperties[propertyName]?has_key("\$ref")>
+          ${jsonSchema.title} --> ${rootProperties[propertyName]["$ref"]?split("/")[3]}
+        </#if>
+      </#list>
+    </div>
+</body>
+</html>

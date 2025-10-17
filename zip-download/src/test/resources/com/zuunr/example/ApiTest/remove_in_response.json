@@ -1,0 +1,36 @@
+{
+  "given": null,
+  "when": {
+    "method": "POST",
+    "uri": "/test?",
+    "headers": {
+      "content-type": [
+        "application/json"
+      ],
+      "accept": [
+        "application/json"
+      ],
+      "x-api-key": [
+        "apisecret"
+      ]
+    },
+    "body": {
+      "hello": "you",
+      "hidden_in_response": "I do not show!"
+    }
+  },
+  "then": {
+    "headers": {
+      "content-type": [
+        "application/json"
+      ]
+    },
+    "status": 200,
+    "body": {
+      "hello": "you"
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

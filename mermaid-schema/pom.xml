@@ -10,7 +10,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>form-builder</artifactId>
+    <artifactId>mermaid-schema</artifactId>
     <version>${databiit}</version>
 
     <properties>

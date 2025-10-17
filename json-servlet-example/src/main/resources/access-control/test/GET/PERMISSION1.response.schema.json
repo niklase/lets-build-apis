@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "response": {
+      "properties": {
+        "body": {
+          "properties": {
+            "hello": true,
+            "hidden_in_response": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": "name",
+          "style": "form",
+          "allowReserved": false,
+          "explode": false,
+          "required": false,
+          "in": "query"
+        },
+        {
+          "schema": {
+            "type": "integer"
+          },
+          "name": "age",
+          "style": "form",
+          "allowReserved": false,
+          "explode": true,
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/hello?age=33&name=Peter%2CAndersson"
+    }
+  },
+  "then": {
+    "ok": true,
+    "request": {
+      "query": {
+        "age": [
+          33
+        ],
+        "name": [
+          "Peter",
+          "Andersson"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "request": {
+      "properties": {
+        "body": {
+          "properties": {
+            "hello": true,
+            "hidden_in_response": true
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

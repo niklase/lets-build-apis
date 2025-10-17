@@ -1,0 +1,69 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "required": [
+                "c"
+              ],
+              "properties": {
+                "b": {
+                  "type": "array",
+                  "items": {
+                    "type": "boolean"
+                  },
+                  "maxItems": 2
+                },
+                "c": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      },
+      "body": "b=true&b=false&b=false"
+    }
+  },
+  "then": {
+    "ok": false,
+    "errors": {
+      "": {
+        "rejectedValue": {
+          "b": [
+            "true",
+            "false",
+            "false"
+          ]
+        },
+        "violations": {
+          "/required": [
+            "c"
+          ]
+        }
+      },
+      "/b": {
+        "rejectedValue": [
+          "true",
+          "false",
+          "false"
+        ],
+        "violations": {
+          "/properties/b/maxItems": 2
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "given": {
+    "oasOperationObject": {
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+            }
+          }
+        }
+      }
+    }
+  },
+  "when": {
+    "request": {
+      "uri": "/somePath",
+      "headers": {
+        "content-type": [
+          "application/x-www-form-urlencoded"
+        ]
+      }
+    }
+  },
+  "then": {
+    "errors": {
+      "/request": {
+        "rejectedValue": {
+          "uri": "/somePath",
+          "headers": {
+            "content-type": [
+              "application/x-www-form-urlencoded"
+            ]
+          }
+        },
+        "violations": {
+          "/properties/request/required": [
+            "body"
+          ]
+        }
+      }
+    },
+    "ok": false
+  }
+}
