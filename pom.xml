@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.zuunr</groupId>
+    <artifactId>databiit-opensource</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <modules>
+        <!--
+        <module>../json</module>
+        -->
+        <module>parent</module>
+        <module>json-tester</module>
+        <module>openapi</module>
+        <!--
+        <module>openapi-design</module>
+        -->
+        <module>json-servlet-example</module>
+        <module>java-object-gen</module>
+        <module>zip-download</module>
+        <module>services-app</module>
+        <module>mermaid-schema</module>
+        <module>form-builder</module>
+    </modules>
+    <name>databiit-opensource</name>
+</project>
