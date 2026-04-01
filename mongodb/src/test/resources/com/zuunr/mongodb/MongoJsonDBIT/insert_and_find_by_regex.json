@@ -1,0 +1,52 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter",
+            "age": 20,
+            "length": 180
+          },
+          {
+            "name": "Laura",
+            "age": 30,
+            "length": 180
+          }
+        ]
+      }
+    }
+  ],
+  "when": {
+    "find": {
+      "collection": "persons",
+      "filter": {
+        "name": [
+          {
+            "$regex": "Laura"
+          }
+        ]
+      }
+    }
+  },
+  "then": {
+    "ok": 1,
+    "cursor": {
+      "firstBatch": [
+        {
+          "name": "Laura",
+          "age": 30
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

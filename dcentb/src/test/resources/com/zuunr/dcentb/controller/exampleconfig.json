@@ -1,0 +1,30 @@
+{
+  "paths": {
+    "/animals/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "processors": [
+          {"name":  "ReadCollectionProcessor"}
+        ]
+      }
+    }
+  },
+  "processors": [
+    {"name": "Authenticator"},
+    {"name": "RequestValidator"},
+    {"name": "Authorizer"},
+    {"name": "MongoDBQueryCreator"},
+    {"name": "ExecuteMongoDBQuery"},
+    {"name": "TransformMongoDBResponse"},
+    {"name": "ResponseController"}
+  ]
+}

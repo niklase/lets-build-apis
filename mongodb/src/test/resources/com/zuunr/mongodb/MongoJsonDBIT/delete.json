@@ -1,0 +1,44 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter"
+          },
+          {
+            "name": "Peter"
+          }
+        ]
+      }
+    }
+  ],
+  "when": {
+    "delete": {
+      "collection": "persons",
+      "deletes": [
+        {
+          "q": {
+            "name": [
+              {
+                "$eq": "Peter"
+              }
+            ]
+          },
+          "limit": 0
+        }
+      ]
+    }
+  },
+  "then": {
+    "ok": 1,
+    "n": 2
+  },
+  "exactMatch": false
+}

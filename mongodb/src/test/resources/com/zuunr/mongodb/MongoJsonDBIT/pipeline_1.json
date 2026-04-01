@@ -1,0 +1,57 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter"
+          },
+          {
+            "name": "Rob"
+          }
+        ]
+      }
+    }
+  ],
+  "when": {
+    "aggregate": {
+      "collection": "persons",
+      "pipeline": [
+        {
+          "$match": {
+            "$or": [
+                {
+                  "name": "Peter"
+                },
+                {
+                  "name": "Rob"
+                }
+              ]
+
+          }
+        }
+      ],
+      "cursor": {}
+    }
+  },
+  "then": {
+    "ok": 1,
+    "n": 1,
+    "cursor": {
+      "firstBatch": [
+        {
+          "name": "Peter"
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

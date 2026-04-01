@@ -11,7 +11,9 @@
         <module>../json</module>
         -->
         <module>parent</module>
+        <module>dcentb</module>
         <module>json-tester</module>
+        <module>mongodb</module>
         <module>openapi</module>
         <!--
         <module>openapi-design</module>

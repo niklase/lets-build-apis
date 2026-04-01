@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
+        <version>3.5.13</version>
         <relativePath/>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -15,11 +15,10 @@
     <url>http://maven.apache.org</url>
     <properties>
         <java.version>17</java.version>
-        <spring.boot>3.4.3</spring.boot>
+        <spring.boot>3.5.13</spring.boot>
         <databiit>0.1.0-SNAPSHOT</databiit>
         <freemarker.version>2.3.34</freemarker.version>
     </properties>
-
     <dependencyManagement>
         <dependencies>
             <!-- Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-auth -->
@@ -41,11 +40,16 @@
             <dependency>
                 <groupId>com.zuunr</groupId>
                 <artifactId>json</artifactId>
-                <version>0.1.10</version>
+                <version>0.1.11</version>
             </dependency>
             <dependency>
                 <groupId>com.zuunr</groupId>
                 <artifactId>json-tester</artifactId>
+                <version>${databiit}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zuunr</groupId>
+                <artifactId>mongodb</artifactId>
                 <version>${databiit}</version>
             </dependency>
             <dependency>
@@ -76,7 +80,7 @@
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongodb-driver-bom</artifactId>
-                <version>5.5.1</version>
+                <version>5.6.4</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -108,7 +112,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>
 
 

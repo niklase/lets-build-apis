@@ -1,0 +1,56 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter",
+            "age": 20
+          },
+          {
+            "name": "Laura",
+            "age": 30
+          }
+        ]
+      }
+    }
+  ],
+  "when-old": {
+    "$mongodb.createCommand": {
+      "collection": "persons",
+      "query": {
+        "orderBy": ["age desc","name"],
+        "limit": [1],
+        "offset": [1]
+      }
+    }
+  },
+  "when": {
+    "find": {
+      "collection": "persons",
+      "sort": [{"age": -1},{"name": 1}],
+      "limit": 1,
+      "skip": 1
+    }
+  },
+  "then": {
+    "ok": 1,
+    "cursor": {
+      "firstBatch": [
+        {
+          "name": "Peter",
+          "age": 20
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

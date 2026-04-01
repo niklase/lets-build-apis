@@ -1,0 +1,267 @@
+{
+  "type": "object",
+  "properties": {
+    "aggregate": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "pipeline": {
+          "$ref": "#/$defs/Pipeline"
+        }
+      }
+    },
+    "delete": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "deletes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DeleteStatement"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "drop": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "find": {
+      "$ref": "#/$defs/Find"
+    },
+    "insert": {
+      "$ref": "#/$defs/Insert"
+    },
+    "update": {
+      "$ref": "#/$defs/Update"
+    }
+  },
+  "minProperties": 1,
+  "maxProperties": 1,
+  "additionalProperties": false,
+  "$defs": {
+    "CollectionName": {
+      "type": "string",
+      "pattern": "^[A-Za-z]+[A-Za-z0-9-_]*$"
+    },
+    "ComparisonQueries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ComparisonQuery"
+      }
+    },
+    "ComparisonQuery": {
+      "type": "object",
+      "properties": {
+        "$eq": true,
+        "$gt": true,
+        "$gte": true,
+        "$in": {
+          "type": "array"
+        },
+        "$lt": true,
+        "$lte": true,
+        "$regex": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DeleteStatement": {
+      "type": "object",
+      "required": [
+        "q"
+      ],
+      "properties": {
+        "q": {
+          "$ref": "#/$defs/Query"
+        },
+        "limit": {
+          "$ref": "#/$defs/Limit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Find": {
+      "required": [
+        "collection"
+      ],
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "filter": {
+          "$ref": "#/$defs/Query"
+        },
+        "sort": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1
+          }
+        },
+        "limit": {
+          "$ref": "#/$defs/Limit"
+        },
+        "skip": {
+          "$ref": "#/$defs/Limit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldCriteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[^$]+.*$": {
+          "$ref": "#/$defs/ComparisonQueries"
+        }
+      }
+    },
+    "Insert": {
+      "type": "object",
+      "required": [
+        "collection",
+        "documents"
+      ],
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Limit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "LogicalOperator": {
+      "type": "object",
+      "properties": {
+        "$and": {
+          "$ref": "#/$defs/LogicalOperatorArrayValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LogicalOperatorArrayValue": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Query"
+      }
+    },
+    "Pipeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/$defs/LogicalOperator"
+          }
+        }
+      }
+    },
+    "Query": {
+      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ComparisonQuery"
+        },
+        {
+          "$ref": "#/$defs/LogicalOperator"
+        },
+        {
+          "$ref": "#/$defs/FieldCriteria"
+        }
+      ],
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    "Update": {
+      "type": "object",
+      "required": [
+        "collection",
+        "updates"
+      ],
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "updates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UpdateStatement"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateStatement": {
+      "type": "object",
+      "required": [
+        "q",
+        "u"
+      ],
+      "properties": {
+        "q": {
+          "$ref": "#/$defs/Query"
+        },
+        "u": {
+          "$ref": "#/$defs/UpdateStatementModification"
+        },
+        "upsert": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateStatementModification": {
+      "type": "object",
+      "description": "The modifications to be applied",
+      "patternProperties": {
+        "^.*$": {
+          "$ref": "#/$defs/UpdateStatementModificationNested"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateStatementModificationNested": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UpdateStatementModification"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UpdateStatementModificationNested"
+          }
+        },
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      ]
+    }
+  }
+}

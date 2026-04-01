@@ -1,0 +1,58 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter",
+            "age": 20,
+            "length": 180
+          },
+          {
+            "name": "Laura",
+            "age": 30,
+            "length": 180
+          }
+        ]
+      }
+    }
+  ],
+  "when-org": {
+    "$mongodb.createCommand": {
+      "collection": "persons",
+      "query": {
+        "orderBy": ["length asc","age desc"]
+      }
+    }
+  },
+  "when": {
+    "find": {
+      "collection": "persons",
+      "sort": [{"length":  1},{"age":  -1}]
+    }
+  },
+  "then": {
+    "ok": 1,
+    "cursor": {
+      "firstBatch": [
+        {
+          "name": "Laura",
+          "age": 30
+        },
+        {
+          "name": "Peter",
+          "age": 20
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

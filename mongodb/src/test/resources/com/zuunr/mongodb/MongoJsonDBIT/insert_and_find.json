@@ -1,0 +1,51 @@
+{
+  "given": [
+    {
+      "drop": {
+        "collection": "persons"
+      }
+    },
+    {
+      "insert": {
+        "collection": "persons",
+        "documents": [
+          {
+            "name": "Peter"
+          },
+          {
+            "name": "Laura"
+          }
+        ]
+      }
+    }
+  ],
+  "when": {
+    "find": {
+      "collection": "persons",
+      "filter": {
+        "$and": [
+          {
+            "name": [
+              {
+                "$eq": "Peter"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "then": {
+    "ok": 1,
+    "cursor": {
+      "firstBatch": [
+        {
+          "name": "Peter"
+        }
+      ]
+    }
+  },
+  "meta": {
+    "additionalPropertiesAllowed": true
+  }
+}

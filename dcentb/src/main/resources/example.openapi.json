@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.0",
+  "paths": {
+    "/players": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter.name.eq",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "x-decentb": {
+          "mongodb": {
+            "collection": "players",
+            "connection": "",
+            "db": ""
+          }
+        }
+      }
+    }
+  }
+}
