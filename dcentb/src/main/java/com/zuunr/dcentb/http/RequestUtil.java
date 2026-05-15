@@ -1,4 +1,4 @@
-package com.zuunr.api.runtime.http;
+package com.zuunr.dcentb.http;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.Response;

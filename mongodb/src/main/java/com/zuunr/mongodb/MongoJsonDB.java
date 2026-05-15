@@ -45,7 +45,8 @@ public class MongoJsonDB {
     public MongoJsonDB(String connectionString, String databaseName) {
 
         // Create a MongoClient instance
-        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+        try {
+            MongoClient mongoClient = MongoClients.create(connectionString);
             // Access a specific database
             mongoDatabase = mongoClient.getDatabase(databaseName);
             System.out.println("mongodb ping result: " + mongoDatabase.runCommand(new Document("ping", 1)));

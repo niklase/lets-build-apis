@@ -1,7 +1,8 @@
 package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
-import com.zuunr.dcentb.rest.processor.ReadCollectionRequestHandler;
+import com.zuunr.dcentb.rest.Response;
+import com.zuunr.dcentb.rest.requesthandler.ReadCollectionRequestHandler;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValueFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,15 @@ public class RequestHandlerProvider {
 
     @Autowired
     public RequestHandlerProvider(@Value("classpath:example.openapi.json") Resource resource) throws IOException {
-        String fileContent = new String(Files.readAllBytes(resource.getFile().toPath()));
-        JsonObject openApiDocument = JsonValueFactory.create(fileContent).getJsonObject();
+        this(JsonValueFactory.create(
+                new String(
+                        Files.readAllBytes(
+                                resource.getFile().toPath())
+                ))
+                .getJsonObject());
+    }
+
+    public RequestHandlerProvider(JsonObject openApiDocument) {
         pathConfigMapper = setupPathConfigMapper(openApiDocument);
     }
 
@@ -39,14 +47,38 @@ public class RequestHandlerProvider {
                                 .put("path", path)                                  // get anything from
                                 .put("operation", operationsPerMethod.get(method))  // this JsonValue as
                                 .jsonValue()                                        // cached if needed
-                        );
+                );
             }
         }
         return pathConfigMapper;
     }
 
+    public RequestHandler getRequestHandler(JsonObject request) {
+        return getRequestHandler(Request.of(request));
+    }
+
     public RequestHandler getRequestHandler(Request request) {
-        JsonObject operationConfig = pathConfigMapper.getConfig(request.getURI().getPath(), request.getMethod().toLowerCase());
-        return operationConfig.get("config").as(ReadCollectionRequestHandler.class);
+        return getRequestHandler(request.getURI().getPath(), request.getMethod());
+    }
+
+    private RequestHandler getRequestHandler(String path, String method) {
+        try {
+            JsonObject operationConfig = pathConfigMapper.getConfig(path, method.toLowerCase());
+            return operationConfig.get("config").as(ReadCollectionRequestHandler.class);
+        } catch (MethodNotFoundException e) {
+            return new RequestHandler() {
+                @Override
+                public Response process(Request request) {
+                    return new Response(JsonObject.EMPTY.put("status", 405));
+                }
+            };
+        } catch (PathNotFoundException e) {
+            return new RequestHandler() {
+                @Override
+                public Response process(Request request) {
+                    return new Response(JsonObject.EMPTY.put("status", 404));
+                }
+            };
+        }
     }
 }

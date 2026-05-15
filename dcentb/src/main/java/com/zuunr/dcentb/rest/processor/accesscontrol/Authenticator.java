@@ -1,15 +1,16 @@
-package com.zuunr.dcentb.rest.processor;
+package com.zuunr.dcentb.rest.processor.accesscontrol;
 
+import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class AuthenticationProcessor implements Processor {
+public class Authenticator implements Processor {
 
     private final JsonObject config;
     private final boolean authRequired;
 
-    public AuthenticationProcessor(JsonValue config) {
+    public Authenticator(JsonValue config) {
         this.config = config.getJsonObject();
         this.authRequired = !config.get("security", JsonArray.EMPTY).getJsonArray().isEmpty();
     }

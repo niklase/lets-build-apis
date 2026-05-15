@@ -157,6 +157,9 @@
       "properties": {
         "$and": {
           "$ref": "#/$defs/LogicalOperatorArrayValue"
+        },
+        "$or": {
+          "$ref": "#/$defs/LogicalOperatorArrayValue"
         }
       },
       "additionalProperties": false

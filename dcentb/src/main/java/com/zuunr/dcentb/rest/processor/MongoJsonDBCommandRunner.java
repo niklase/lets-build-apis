@@ -5,7 +5,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.mongodb.MongoJsonDB;
 
-public class MongoCommandRunnerProcessor implements Processor {
+public class MongoJsonDBCommandRunner implements Processor {
 
     private static final String COMMAND = "command";
     private JsonArray pathsToTemplatesInOperand = JsonArray.of(JsonArray.of(COMMAND));
@@ -16,14 +16,13 @@ public class MongoCommandRunnerProcessor implements Processor {
     private MongoJsonDB mongoDB;
 
 
-    public MongoCommandRunnerProcessor(JsonValue config) {
-        JsonObject mongodbConfig = config.get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
+    public MongoJsonDBCommandRunner(JsonValue config) {
+        JsonObject mongodbConfig = config.get("operation", JsonObject.EMPTY).get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
         mongoDB = new MongoJsonDB(mongodbConfig);
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
-        return mongoDB.runCommand(requestContext.get(REQUEST).getJsonObject());
+        return requestContext.put("mongoResult",  mongoDB.runCommand(requestContext.get("mongoCommand").getJsonObject()));
     }
-
 }

@@ -52,6 +52,11 @@ public class Response<T> {
         me = asJsonObject;
     }
 
+
+
+    public Response(JsonValue me) {
+        this(me.getJsonObject());
+    }
     public Response(JsonObject me) {
         this.me = me;
     }

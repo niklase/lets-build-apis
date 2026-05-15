@@ -2,13 +2,15 @@ package com.zuunr.dcentb.rest.processor;
 
 import com.zuunr.api.openapi.OAS3Deserializer;
 import com.zuunr.json.JsonObject;
+import com.zuunr.json.JsonObjectMerger;
 import com.zuunr.json.JsonValue;
 
-public class OASRequestProcessor implements Processor {
+public class OASRequestDeserializer implements Processor {
 
+    private static final JsonObjectMerger MERGER = new JsonObjectMerger();
     private JsonValue config;
 
-    public OASRequestProcessor(JsonValue config) {
+    public OASRequestDeserializer(JsonValue config) {
         this.config = config;
     }
 
@@ -17,7 +19,8 @@ public class OASRequestProcessor implements Processor {
 
         JsonObject result = OAS3Deserializer.deserializeRequest(requestContext, config.get("operation").getJsonObject());
         if (result.get("ok").getBoolean()) {
-            return requestContext.put(REQUEST, result.get(REQUEST));
+            JsonObject request = MERGER.merge(requestContext.get(REQUEST).getJsonObject(), result.get(REQUEST).getJsonObject());
+            return requestContext.put(REQUEST, request);
         } else {
             return requestContext
                     .put(RESPONSE, JsonObject.EMPTY
@@ -26,5 +29,4 @@ public class OASRequestProcessor implements Processor {
                                     .put("errors", result.get("errors"))));
         }
     }
-
 }

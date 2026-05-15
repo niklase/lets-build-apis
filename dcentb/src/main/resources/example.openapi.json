@@ -1,5 +1,9 @@
 {
   "openapi": "3.1.0",
+  "accessControl": {
+    "userInfo": {
+    }
+  },
   "paths": {
     "/players": {
       "get": {
@@ -11,13 +15,105 @@
               "type": "string"
             },
             "required": false
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "orderBy",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required": false
           }
         ],
-        "x-decentb": {
+        "x-dcentb": {
           "mongodb": {
             "collection": "players",
-            "connection": "",
-            "db": ""
+            "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+            "db": "dcentb-mytest"
+          },
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "productA",
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "customerIdOfOrder": {
+                              "equals": [
+                                "/userInfo/customerIdOfUser"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "permission": "AUTHENTICATED_DEFAULT",
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "name": false
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "enum": [
+                                      "Peter"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       }

@@ -6,19 +6,20 @@ import com.zuunr.json.util.StringSplitter;
 
 import java.util.regex.Matcher;
 
-public class MongoDBCommandCreatorProcessor implements Processor {
+public class MongoJsonDBCommandCreator implements Processor {
 
     private JsonValue jsonValue;
 
-    public MongoDBCommandCreatorProcessor(JsonValue jsonValue) {
+    public MongoJsonDBCommandCreator(JsonValue jsonValue) {
         this.jsonValue = jsonValue;
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
+        JsonObject deserializedRequest = requestContext.get(REQUEST).getJsonObject();
         JsonValue collection = requestContext.get("collection", "players");
         JsonArray filterOrder = requestContext.get("filterOrder", JsonArray.EMPTY).getJsonArray();
-        JsonObject query = requestContext.get("query", JsonObject.EMPTY).getJsonObject();
+        JsonObject query = deserializedRequest.get("query", JsonObject.EMPTY).getJsonObject();
         JsonValue defaultLimit = requestContext.get("defaultLimit", 100);
         return requestContext.put("mongoCommand", createCommand(collection, query, filterOrder, defaultLimit));
     }
