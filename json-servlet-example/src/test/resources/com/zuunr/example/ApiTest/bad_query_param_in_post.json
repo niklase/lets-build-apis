@@ -66,6 +66,6 @@
     }
   },
   "meta": {
-    "additionalPropertiesAllowed": true
+    "validationStrategy": "ALLOW_EXTRA_PROPERTIES"
   }
 }

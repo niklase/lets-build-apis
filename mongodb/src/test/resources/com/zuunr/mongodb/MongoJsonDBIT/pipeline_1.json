@@ -42,7 +42,6 @@
   },
   "then": {
     "ok": 1,
-    "n": 1,
     "cursor": {
       "firstBatch": [
         {
@@ -52,6 +51,6 @@
     }
   },
   "meta": {
-    "additionalPropertiesAllowed": true
+    "validationStrategy": "ALLOW_EXTRA_PROPERTIES"
   }
 }

@@ -1,6 +1,11 @@
 package com.zuunr.jsontester;
 
 import com.zuunr.json.*;
+import com.zuunr.json.pointer.JsonPointer;
+import com.zuunr.json.schema.JsonSchema;
+import com.zuunr.json.schema.validation.JsonSchemaValidator;
+import com.zuunr.json.schema.validation.OutputStructure;
+import com.zuunr.json.util.ApiErrorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +21,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class GivenWhenThenTesterBase {
 
@@ -50,7 +56,7 @@ public abstract class GivenWhenThenTesterBase {
         LOGGER.info("file {}", testFilePath);
         try {
             Path path = Paths.get(resource.toURI());
-            LOGGER.info("Source file? {}","file:///" + path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
+            LOGGER.info("Source file? {}", "file:///" + path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
         } catch (URISyntaxException e) {
             LOGGER.error("Cannot log source of test file.");
         }
@@ -61,7 +67,8 @@ public abstract class GivenWhenThenTesterBase {
         // Call the method you want to test, passing the JSON content
         // For example:
 
-        JsonValue testCase = JsonValueFactory.create(jsonContent);
+        JsonValue testJson = JsonValueFactory.create(jsonContent);
+        JsonValue testCase = testJson;
         JsonArray tests = testCase.get("tests", JsonArray.of(testCase, testCase, testCase)).getJsonArray();
 
         Iterator<JsonValue> iterator = tests.iterator();
@@ -97,23 +104,48 @@ public abstract class GivenWhenThenTesterBase {
 
             JsonValue result = doGivenWhen(given, when);
 
-            if (Boolean.TRUE == testCase.get("meta", JsonObject.EMPTY).get("additionalPropertiesAllowed", false).getBoolean()) {
-                JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
-                JsonObject resultToBeMerged = JsonObject.EMPTY.put(MERGE_ME, result);
+            String validationStrategy = testJson.get("meta", JsonObject.EMPTY).get("validationStrategy", "EXACT_MATCH").getString();
+            switch (validationStrategy) {
+                case "ALLOW_EXTRA_PROPERTIES": {
+                    JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
+                    JsonObject resultToBeMerged = JsonObject.EMPTY.put(MERGE_ME, result);
 
-                // JSON Merge Patch:  "then" patched by "actual result"
-                JsonObject thenMergedByResult = JSON_OBJECT_MERGER.merge(thenToBeMerged, resultToBeMerged);
+                    // JSON Merge Patch:  "then" patched by "actual result"
+                    JsonObject thenMergedByResult = JSON_OBJECT_MERGER.merge(thenToBeMerged, resultToBeMerged);
 
-                // JSON Merge Patch: "actual result" patched by "then"
-                JsonObject resultMergedByThen = JSON_OBJECT_MERGER.merge(resultToBeMerged, thenToBeMerged);
-
-                assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME));
-            } else {
-                assertEquals(then, result);
+                    // JSON Merge Patch: "actual result" patched by "then"
+                    JsonObject resultMergedByThen = JSON_OBJECT_MERGER.merge(resultToBeMerged, thenToBeMerged);
+                    assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME), "Present properties of 'then' mismatch");
+                    assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then mismatch");
+                    JsonArray propertiesOfThen = then.getPaths(true);
+                    JsonArrayBuilder failures = JsonArray.EMPTY.builder();
+                    for (int i = 0; i < propertiesOfThen.size(); i++){
+                        JsonArray pathAndValue = propertiesOfThen.get(i).getJsonArray();
+                        JsonPointer propertyPointer = pathAndValue.allButLast().as(JsonPointer.class);
+                        JsonValue propertyValue = pathAndValue.last();
+                        JsonValue resultingValue = result.get(propertyPointer);
+                        if (resultingValue == null) {
+                            failures.add(propertyPointer.getJsonPointerString());
+                        }
+                    }
+                    assertEquals("Mismatching pointers of 'then': " + JsonArray.EMPTY, "Mismatching pointers of 'then': " + failures.build(), "Present properties of 'then' mismatch:");
+                    break;
+                }
+                case "JSON_SCHEMA": {
+                    JsonObject validationResult = new JsonSchemaValidator().validate(result, then, OutputStructure.DETAILED);
+                    if (!validationResult.get("valid").getBoolean()) {
+                        JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, result, then.as(JsonSchema.class));
+                        LOGGER.error("JSON Schema error: {}", JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
+                        assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY), apiError, "JSON Schema violated");
+                    }
+                    break;
+                }
+                default: {
+                    assertEquals(then, result, "Exact match failed");
+                }
             }
         }
         LOGGER.info("Test ended: {}", jsonFileName);
-
     }
 
 

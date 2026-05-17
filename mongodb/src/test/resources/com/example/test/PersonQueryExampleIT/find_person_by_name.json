@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "validationStrategy": "ALLOW_EXTRA_PROPERTIES"
+  },
+  "tests": [
+    {
+      "given": [
+        {
+          "drop": {
+            "collection": "persons"
+          }
+        },
+        {
+          "insert": {
+            "collection": "persons",
+            "documents": [
+              {
+                "_id": "alice-1",
+                "name": "Alice",
+                "age": 30
+              },
+              {
+                "_id": "bob-1",
+                "name": "Bob",
+                "age": 25
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "when": {
+        "find": {
+          "collection": "persons",
+          "filter": {
+            "$and": [
+              {
+                "name": [
+                  {
+                    "$eq": "Alice"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "then": {
+        "ok": 1,
+        "cursor": {
+          "firstBatch": [
+            {
+              "_id": "alice-1",
+              "name": "Alice",
+              "age": 30
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -39,7 +39,6 @@
         <dependency>
             <groupId>com.zuunr</groupId>
             <artifactId>json-tester</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
