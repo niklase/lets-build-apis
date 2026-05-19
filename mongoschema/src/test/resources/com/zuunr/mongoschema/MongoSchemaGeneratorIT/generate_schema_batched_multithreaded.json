@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "validationStrategy": "EXACT_MATCHING"
+  },
+  "tests": [
+    {
+      "given": [
+        {
+          "drop": {
+            "collection": "products"
+          }
+        },
+        {
+          "insert": {
+            "collection": "products",
+            "documents": [
+              {
+                "_id": "p-1",
+                "name": "Laptop",
+                "price": 999,
+                "inStock": true
+              },
+              {
+                "_id": "p-2",
+                "name": "Phone",
+                "price": 499,
+                "inStock": false
+              },
+              {
+                "_id": "p-3",
+                "name": "Tablet",
+                "price": 299,
+                "inStock": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "when": {
+        "collection": "products",
+        "batchSize": 1,
+        "threads": 2
+      }
+    },
+    {
+      "then": {
+        "properties": {
+          "inStock": {
+            "type": "boolean"
+          },
+          "name": {
+            "minLength": 5,
+            "maxLength": 6,
+            "type": "string"
+          },
+          "_id": {
+            "minLength": 3,
+            "maxLength": 3,
+            "type": "string"
+          },
+          "price": {
+            "maximum": 999,
+            "minimum": 299,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_id",
+          "inStock",
+          "name",
+          "price"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      }
+    }
+  ]
+}

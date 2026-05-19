@@ -9,10 +9,10 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>mongodb</artifactId>
+    <artifactId>mongoschema</artifactId>
     <version>${databiit}</version>
-    <name>mongodb</name>
-    <description>JSON format MongDB API</description>
+    <name>mongoschema</name>
+    <description>JSON Schema generation from MongoDB collections</description>
     <packaging>jar</packaging>
     <url/>
     <licenses>
@@ -29,8 +29,8 @@
     </scm>
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <groupId>com.zuunr</groupId>
+            <artifactId>mongodb</artifactId>
         </dependency>
         <dependency>
             <groupId>com.zuunr</groupId>

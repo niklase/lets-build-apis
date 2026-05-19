@@ -31,6 +31,6 @@
     }
   },
   "meta": {
-    "validationStrategy": "ALLOW_EXTRA_PROPERTIES"
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
   }
 }

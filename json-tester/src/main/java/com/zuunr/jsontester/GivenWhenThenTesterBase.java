@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class GivenWhenThenTesterBase {
 
@@ -104,9 +103,9 @@ public abstract class GivenWhenThenTesterBase {
 
             JsonValue result = doGivenWhen(given, when);
 
-            String validationStrategy = testJson.get("meta", JsonObject.EMPTY).get("validationStrategy", "EXACT_MATCH").getString();
+            String validationStrategy = testJson.get("meta", JsonObject.EMPTY).get("validationStrategy", "EXACT_MATCHING").getString();
             switch (validationStrategy) {
-                case "ALLOW_EXTRA_PROPERTIES": {
+                case "ALLOWING_EXTRA_PROPERTIES": {
                     JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
                     JsonObject resultToBeMerged = JsonObject.EMPTY.put(MERGE_ME, result);
 
@@ -119,7 +118,7 @@ public abstract class GivenWhenThenTesterBase {
                     assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then mismatch");
                     JsonArray propertiesOfThen = then.getPaths(true);
                     JsonArrayBuilder failures = JsonArray.EMPTY.builder();
-                    for (int i = 0; i < propertiesOfThen.size(); i++){
+                    for (int i = 0; i < propertiesOfThen.size(); i++) {
                         JsonArray pathAndValue = propertiesOfThen.get(i).getJsonArray();
                         JsonPointer propertyPointer = pathAndValue.allButLast().as(JsonPointer.class);
                         JsonValue propertyValue = pathAndValue.last();
@@ -139,6 +138,8 @@ public abstract class GivenWhenThenTesterBase {
                         assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY), apiError, "JSON Schema violated");
                     }
                     break;
+                }
+                case "EXACT_MATCHING": {
                 }
                 default: {
                     assertEquals(then, result, "Exact match failed");

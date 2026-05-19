@@ -1,6 +1,6 @@
 {
   "meta": {
-    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+    "validationStrategy": "EXACT_MATCHING"
   },
   "tests": [
     {
@@ -31,34 +31,35 @@
     },
     {
       "when": {
-        "find": {
-          "collection": "persons",
-          "filter": {
-            "$and": [
-              {
-                "name": [
-                  {
-                    "$eq": "Alice"
-                  }
-                ]
-              }
-            ]
-          }
-        }
+        "collection": "persons"
       }
     },
     {
       "then": {
-        "ok": 1,
-        "cursor": {
-          "firstBatch": [
-            {
-              "_id": "alice-1",
-              "name": "Alice",
-              "age": 30
-            }
-          ]
-        }
+        "properties": {
+          "age": {
+            "maximum": 30,
+            "minimum": 25,
+            "type": "integer"
+          },
+          "name": {
+            "minLength": 3,
+            "maxLength": 5,
+            "type": "string"
+          },
+          "_id": {
+            "minLength": 5,
+            "maxLength": 7,
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "age",
+          "name"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     }
   ]

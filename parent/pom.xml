@@ -54,6 +54,11 @@
             </dependency>
             <dependency>
                 <groupId>com.zuunr</groupId>
+                <artifactId>mongoschema</artifactId>
+                <version>${databiit}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zuunr</groupId>
                 <artifactId>openapi</artifactId>
                 <version>${databiit}</version>
             </dependency>
