@@ -64,6 +64,7 @@
                               "body": {
                                 "properties": {
                                   "customerIdOfOrder": {
+                                    "const": {"$data": "/userInfo/customerIdOfUser"},
                                     "equals": [
                                       "/userInfo/customerIdOfUser"
                                     ]
@@ -127,7 +128,6 @@
     {
       "when": {
         "method": "GET",
-        "query": "limit=2&offset=0&orderBy=name%20desc",
         "uri": "/players?limit=2&offset=0&orderBy=name%20desc",
         "headers": {
           "priority": [
@@ -186,6 +186,68 @@
               "meta": {
                 "id": "69ce3b99db652b46a90cb4bd"
               }
+            }
+          ]
+        },
+        "status": 200
+      }
+    },
+    {
+      "when": {
+        "method": "GET",
+        "uri": "/players?limit=1",
+        "headers": {
+          "priority": [
+            "u=0, i"
+          ],
+          "sec-fetch-site": [
+            "none"
+          ],
+          "host": [
+            "localhost:8080"
+          ],
+          "user-agent": [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0"
+          ],
+          "cookie": [
+            "Idea-d26e9643=21f22c87-0682-4a0a-8c84-c276780cd28f"
+          ],
+          "sec-fetch-user": [
+            "?1"
+          ],
+          "connection": [
+            "keep-alive"
+          ],
+          "upgrade-insecure-requests": [
+            "1"
+          ],
+          "accept": [
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+          ],
+          "accept-language": [
+            "en-US,en;q=0.9"
+          ],
+          "sec-fetch-dest": [
+            "document"
+          ],
+          "accept-encoding": [
+            "gzip, deflate, br, zstd"
+          ],
+          "sec-fetch-mode": [
+            "navigate"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "items": [
+            {
+              "meta": {
+                "id": "69ce3b99db652b46a90cb4bd"
+              },
+              "name": "Peter"
             }
           ]
         },

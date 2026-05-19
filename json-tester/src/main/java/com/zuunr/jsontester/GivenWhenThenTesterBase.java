@@ -17,7 +17,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,12 +38,10 @@ public abstract class GivenWhenThenTesterBase {
         testFolderUri = testClass.getResource(testClass.getSimpleName()).toURI();
         return Files.list(Paths.get(testFolderUri))
                 .filter(path -> path.toString().endsWith(".json"))
-                .map(Path::getFileName)
-                ;
+                .map(Path::getFileName);
     }
 
     protected final void executeTest(Path jsonFileName) throws IOException {
-
 
         LOGGER.info("Test started: {}", jsonFileName);
         Class clazz = this.getClass();
@@ -52,10 +49,10 @@ public abstract class GivenWhenThenTesterBase {
 
         Path testFilePath = Path.of(testFolderUri.getPath() + File.separatorChar + jsonFileName.toString());
 
-        LOGGER.info("file {}", testFilePath);
+        LOGGER.debug("file: {}", testFilePath);
         try {
             Path path = Paths.get(resource.toURI());
-            LOGGER.info("Source file? {}", "file:///" + path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
+            LOGGER.info("Source file(?): {}", path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
         } catch (URISyntaxException e) {
             LOGGER.error("Cannot log source of test file.");
         }
@@ -68,37 +65,37 @@ public abstract class GivenWhenThenTesterBase {
 
         JsonValue testJson = JsonValueFactory.create(jsonContent);
         JsonValue testCase = testJson;
-        JsonArray tests = testCase.get("tests", JsonArray.of(testCase, testCase, testCase)).getJsonArray();
+        JsonArray tests = testCase.get("tests", JsonValue.NULL)
+                .getJsonArray();
 
-        Iterator<JsonValue> iterator = tests.iterator();
+        if (tests == null){
+            // adding backwards compatibility
+            tests = JsonArray.of(
+                    testCase,
+                    testCase
+                            .remove(JsonArray.of("given"))
+                            .remove(JsonArray.of("then")),
+                    testCase
+                            .remove(JsonArray.of("given"))
+                            .remove(JsonArray.of("when")));
+        }
 
-        while (iterator.hasNext()) {
-            testCase = tests.head();
-            tests = tests.tail();
+        final JsonValue given = tests.get(0).getJsonObject().get("given");
 
-            JsonValue next = iterator.next();
+        if (given == null) {
+            throw new RuntimeException("Missing 'given' in test case: " + testCase);
+        }
 
-            JsonValue given;
-            JsonValue when = null;
-            JsonValue then = null;
+        for (int i = 1; i < tests.size(); i= i+2) {
 
-            given = next.getJsonObject().get("given");
-            if (given == null) {
-                when = next.getJsonObject().get("when");
-            }
-
+            JsonValue when = tests.get(i).get("when");
             if (when == null) {
-                next = iterator.hasNext() ? iterator.next() : JsonObject.EMPTY.jsonValue();
-                when = next.get("when");
+                throw new RuntimeException("Missing 'when' in test element: " + i);
             }
 
-            if (when == null) {
-                then = next.get("then");
-            }
-
+            JsonValue then = tests.get(i + 1).get("then");
             if (then == null) {
-                next = iterator.hasNext() ? iterator.next() : null;
-                then = next.get("then");
+                throw new RuntimeException("Missing 'then' in test element: " + i + 1);
             }
 
             JsonValue result = doGivenWhen(given, when);
@@ -116,12 +113,10 @@ public abstract class GivenWhenThenTesterBase {
                     JsonObject resultMergedByThen = JSON_OBJECT_MERGER.merge(resultToBeMerged, thenToBeMerged);
                     assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME), "Present properties of 'then' mismatch");
                     assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then mismatch");
-                    JsonArray propertiesOfThen = then.getPaths(true);
+                    JsonArray propertiesOfThen = then.getPaths(false);
                     JsonArrayBuilder failures = JsonArray.EMPTY.builder();
-                    for (int i = 0; i < propertiesOfThen.size(); i++) {
-                        JsonArray pathAndValue = propertiesOfThen.get(i).getJsonArray();
-                        JsonPointer propertyPointer = pathAndValue.allButLast().as(JsonPointer.class);
-                        JsonValue propertyValue = pathAndValue.last();
+                    for (int propIndex = 0; propIndex < propertiesOfThen.size(); propIndex++) {
+                        JsonPointer propertyPointer = propertiesOfThen.get(propIndex).getJsonArray().as(JsonPointer.class);
                         JsonValue resultingValue = result.get(propertyPointer);
                         if (resultingValue == null) {
                             failures.add(propertyPointer.getJsonPointerString());
@@ -135,11 +130,13 @@ public abstract class GivenWhenThenTesterBase {
                     if (!validationResult.get("valid").getBoolean()) {
                         JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, result, then.as(JsonSchema.class));
                         LOGGER.error("JSON Schema error: {}", JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
-                        assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY), apiError, "JSON Schema violated");
+                        assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
                     }
                     break;
                 }
                 case "EXACT_MATCHING": {
+                    assertEquals(then, result, "Exact match failed");
+                    break;
                 }
                 default: {
                     assertEquals(then, result, "Exact match failed");
@@ -158,6 +155,4 @@ public abstract class GivenWhenThenTesterBase {
      * @return
      */
     public abstract JsonValue doGivenWhen(JsonValue given, JsonValue when);
-
-
 }

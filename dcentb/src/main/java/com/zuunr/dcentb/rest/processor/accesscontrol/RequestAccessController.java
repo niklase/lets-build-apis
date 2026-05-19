@@ -93,8 +93,7 @@ public class RequestAccessController implements Processor {
 
     public JsonObject process(JsonObject requestContext) {
 
-        JsonArray permissions = requestContext.get("authenticatedUser").get("userPermissions").getJsonArray();
-
+        JsonArray permissions = requestContext.get("authenticatedUser", JsonObject.EMPTY).get("userPermissions", JsonArray.EMPTY).getJsonArray();
 
         JsonValue authenticatedDefault = permissionSchemas.get("AUTHENTICATED_DEFAULT");
         boolean authenticatedDefaultPermissionExist = authenticatedDefault != null;

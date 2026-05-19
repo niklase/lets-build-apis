@@ -10,7 +10,6 @@
 	</parent>
 
 	<artifactId>dcentb</artifactId>
-	<version>${databiit}</version>
 	<name>Data Centered Backend</name>
 	<description>Security first, Declarative and Extensible Java based backend for MongoDB CRUD and Async</description>
 	<packaging>jar</packaging>
