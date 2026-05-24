@@ -2,8 +2,10 @@ package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.Response;
+import com.zuunr.dcentb.rest.requesthandler.CreateItemRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.ReadCollectionRequestHandler;
 import com.zuunr.json.JsonObject;
+import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,7 +66,11 @@ public class RequestHandlerProvider {
     private RequestHandler getRequestHandler(String path, String method) {
         try {
             JsonObject operationConfig = pathConfigMapper.getConfig(path, method.toLowerCase());
-            return operationConfig.get("config").as(ReadCollectionRequestHandler.class);
+            JsonValue config = operationConfig.get("config");
+            if ("post".equalsIgnoreCase(method)) {
+                return config.as(CreateItemRequestHandler.class);
+            }
+            return config.as(ReadCollectionRequestHandler.class);
         } catch (MethodNotFoundException e) {
             return new RequestHandler() {
                 @Override

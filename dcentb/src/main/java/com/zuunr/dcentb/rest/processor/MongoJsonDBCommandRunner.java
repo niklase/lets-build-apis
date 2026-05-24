@@ -7,14 +7,7 @@ import com.zuunr.mongodb.MongoJsonDB;
 
 public class MongoJsonDBCommandRunner implements Processor {
 
-    private static final String COMMAND = "command";
-    private JsonArray pathsToTemplatesInOperand = JsonArray.of(JsonArray.of(COMMAND));
-    private JsonArray templates;
-
-    private String connection;
-    private String db;
     private MongoJsonDB mongoDB;
-
 
     public MongoJsonDBCommandRunner(JsonValue config) {
         JsonObject mongodbConfig = config.get("operation", JsonObject.EMPTY).get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();

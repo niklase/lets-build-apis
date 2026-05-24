@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class ReadCollectionRequestHandlerIT extends DcentbGivenWhenThenTester {
+public class CreateItemRequestHandlerIT extends DcentbGivenWhenThenTester {
 
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
@@ -28,9 +28,8 @@ public class ReadCollectionRequestHandlerIT extends DcentbGivenWhenThenTester {
     @ParameterizedTest(name = "{index} => JSON file: {0}")
     @MethodSource("testFiles")
     void test(Path testsFolderPath) throws Exception {
-            executeTest(testsFolderPath);
+        executeTest(testsFolderPath);
     }
-
 
     @Override
     protected JsonValue doWhen(JsonValue given, JsonValue when) {

@@ -52,7 +52,7 @@ public abstract class GivenWhenThenTesterBase {
         LOGGER.debug("file: {}", testFilePath);
         try {
             Path path = Paths.get(resource.toURI());
-            LOGGER.info("Source file(?): {}", path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
+            LOGGER.info("Source file(?): {}", "file:"+path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
         } catch (URISyntaxException e) {
             LOGGER.error("Cannot log source of test file.");
         }

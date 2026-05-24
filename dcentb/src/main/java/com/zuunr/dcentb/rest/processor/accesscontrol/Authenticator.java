@@ -7,11 +7,9 @@ import com.zuunr.json.JsonValue;
 
 public class Authenticator implements Processor {
 
-    private final JsonObject config;
     private final boolean authRequired;
 
     public Authenticator(JsonValue config) {
-        this.config = config.getJsonObject();
         this.authRequired = !config.get("security", JsonArray.EMPTY).getJsonArray().isEmpty();
     }
 

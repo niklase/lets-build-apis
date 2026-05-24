@@ -1,0 +1,10 @@
+{
+  "logging": {
+    "level": {
+      "com": {
+        "zuunr": "DEBUG"
+      }
+    }
+  }
+
+}

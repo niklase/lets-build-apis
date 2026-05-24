@@ -1,5 +1,6 @@
 package com.zuunr.dcentb.rest.processor;
 
+import com.zuunr.dcentb.rest.processor.mongo.MongoToRestItemTranslator;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonArrayBuilder;
 import com.zuunr.json.JsonObject;
@@ -20,17 +21,12 @@ public class MongoToRestCollectionTranslator implements Processor {
 
         JsonArrayBuilder itemsBuilder = JsonArray.EMPTY.builder();
         for (JsonValue item : mongoResult.get("cursor").get("firstBatch").getJsonArray()) {
-            itemsBuilder.add(translateItem(item.getJsonObject()));
+            itemsBuilder.add(MongoToRestItemTranslator.getRestItem(item.getJsonObject()));
         }
         return requestContext
                 .put("response", JsonObject.EMPTY
                         .put("status", 200)
                         .put("body", JsonObject.EMPTY
                                 .put("items", itemsBuilder.build())));
-    }
-
-    private JsonObject translateItem(JsonObject mongoItem) {
-        JsonObject meta = mongoItem.get("meta", JsonObject.EMPTY).getJsonObject().put("id", mongoItem.get("_id").get("ObjectId"));
-        return mongoItem.remove("_id").put("meta", meta);
     }
 }

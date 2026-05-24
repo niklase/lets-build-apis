@@ -2,110 +2,144 @@
   "tests": [
     {
       "given": {
-        "openapi": "3.1.0",
-        "accessControl": {
-          "userInfo": {
-          }
+        "dbSetup": {
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "db": "dcentb-mytest",
+          "commands": [
+            {
+              "drop": {
+                "collection": "players"
+              }
+            },
+            {
+              "insert": {
+                "collection": "players",
+                "documents": [
+                  {
+                    "_id": {
+                      "ObjectId": "69ce3b99db652b46a90cb4bd"
+                    },
+                    "name": "Peter"
+                  },
+                  {
+                    "_id": {
+                      "ObjectId": "69ce48e1db652b46a90cb4c4"
+                    },
+                    "name": "Zeus"
+                  }
+                ]
+              }
+            }
+          ]
         },
-        "paths": {
-          "/players": {
-            "get": {
-              "parameters": [
-                {
-                  "in": "query",
-                  "name": "filter.name.eq",
-                  "schema": {
-                    "type": "string"
-                  },
-                  "required": false
-                },
-                {
-                  "in": "query",
-                  "name": "limit",
-                  "schema": {
-                    "type": "integer"
-                  },
-                  "required": false
-                },
-                {
-                  "in": "query",
-                  "name": "offset",
-                  "schema": {
-                    "type": "integer"
-                  },
-                  "required": false
-                },
-                {
-                  "in": "query",
-                  "name": "orderBy",
-                  "schema": {
-                    "type": "array",
-                    "items": {
+        "config": {
+          "openapi": "3.1.0",
+          "accessControl": {
+            "userInfo": {
+            }
+          },
+          "paths": {
+            "/players": {
+              "get": {
+                "parameters": [
+                  {
+                    "in": "query",
+                    "name": "filter.name.eq",
+                    "schema": {
                       "type": "string"
-                    }
+                    },
+                    "required": false
                   },
-                  "required": false
-                }
-              ],
-              "x-dcentb": {
-                "mongodb": {
-                  "collection": "players",
-                  "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-                  "db": "dcentb-mytest"
-                },
-                "accessControl": {
-                  "permissionSchemas": [
-                    {
-                      "permission": "productA",
-                      "requestSchema": {
-                        "properties": {
-                          "request": {
-                            "properties": {
-                              "body": {
-                                "properties": {
-                                  "customerIdOfOrder": {
-                                    "const": {"$data": "/userInfo/customerIdOfUser"},
-                                    "equals": [
-                                      "/userInfo/customerIdOfUser"
-                                    ]
+                  {
+                    "in": "query",
+                    "name": "limit",
+                    "schema": {
+                      "type": "integer"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "offset",
+                    "schema": {
+                      "type": "integer"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "orderBy",
+                    "schema": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "required": false
+                  }
+                ],
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "players",
+                    "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+                    "db": "dcentb-mytest"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "productA",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "customerIdOfOrder": {
+                                      "const": {
+                                        "$data": "/userInfo/customerIdOfUser"
+                                      },
+                                      "equals": [
+                                        "/userInfo/customerIdOfUser"
+                                      ]
+                                    }
                                   }
                                 }
                               }
                             }
                           }
                         }
-                      }
-                    },
-                    {
-                      "permission": "AUTHENTICATED_DEFAULT",
-                      "requestSchema": {
-                        "properties": {
-                          "request": {
-                            "properties": {
-                              "body": {
-                                "properties": {
-                                  "name": false
+                      },
+                      {
+                        "permission": "AUTHENTICATED_DEFAULT",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "name": false
+                                  }
                                 }
                               }
                             }
                           }
-                        }
-                      },
-                      "responseSchema": {
-                        "properties": {
-                          "response": {
-                            "properties": {
-                              "body": {
-                                "properties": {
-                                  "items": {
-                                    "type": "array",
+                        },
+                        "responseSchema": {
+                          "properties": {
+                            "response": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
                                     "items": {
-                                      "type": "object",
-                                      "properties": {
-                                        "name": {
-                                          "enum": [
-                                            "Peter"
-                                          ]
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "name": {
+                                            "enum": [
+                                              "Peter"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -116,8 +150,8 @@
                           }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             }

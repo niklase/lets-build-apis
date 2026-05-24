@@ -1,4 +1,4 @@
-package com.zuunr.api.runtime.http;
+package com.zuunr.dcentb.http;
 
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public class HeadersUtil {
+
+    private HeadersUtil() {}
 
     public static JsonObject translateHttpHeaders(HttpHeaders httpHeaders) {
 
