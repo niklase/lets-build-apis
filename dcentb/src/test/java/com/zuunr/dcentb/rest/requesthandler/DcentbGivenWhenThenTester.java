@@ -34,7 +34,7 @@ import com.zuunr.mongodb.MongoJsonDB;
 public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase {
 
     @Override
-    public final JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
         JsonObject dbSetup = given.get("dbSetup", JsonValue.NULL).getJsonObject();
         if (dbSetup != null) {
             JsonObject mongoConfig = JsonObject.EMPTY
@@ -46,8 +46,5 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
                 mongoDB.runCommand(commands.get(i).getJsonObject());
             }
         }
-        return doWhen(given, when);
     }
-
-    protected abstract JsonValue doWhen(JsonValue given, JsonValue when);
 }

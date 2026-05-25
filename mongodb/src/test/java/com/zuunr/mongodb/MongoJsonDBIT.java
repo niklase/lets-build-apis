@@ -31,6 +31,8 @@ public class MongoJsonDBIT extends GivenWhenThenTesterBase {
 
     private static MongoJsonDB mongoJsonDB = new MongoJsonDB(database);
 
+    private JsonValue given;
+
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
      */
@@ -185,7 +187,12 @@ public class MongoJsonDBIT extends GivenWhenThenTesterBase {
     }
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given){
+        this.given = given;
+    }
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
 
         JsonArray jsonArray = given.getJsonArray();
         for (int i = 0; i < jsonArray.size(); i++) {

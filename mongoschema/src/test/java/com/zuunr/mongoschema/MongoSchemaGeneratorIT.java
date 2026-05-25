@@ -33,6 +33,8 @@ class MongoSchemaGeneratorIT extends GivenWhenThenTesterBase {
     private static final MongoJsonDB MONGO_JSON_DB = new MongoJsonDB(DB_CONFIG);
     private static final MongoSchemaGenerator MONGO_SCHEMA_GENERATOR = new MongoSchemaGenerator(MONGO_JSON_DB);
 
+    private JsonValue given;
+
     static Stream<Path> testFiles() throws Exception {
         return testFiles((Class<? extends GivenWhenThenTesterBase>) new Object() {}.getClass().getEnclosingClass()); // NOSONAR
     }
@@ -45,7 +47,12 @@ class MongoSchemaGeneratorIT extends GivenWhenThenTesterBase {
     }
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        this.given = given;
+    }
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
         JsonArray commands = given.getJsonArray();
         for (int i = 0; i < commands.size(); i++) {
             JsonObject result = MONGO_JSON_DB.runCommand(commands.get(i).getJsonObject());

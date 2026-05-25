@@ -41,6 +41,7 @@ public abstract class GivenWhenThenTesterBase {
                 .map(Path::getFileName);
     }
 
+
     protected final void executeTest(Path jsonFileName) throws IOException {
 
         LOGGER.info("Test started: {}", jsonFileName);
@@ -52,7 +53,7 @@ public abstract class GivenWhenThenTesterBase {
         LOGGER.debug("file: {}", testFilePath);
         try {
             Path path = Paths.get(resource.toURI());
-            LOGGER.info("Source file(?): {}", "file:"+path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
+            LOGGER.info("Source file(?): {}", "file:" + path.toString().replaceFirst("/target/test-classes/", "/src/test/resources/"));
         } catch (URISyntaxException e) {
             LOGGER.error("Cannot log source of test file.");
         }
@@ -68,7 +69,7 @@ public abstract class GivenWhenThenTesterBase {
         JsonArray tests = testCase.get("tests", JsonValue.NULL)
                 .getJsonArray();
 
-        if (tests == null){
+        if (tests == null) {
             // adding backwards compatibility
             tests = JsonArray.of(
                     testCase,
@@ -80,27 +81,39 @@ public abstract class GivenWhenThenTesterBase {
                             .remove(JsonArray.of("when")));
         }
 
-        final JsonValue given = tests.get(0).getJsonObject().get("given");
+        JsonValue given = tests.get(0).getJsonObject().get("given");
 
         if (given == null) {
             throw new RuntimeException("Missing 'given' in test case: " + testCase);
         }
 
-        for (int i = 1; i < tests.size(); i= i+2) {
+        JsonObject variables = testCase.get(JsonArray.of("meta", "variables"), JsonObject.EMPTY.jsonValue()).getJsonObject();
+
+        given = updateWithVariableValues(given, variables);
+
+        doGiven(given);
+
+        for (int i = 1; i < tests.size(); i = i + 2) {
 
             JsonValue when = tests.get(i).get("when");
             if (when == null) {
                 throw new RuntimeException("Missing 'when' in test element: " + i);
             }
 
-            JsonValue then = tests.get(i + 1).get("then");
+            when = updateWithVariableValues(when, variables);
+
+            JsonObject thenAndMeta = tests.get(i + 1 ).getJsonObject();
+            JsonValue then = thenAndMeta.get("then");
+
             if (then == null) {
                 throw new RuntimeException("Missing 'then' in test element: " + i + 1);
             }
 
-            JsonValue result = doGivenWhen(given, when);
+            JsonValue result = doWhen(when);
 
-            String validationStrategy = testJson.get("meta", JsonObject.EMPTY).get("validationStrategy", "EXACT_MATCHING").getString();
+            JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
+            String validationStrategy = thenAndMeta.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString();
+
             switch (validationStrategy) {
                 case "ALLOWING_EXTRA_PROPERTIES": {
                     JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
@@ -112,7 +125,7 @@ public abstract class GivenWhenThenTesterBase {
                     // JSON Merge Patch: "actual result" patched by "then"
                     JsonObject resultMergedByThen = JSON_OBJECT_MERGER.merge(resultToBeMerged, thenToBeMerged);
                     assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME), "Present properties of 'then' mismatch");
-                    assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then mismatch");
+                    assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then' mismatch");
                     JsonArray propertiesOfThen = then.getPaths(false);
                     JsonArrayBuilder failures = JsonArray.EMPTY.builder();
                     for (int propIndex = 0; propIndex < propertiesOfThen.size(); propIndex++) {
@@ -141,18 +154,43 @@ public abstract class GivenWhenThenTesterBase {
                 default: {
                     assertEquals(then, result, "Exact match failed");
                 }
+
+                JsonObject setVariables = thenAndMeta.get("setVariables", JsonObject.EMPTY).getJsonObject();
+                variables  = variables.putAll(setVariables(setVariables, result));
             }
         }
         LOGGER.info("Test ended: {}", jsonFileName);
     }
 
+    private JsonValue updateWithVariableValues(JsonValue tobeUpdated, JsonObject variables) {
+        JsonObject wrapper = JsonObject.EMPTY.put("_", tobeUpdated);
+        for (JsonValue pathValue: wrapper.jsonValue().getPaths(true)) {
+            JsonArray path = pathValue.getJsonArray();
+            JsonValue last = path.last();
+            if (last.isString()) {
+                String lastString = last.getString();
+                JsonValue varVal = variables.get(lastString);
+                if (varVal != null) {
+                    wrapper = wrapper.put(path.allButLast(), varVal);
+                }
+            }
+        }
+        return wrapper.get("_");
+    }
 
-    /**
-     * Should return the value of given when
-     *
-     * @param given
-     * @param when
-     * @return
-     */
-    public abstract JsonValue doGivenWhen(JsonValue given, JsonValue when);
+
+    public abstract void doGiven(JsonValue given);
+
+    public abstract JsonValue doWhen(JsonValue when);
+
+
+    private JsonObject setVariables(JsonObject setVariables, JsonValue result) {
+        JsonObject variables = JsonObject.EMPTY;
+        for (JsonValue key : setVariables.keys()) {
+            String keyStr = key.getString();
+            JsonPointer pointer = JsonValue.of(setVariables.get(keyStr).getString()).as(JsonPointer.class);
+            variables = variables.put(keyStr, result.get(pointer));
+        }
+        return variables;
+    }
 }

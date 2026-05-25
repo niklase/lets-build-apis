@@ -4,9 +4,9 @@ import com.zuunr.api.openapi.JsonUri;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class MongoToRestItemTranslator implements Processor {
+public class MongoItemToRestResponseTranslator implements Processor {
 
-    public MongoToRestItemTranslator(JsonValue config) {
+    public MongoItemToRestResponseTranslator(JsonValue config) {
     }
 
     @Override

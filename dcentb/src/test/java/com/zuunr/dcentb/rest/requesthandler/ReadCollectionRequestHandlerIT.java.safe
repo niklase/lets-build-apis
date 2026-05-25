@@ -1,5 +1,7 @@
-package com.example.test;
+package com.zuunr.dcentb.rest.requesthandler;
 
+import com.zuunr.dcentb.rest.Request;
+import com.zuunr.dcentb.rest.controller.RequestHandlerProvider;
 import com.zuunr.json.JsonValue;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import org.junit.jupiter.api.DisplayName;
@@ -9,18 +11,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-/**
- * Both the
- */
-public class ExampleOfLogicalOrTest extends GivenWhenThenTesterBase {
+public class ReadCollectionRequestHandlerIT extends DcentbGivenWhenThenTester {
 
-    private JsonValue given;
 
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
      */
     static Stream<Path> testFiles() throws Exception {
-        return testFiles((Class <? extends GivenWhenThenTesterBase>) new Object(){}.getClass().getEnclosingClass()); // NOSONAR
+        return testFiles((Class<? extends GivenWhenThenTesterBase>) new Object() {
+        }.getClass().getEnclosingClass()); // NOSONAR
     }
 
     /*
@@ -30,16 +29,19 @@ public class ExampleOfLogicalOrTest extends GivenWhenThenTesterBase {
     @ParameterizedTest(name = "{index} => JSON file: {0}")
     @MethodSource("testFiles")
     void test(Path testsFolderPath) throws Exception {
-        executeTest(testsFolderPath);
+            executeTest(testsFolderPath);
     }
 
-    @Override
-    public void doGiven(JsonValue given) {
-        this.given = given;
-    }
 
     @Override
-    public JsonValue doWhen(JsonValue when) {
-        return JsonValue.of(given.getBoolean() | when.getBoolean());
+    JsonValue doWhen(JsonValue when) {
+
+        Request request = Request.of(when.getJsonObject());
+
+        return new RequestHandlerProvider(given.getJsonObject().get("config").getJsonObject())
+                .getRequestHandler(request)
+                .process(request)
+                .asJsonObject()
+                .jsonValue();
     }
 }

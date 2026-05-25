@@ -17,6 +17,8 @@ import java.util.stream.Stream;
  */
 class AccountBalanceExampleTest extends GivenWhenThenTesterBase {
 
+    private JsonValue given;
+
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
      */
@@ -35,7 +37,12 @@ class AccountBalanceExampleTest extends GivenWhenThenTesterBase {
     }
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        this.given = given;
+    }
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
 
         // Perform the test (typically calling the method to be tested)
         BigDecimal balance = given.get("balance", 0).getJsonNumber().asBigDecimal();

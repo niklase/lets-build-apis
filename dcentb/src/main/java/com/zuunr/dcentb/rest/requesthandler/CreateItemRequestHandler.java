@@ -19,7 +19,7 @@ public class CreateItemRequestHandler extends RequestHandlerBase {
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
         MongoJsonDBInsertCommandCreator mongoJsonDBInsertCommandCreator = config.as(MongoJsonDBInsertCommandCreator.class);
         MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
-        MongoToRestItemTranslator mongoToRestItemTranslator = config.as(MongoToRestItemTranslator.class);
+        MongoItemToRestResponseTranslator mongoItemToRestResponseTranslator = config.as(MongoItemToRestResponseTranslator.class);
 
         processors = new Processor[] {
                 apiKeyAuthenticator,
@@ -28,7 +28,7 @@ public class CreateItemRequestHandler extends RequestHandlerBase {
                 requestAccessController,
                 mongoJsonDBInsertCommandCreator,
                 mongoJsonDBCommandRunner,
-                mongoToRestItemTranslator};
+                mongoItemToRestResponseTranslator};
     }
 
     @Override

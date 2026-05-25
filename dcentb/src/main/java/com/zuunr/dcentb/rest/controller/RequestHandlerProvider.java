@@ -18,7 +18,6 @@ import java.nio.file.Files;
 @Component
 public class RequestHandlerProvider {
 
-    private ReadCollectionRequestHandler readCollectionRequestHandler;
     private PathConfigMapper pathConfigMapper;
 
     @Autowired

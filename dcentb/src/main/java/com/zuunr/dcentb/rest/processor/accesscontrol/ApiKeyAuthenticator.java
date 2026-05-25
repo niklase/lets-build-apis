@@ -15,7 +15,7 @@ public class ApiKeyAuthenticator implements Processor {
     @Override
     public JsonObject process(JsonObject requestContext){
         JsonObject request = requestContext.get(REQUEST).getJsonObject();
-        String apiKey = request.get("headers").get("api-key", JsonArray.of("KEY1234")).get(0).getString();
+        String apiKey = request.get("headers", JsonObject.EMPTY).get("api-key", JsonArray.of("KEY1234")).get(0).getString();
         JsonObject authentication = apiKeys.get(apiKey, JsonValue.NULL).getJsonObject();
         if (authentication == null) {
             return requestContext.put(RESPONSE, JsonObject.EMPTY.put("status", 401).put("message", "Invalid api-key"));

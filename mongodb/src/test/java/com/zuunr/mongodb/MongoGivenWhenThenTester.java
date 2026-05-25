@@ -33,10 +33,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public abstract class MongoGivenWhenThenTester extends GivenWhenThenTesterBase {
 
+    private JsonValue given;
+
     protected abstract MongoJsonDB getMongoJsonDB();
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        this.given = given;
+    }
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
         JsonArray commands = given.getJsonArray();
         for (int i = 0; i < commands.size(); i++) {
             JsonObject result = getMongoJsonDB().runCommand(commands.get(i).getJsonObject());

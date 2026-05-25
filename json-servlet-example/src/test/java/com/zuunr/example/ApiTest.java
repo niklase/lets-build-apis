@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiTest extends GivenWhenThenTesterBase {
 
+    private JsonValue given;
+
     @LocalServerPort
     private int port;
 
@@ -54,7 +56,12 @@ class ApiTest extends GivenWhenThenTesterBase {
     }
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        this.given = given;
+    }
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
         JsonObject jsonRequest = when.getJsonObject();
         Request<JsonValue> request = Request.of(jsonRequest);
         RequestEntity.BodyBuilder bodyBuilder = RequestEntity.method(HttpMethod.valueOf(request.getMethod()), "http://localhost:" + port + request.getURI());

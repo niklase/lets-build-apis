@@ -1,7 +1,8 @@
-package com.zuunr.dcentb.rest.requesthandler;
+package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
-import com.zuunr.dcentb.rest.controller.RequestHandlerProvider;
+import com.zuunr.dcentb.rest.Response;
+import com.zuunr.dcentb.rest.requesthandler.DcentbGivenWhenThenTester;
 import com.zuunr.json.JsonValue;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +12,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class ReadCollectionRequestHandlerIT extends DcentbGivenWhenThenTester {
+public class ControllerIT extends DcentbGivenWhenThenTester {
+
 
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
@@ -28,19 +30,25 @@ public class ReadCollectionRequestHandlerIT extends DcentbGivenWhenThenTester {
     @ParameterizedTest(name = "{index} => JSON file: {0}")
     @MethodSource("testFiles")
     void test(Path testsFolderPath) throws Exception {
-            executeTest(testsFolderPath);
+        executeTest(testsFolderPath);
     }
 
+    RequestHandlerProvider requestHandlerProvider;
 
     @Override
-    protected JsonValue doWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        super.doGiven(given);
+        requestHandlerProvider =  new RequestHandlerProvider(given.getJsonObject().get("config").getJsonObject());
+    }
 
-        Request request = Request.of(when.getJsonObject());
-
-        return new RequestHandlerProvider(given.getJsonObject().get("config").getJsonObject())
+    @Override
+    public JsonValue doWhen(JsonValue given) {
+        Request<Object> request = Request.of(given.getJsonObject());
+        return requestHandlerProvider
                 .getRequestHandler(request)
                 .process(request)
                 .asJsonObject()
                 .jsonValue();
     }
+
 }

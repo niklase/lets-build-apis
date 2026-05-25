@@ -14,6 +14,8 @@ import java.util.stream.Stream;
  */
 class ExampleOfLogicalOrTest extends GivenWhenThenTesterBase {
 
+    private JsonValue given;
+
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
      */
@@ -34,7 +36,13 @@ class ExampleOfLogicalOrTest extends GivenWhenThenTesterBase {
     }
 
     @Override
-    public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
+    public void doGiven(JsonValue given) {
+        this.given = given;
+    }
+
+
+    @Override
+    public JsonValue doWhen(JsonValue when) {
         return JsonValue.of(given.getBoolean() | when.getBoolean());
     }
 }
