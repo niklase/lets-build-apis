@@ -1,7 +1,9 @@
 {
   "openapi": "3.1.0",
-  "accessControl": {
-    "userInfo": {
+  "x-dcentb": {
+    "mongodb": {
+      "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+      "db": "dcentb-demo"
     }
   },
   "paths": {
