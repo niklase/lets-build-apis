@@ -43,6 +43,10 @@ public class ControllerIT extends DcentbGivenWhenThenTester {
 
     @Override
     public JsonValue doWhen(JsonValue given) {
+
+        if (given.get("body", JsonValue.NULL).isJsonObject()) {
+            given = given.getJsonObject().put("body", given.get("body").asJson()).jsonValue();
+        }
         Request<Object> request = Request.of(given.getJsonObject());
         return requestHandlerProvider
                 .getRequestHandler(request)

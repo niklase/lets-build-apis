@@ -9,11 +9,11 @@ import com.zuunr.dcentb.rest.processor.apimodel.ApiItemCreator;
 import com.zuunr.dcentb.rest.processor.mongo.MongoItemCreator;
 import com.zuunr.json.JsonValue;
 
-public class CreateItemRequestHandler extends RequestHandlerBase {
+public class CUDItemRequestHandler extends RequestHandlerBase {
 
     private Processor[] processors;
 
-    public CreateItemRequestHandler(JsonValue config) {
+    public CUDItemRequestHandler(JsonValue config) {
         super(config);
         ApiKeyAuthenticator apiKeyAuthenticator = config.as(ApiKeyAuthenticator.class);
         OASRequestDeserializer oasRequestDeserializer = config.as(OASRequestDeserializer.class);

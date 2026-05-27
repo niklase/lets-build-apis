@@ -16,16 +16,13 @@ public class MongoJsonDBInsertCommandCreator implements Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
-        JsonObject deserializedRequest = requestContext.get(REQUEST).getJsonObject();
         JsonValue collection = config.get("operation").get(X_DCENTB).get("mongodb").get("collection");
-        JsonObject body = deserializedRequest.get("body", JsonObject.EMPTY).getJsonObject();
 
-        String id = UUID.randomUUID().toString().replace("-", "");
-        JsonObject document = body.put("_id", id);
+        JsonValue mongoItem = requestContext.get("mongoItem");
 
         JsonValue insertCommand = JsonObject.EMPTY.put("insert", JsonObject.EMPTY
                 .put("collection", collection)
-                .put("documents", JsonArray.of(document.jsonValue())))
+                .put("documents", JsonArray.of(mongoItem)))
                 .jsonValue();
 
         return requestContext

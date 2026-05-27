@@ -95,6 +95,7 @@ public abstract class GivenWhenThenTesterBase {
 
         for (int i = 1; i < tests.size(); i = i + 2) {
 
+            LOGGER.info("tests[{}]: {}", i, tests.get(i).get("description", "<no desciption>").getString());
             JsonValue when = tests.get(i).get("when");
             if (when == null) {
                 throw new RuntimeException("Missing 'when' in test element: " + i);
@@ -102,8 +103,8 @@ public abstract class GivenWhenThenTesterBase {
 
             when = updateWithVariableValues(when, variables);
 
-            JsonObject thenAndMeta = tests.get(i + 1 ).getJsonObject();
-            JsonValue then = thenAndMeta.get("then");
+            JsonObject testItem = tests.get(i + 1 ).getJsonObject();
+            JsonValue then = testItem.get("then");
 
             if (then == null) {
                 throw new RuntimeException("Missing 'then' in test element: " + i + 1);
@@ -112,7 +113,9 @@ public abstract class GivenWhenThenTesterBase {
             JsonValue result = doWhen(when);
 
             JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
-            String validationStrategy = thenAndMeta.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString();
+            String validationStrategy = testItem.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString();
+
+            then = updateWithVariableValues(then, variables);
 
             switch (validationStrategy) {
                 case "ALLOWING_EXTRA_PROPERTIES": {
@@ -155,9 +158,9 @@ public abstract class GivenWhenThenTesterBase {
                     assertEquals(then, result, "Exact match failed");
                 }
 
-                JsonObject setVariables = thenAndMeta.get("setVariables", JsonObject.EMPTY).getJsonObject();
-                variables  = variables.putAll(setVariables(setVariables, result));
             }
+            JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
+            variables  = variables.putAll(setVariables(setVariables, result));
         }
         LOGGER.info("Test ended: {}", jsonFileName);
     }

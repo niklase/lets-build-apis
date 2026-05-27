@@ -251,6 +251,81 @@
     },
     {
       "when": {
+        "method": "POST",
+        "uri": "/players",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ]
+        },
+        "body": {
+          "name": "Peter",
+          "age": 25
+        }
+      }
+    },
+    {
+      "then": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "const": 201
+          },
+          "headers": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "^/players/[a-f0-9]{32}$"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{32}$"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "name": {
+                "const": "Peter"
+              },
+              "age": {
+                "const": 25
+              }
+            },
+            "required": [
+              "meta",
+              "name",
+              "age"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "headers",
+          "body"
+        ]
+      },
+      "meta": {
+        "setVariables": {
+          "{{peter-id}}": "/body/meta/id"
+        }
+      }
+    },
+    {
+      "when": {
         "method": "GET",
         "uri": "/players"
       }
@@ -260,6 +335,21 @@
         "properties": {
           "status": {
             "const": 200
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -294,10 +384,50 @@
         }
       },
       "meta": {
-        "validationStrategy": "JSON_SCHEMA",
-        "variables": {
-          "id" : "$/status"
+        "validationStrategy": "JSON_SCHEMA"
+      }
+    },
+    {
+      "when": {
+        "method": "GET",
+        "uri": "/players?filter.name.eq=Peter"
+      }
+    },
+    {
+      "then": {
+        "properties": {
+          "body": {
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "Peter"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "const": "{{peter-id}}"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "maxItems": 1,
+                "minItems": 1
+              }
+            }
+          }
         }
+      },
+      "meta": {
+        "validationStrategy": "JSON_SCHEMA"
       }
     }
   ]

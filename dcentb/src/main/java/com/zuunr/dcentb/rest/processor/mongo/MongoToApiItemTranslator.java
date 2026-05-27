@@ -4,7 +4,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public final class MongoToRestItemTranslator {
+public final class MongoToApiItemTranslator {
 
     public static JsonObject getRestItem(JsonObject mongoItem) {
         JsonValue itemId = null;

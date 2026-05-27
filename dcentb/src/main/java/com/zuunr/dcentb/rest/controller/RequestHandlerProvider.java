@@ -47,8 +47,8 @@ public class RequestHandlerProvider {
         JsonValue globalConnection = globalMongoConfig.get("connection", JsonValue.NULL);
         JsonValue globalDb = globalMongoConfig.get("db", JsonValue.NULL);
         String connectionString = mongoConfig.get("connection", globalConnection).getString();
-        String databaseName = mongoConfig.get("db").getString();
-        if (databaseName.isEmpty()) {
+        String databaseName = mongoConfig.get("db", JsonValue.NULL).getString();
+        if (databaseName == null || databaseName.isEmpty()) {
             databaseName = globalDb.getString();
         }
 
@@ -91,7 +91,8 @@ public class RequestHandlerProvider {
                 pathConfigMapper.addConfigForPathAndMethod(
                         path,
                         method,
-                        openApiDocumentWithoutPaths                                 // Makes it possible to
+                        openApiDocumentWithoutPaths
+                                .put("method", method)
                                 .put("path", path)                                  // get anything from
                                 .put("operation", operationsPerMethod.get(method))  // this JsonValue as
                                 .jsonValue()                                        // cached if needed

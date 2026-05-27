@@ -1,6 +1,6 @@
 package com.zuunr.dcentb.rest.processor;
 
-import com.zuunr.dcentb.rest.processor.mongo.MongoToRestItemTranslator;
+import com.zuunr.dcentb.rest.processor.mongo.MongoToApiItemTranslator;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonArrayBuilder;
 import com.zuunr.json.JsonObject;
@@ -21,7 +21,7 @@ public class MongoToRestCollectionTranslator implements Processor {
 
         JsonArrayBuilder itemsBuilder = JsonArray.EMPTY.builder();
         for (JsonValue item : mongoResult.get("cursor").get("firstBatch").getJsonArray()) {
-            itemsBuilder.add(MongoToRestItemTranslator.getRestItem(item.getJsonObject()));
+            itemsBuilder.add(MongoToApiItemTranslator.getRestItem(item.getJsonObject()));
         }
         return requestContext
                 .put("response", JsonObject.EMPTY

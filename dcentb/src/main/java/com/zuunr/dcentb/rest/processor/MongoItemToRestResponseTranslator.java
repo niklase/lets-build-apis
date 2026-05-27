@@ -1,6 +1,7 @@
 package com.zuunr.dcentb.rest.processor;
 
 import com.zuunr.api.openapi.JsonUri;
+import com.zuunr.dcentb.rest.processor.mongo.MongoToApiItemTranslator;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
@@ -19,7 +20,7 @@ public class MongoItemToRestResponseTranslator implements Processor {
 
         JsonObject mongoItem = requestContext.get("mongoCommand").get("insert").get("documents").get(0).getJsonObject();
 
-        JsonObject item = com.zuunr.dcentb.rest.processor.mongo.MongoToRestItemTranslator.getRestItem(mongoItem);
+        JsonObject item = MongoToApiItemTranslator.getRestItem(mongoItem);
 
         JsonUri requestUri = requestContext.get(REQUEST).get("uri").as(JsonUri.class);
         String basePath = requestUri.getPath().getString();
