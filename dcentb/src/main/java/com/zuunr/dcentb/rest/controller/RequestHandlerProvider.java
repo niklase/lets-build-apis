@@ -2,8 +2,8 @@ package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.Response;
-import com.zuunr.dcentb.rest.requesthandler.CreateItemRequestHandler;
-import com.zuunr.dcentb.rest.requesthandler.ReadCollectionRequestHandler;
+import com.zuunr.dcentb.rest.requesthandler.MethodNotAllowedRequestHandler;
+import com.zuunr.dcentb.rest.requesthandler.NotFoundRequestHandler;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;
@@ -16,6 +16,9 @@ import java.io.IOException;
 
 @Component
 public class RequestHandlerProvider {
+
+    private static final RequestHandlerHandle _404_HANDLE = new RequestHandlerHandle(new NotFoundRequestHandler(), JsonObject.EMPTY);
+    private static final RequestHandlerHandle _405_HANDLE = new RequestHandlerHandle(new MethodNotAllowedRequestHandler(), JsonObject.EMPTY);
 
     private PathConfigMapper pathConfigMapper;
 
@@ -66,7 +69,8 @@ public class RequestHandlerProvider {
                         JsonObject updatedMongodb = mongodb.getJsonObject();
                         if (databaseName != null) {
                             updatedMongodb = updatedMongodb.put("db", databaseName);
-                        }if (connectionString != null) {
+                        }
+                        if (connectionString != null) {
                             updatedMongodb = updatedMongodb.put("connection", connectionString);
                         }
 
@@ -102,36 +106,27 @@ public class RequestHandlerProvider {
         return pathConfigMapper;
     }
 
-    public RequestHandler getRequestHandler(JsonObject request) {
-        return getRequestHandler(Request.of(request));
+    public RequestHandlerHandle getRequestHandlerHandle(JsonObject request) {
+        return getRequestHandlerHandle(Request.of(request));
     }
 
-    public RequestHandler getRequestHandler(Request request) {
-        return getRequestHandler(request.getURI().getPath(), request.getMethod());
+    public RequestHandlerHandle getRequestHandlerHandle(Request request) {
+        RequestHandlerHandle handle = getRequestHandlerHandle(request.getURI().getPath(), request.getMethod());
+        return handle;
     }
 
-    private RequestHandler getRequestHandler(String path, String method) {
+    private RequestHandlerHandle getRequestHandlerHandle(String path, String method) {
         try {
-            JsonObject operationConfig = pathConfigMapper.getConfig(path, method.toLowerCase());
-            JsonValue config = operationConfig.get("config");
-            if ("post".equalsIgnoreCase(method)) {
-                return config.as(CreateItemRequestHandler.class);
-            }
-            return config.as(ReadCollectionRequestHandler.class);
+            JsonObject operationConfigAndBicatch = pathConfigMapper.getConfig(path, method.toLowerCase());
+            JsonValue operationConfigJsonValue = operationConfigAndBicatch.get("config");
+            OperationConfig operationConfig = operationConfigJsonValue.as(OperationConfig.class);
+            JsonObject pathParams = operationConfigAndBicatch.get("pathParams", JsonObject.EMPTY).getJsonObject();
+            JsonObject bicatch = JsonObject.EMPTY.put("pathParameters", pathParams);
+            return new RequestHandlerHandle(operationConfig.getRequestHandler(), bicatch);
         } catch (MethodNotFoundException e) {
-            return new RequestHandler() {
-                @Override
-                public Response process(Request request) {
-                    return new Response(JsonObject.EMPTY.put("status", 405));
-                }
-            };
+            return _405_HANDLE;
         } catch (PathNotFoundException e) {
-            return new RequestHandler() {
-                @Override
-                public Response process(Request request) {
-                    return new Response(JsonObject.EMPTY.put("status", 404));
-                }
-            };
+            return _404_HANDLE;
         }
     }
 }

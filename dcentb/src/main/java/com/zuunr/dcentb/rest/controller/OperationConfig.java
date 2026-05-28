@@ -12,7 +12,6 @@ public class OperationConfig {
 
     public OperationConfig(JsonValue config) {
         this.config = config.getJsonObject();
-
     }
 
     public RequestHandler getRequestHandler() {

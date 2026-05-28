@@ -1,7 +1,6 @@
 package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
-import com.zuunr.dcentb.rest.Response;
 import com.zuunr.dcentb.rest.requesthandler.DcentbGivenWhenThenTester;
 import com.zuunr.json.JsonValue;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
@@ -49,8 +48,7 @@ public class ControllerIT extends DcentbGivenWhenThenTester {
         }
         Request<Object> request = Request.of(given.getJsonObject());
         return requestHandlerProvider
-                .getRequestHandler(request)
-                .process(request)
+                .getRequestHandlerHandle(request).runRequestHandler(request)
                 .asJsonObject()
                 .jsonValue();
     }

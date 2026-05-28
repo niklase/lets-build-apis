@@ -20,8 +20,7 @@ public class Controller {
     }
 
     public Response execute(Request request) {
-
-        RequestHandler requestHandler = requestHandlerProvider.getRequestHandler(request);
-        return requestHandler.process(request);
+        RequestHandlerHandle handle = requestHandlerProvider.getRequestHandlerHandle(request);
+        return handle.runRequestHandler(request);
     }
 }
