@@ -8,16 +8,22 @@ import java.util.regex.Matcher;
 
 public class MongoJsonDBCommandCreator implements Processor {
 
-    private JsonValue jsonValue;
+    private static final JsonArray COLLECTION_NAME = JsonArray.of("operation", "x-dcentb", "mongodb", "collection");
 
-    public MongoJsonDBCommandCreator(JsonValue jsonValue) {
-        this.jsonValue = jsonValue;
+    private JsonValue openApiConfig;
+    private String collectionName;
+
+
+    public MongoJsonDBCommandCreator(JsonValue openApiConfig) {
+
+        this.openApiConfig = openApiConfig;
+        this.collectionName = openApiConfig.get(COLLECTION_NAME).asString();
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
         JsonObject deserializedRequest = requestContext.get(REQUEST).getJsonObject();
-        JsonValue collection = requestContext.get("collection", "players");
+        JsonValue collection = requestContext.get("collection", collectionName);
         JsonArray filterOrder = requestContext.get("filterOrder", JsonArray.EMPTY).getJsonArray();
         JsonObject query = deserializedRequest.get("query", JsonObject.EMPTY).getJsonObject();
         JsonValue defaultLimit = requestContext.get("defaultLimit", 100);
@@ -85,8 +91,8 @@ public class MongoJsonDBCommandCreator implements Processor {
                 tuple.size() == 1
                         ? 1
                         : tuple.get(1).getString().equals("desc")
-                        ? -1
-                        : 1);
+                          ? -1
+                          : 1);
     }
 
     public JsonArray createFilterArray(JsonObject query, JsonArray orderOfTranslated) {
@@ -111,23 +117,24 @@ public class MongoJsonDBCommandCreator implements Processor {
         JsonArray leftOverValues = leftOvers.values();
 
         for (int i = 0; i < leftOvers.size(); i++) {
-
-
+            String key = leftOverKeys.get(i).getString();
+            if (!key.startsWith("filter.")) {
+                continue;
+            }
             JsonArray keyArray = leftOverValues.get(i, JsonValue.NULL).getJsonArray();
             if (keyArray != null && keyArray.size() > 0) {
-                JsonValue translated = translate(leftOverKeys.get(i).getString(), keyArray.get(0));
+                JsonValue translated = translate(key, keyArray.get(0));
                 if (translated != null) {
                     builder.add(translated);
                 }
             }
         }
-
         return builder.build();
     }
 
     private JsonValue translate(String key, JsonValue value) {
 
-        Pattern keyPattern = JsonValue.of("^filter[.](?<fieldName>.*)[.](?<constraint>[^.]+)$").as(Pattern.class);
+        Pattern keyPattern = JsonValue.of("^filter[.](?<fieldName>.*)[.](?<constraint>[^.]+)$").as(Pattern.class); // TODO: Make this more performant. Regex not needed.
 
         Matcher matcher = keyPattern.compiled().matcher(key);
 

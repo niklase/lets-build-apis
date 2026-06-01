@@ -1,7 +1,6 @@
 package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
-import com.zuunr.dcentb.rest.Response;
 import com.zuunr.dcentb.rest.requesthandler.MethodNotAllowedRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.NotFoundRequestHandler;
 import com.zuunr.json.JsonObject;
@@ -119,7 +118,7 @@ public class RequestHandlerProvider {
         try {
             JsonObject operationConfigAndBicatch = pathConfigMapper.getConfig(path, method.toLowerCase());
             JsonValue operationConfigJsonValue = operationConfigAndBicatch.get("config");
-            OperationConfig operationConfig = operationConfigJsonValue.as(OperationConfig.class);
+            RequestHandlerConfig operationConfig = operationConfigJsonValue.as(RequestHandlerConfig.class);
             JsonObject pathParams = operationConfigAndBicatch.get("pathParams", JsonObject.EMPTY).getJsonObject();
             JsonObject bicatch = JsonObject.EMPTY.put("pathParameters", pathParams);
             return new RequestHandlerHandle(operationConfig.getRequestHandler(), bicatch);

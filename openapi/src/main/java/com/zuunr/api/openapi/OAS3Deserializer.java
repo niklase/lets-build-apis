@@ -28,6 +28,7 @@ public class OAS3Deserializer {
     public static JsonObject deserializeRequest(JsonObject exchangeWithRequestAndBody, JsonObject openApiOperationObject) {
         return deserializeRequest(exchangeWithRequestAndBody, null, openApiOperationObject);
     }
+
     public static JsonObject deserializeRequest(JsonObject exchangeWithRequest, InputStream requestBodyInputStream, JsonObject openApiOperationObject) {
 
         JsonValue errors;
@@ -161,6 +162,7 @@ public class OAS3Deserializer {
             JsonValue oasType;
             // If OAS schema is array
             if ("array".equals(oasRootType.getString())) {
+                oasType = oasPropertySchema.get(Keywords.ITEMS, JsonObject.EMPTY).get(Keywords.TYPE, "string");
                 oasType = oasPropertySchema.get(Keywords.ITEMS, JsonObject.EMPTY).get(Keywords.TYPE, "string");
             } else {
                 oasType = oasRootType;
@@ -362,7 +364,7 @@ public class OAS3Deserializer {
                         }
                     }
                 }
-                 """;
+                """;
 
         JsonObject properties = schema.get(Keywords.PROPERTIES, JsonObject.EMPTY).getJsonObject();
         JsonArray propertiesKeys = properties.keys();
@@ -411,9 +413,14 @@ public class OAS3Deserializer {
         JsonObject errorResult;
         JsonValue parameterSchemaWhereItemsAreStrings = parametersToJsonSchema(openApiSpec, true);
         JsonValue parameterSchema = parametersToJsonSchema(openApiSpec, false);
-        String queryString = URI.create(exchangeWithRequest.get("request", JsonObject.EMPTY).get("uri", JsonValue.EMPTY_STRING).getString()).getQuery();
+        JsonObject request = exchangeWithRequest.get("request", JsonObject.EMPTY).getJsonObject();
+        String queryString = URI.create(request.get("uri", JsonValue.EMPTY_STRING).getString()).getQuery();
+        JsonObject pathParameters = request.get("pathParameters", JsonObject.EMPTY).getJsonObject();
         JsonObject multiValueParametersForQuery = parseQueryStringToMultiValueJsonObject("queryString", JsonObject.EMPTY.put("request", JsonObject.EMPTY.put("queryString", queryString)));
-        JsonObject stringModel = JsonObject.EMPTY.put("request", JsonObject.EMPTY.put("query", multiValueParametersForQuery));
+        JsonObject stringModel = JsonObject.EMPTY.put("request", JsonObject.EMPTY
+                .put("query", multiValueParametersForQuery)
+                .put("pathParameters", pathParameters)
+        );
 
         JsonObject validationResult = VALIDATOR.validate(
                 stringModel.jsonValue(),
@@ -425,8 +432,9 @@ public class OAS3Deserializer {
             throw new ApiErrorException(API_ERROR_CREATOR.createErrorsObject(validationResult, stringModel.jsonValue(), parameterSchemaWhereItemsAreStrings.as(JsonSchema.class)).jsonValue());
         } else {
             try {
-                JsonObject convertedModel = convertStringArrayToSchemaType("query", parameterSchema, stringModel);
-                return JsonObject.EMPTY.put("query", convertedModel);
+                JsonObject convertedModelQuery = convertStringArrayToSchemaType("query", parameterSchema, stringModel);
+                convertedModelQuery = convertedModelQuery.put("pathParameters", JsonObject.EMPTY);
+                return JsonObject.EMPTY.put("query", convertedModelQuery);
             } catch (JsonSchemaValidationException e) {
                 throw new ApiErrorException(
                         API_ERROR_CREATOR.createErrorsObject(
@@ -460,7 +468,7 @@ public class OAS3Deserializer {
             JsonArray stringArray = queryAsMultiValue.get(key, JsonValue.NULL).getJsonArray();
 
             if (Keywords.ARRAY.equals(firstLevelType)
-                    && JsonValue.ONE.equals(propertyValues.get(i).get(Keywords.MAX_ITEMS)) // explode = false
+                && JsonValue.ONE.equals(propertyValues.get(i).get(Keywords.MAX_ITEMS)) // explode = false
             ) {
                 JsonArray values = queryAsMultiValue.get(propertyKeys.get(i).getString(), JsonArray.EMPTY).getJsonArray();
                 if (!values.isEmpty()) {
@@ -513,7 +521,7 @@ public class OAS3Deserializer {
 
     private static JsonSchemaValidationException createJsonSchemaValidationException(
             JsonValue schema, JsonObject
-            propertiesOfQuerySchema,
+                    propertiesOfQuerySchema,
             JsonObject queryAsMultiValue) {
         JsonSchema updatedSchema = schema.put(JsonArray.of(Keywords.PROPERTIES, "query", Keywords.PROPERTIES), schemaOfConvertibleStrings(propertiesOfQuerySchema)).as(JsonSchema.class);
         throw new JsonSchemaValidationException(
@@ -525,41 +533,60 @@ public class OAS3Deserializer {
 
         JsonArray oas3parameters = openApiSpec.get("parameters", JsonArray.EMPTY).getJsonArray();
         JsonValue additionalQueryParameters = openApiSpec.get("additionalQueryParameters", JsonValue.FALSE);
-        JsonObject query = JsonObject.EMPTY.put(Keywords.TYPE, "object").put(Keywords.ADDITIONAL_PROPERTIES, additionalQueryParameters);
+        JsonObject querySchema = JsonObject.EMPTY.put(Keywords.TYPE, "object").put(Keywords.ADDITIONAL_PROPERTIES, additionalQueryParameters);
+        JsonObject pathSchema = JsonObject.EMPTY.put(Keywords.TYPE, "object").put(Keywords.ADDITIONAL_PROPERTIES, false);
 
         for (int i = 0; i < oas3parameters.size(); i++) {
-            JsonValue parameter = oas3parameters.get(i);
-            JsonValue maxItems = parameter.get("explode", true).getBoolean() ? null : JsonValue.ONE;
+            JsonObject parameter = oas3parameters.get(i).getJsonObject();
 
             if ("query".equals(parameter.get("in").getString())) {
-
-                JsonValue name = parameter.get("name");
-                JsonObjectBuilder propertyValueBuilder = JsonObject.EMPTY.builder()
-                        .put(Keywords.TYPE, "array")
-                        .put(Keywords.ITEMS, JsonObject.EMPTY
-                                .put(Keywords.TYPE, itemsTypeAlwaysString
-                                        ? "string"
-                                        : parameter.get("schema", JsonObject.EMPTY).getJsonObject()
-                                        .get(Keywords.ITEMS, parameter.get("schema", JsonObject.EMPTY))
-                                        .get(Keywords.TYPE, Keywords.STRING).getString()));
-
-                if (maxItems != null) {
-                    propertyValueBuilder.put(Keywords.MAX_ITEMS, maxItems);
-                }
-
-                if (parameter.get("required", false).getBoolean()) {
-                    query = query.put(Keywords.REQUIRED, query.get(Keywords.REQUIRED, JsonArray.EMPTY).getJsonArray().add(name));
-                }
-                query = query
-                        .put(JsonArray.of(Keywords.PROPERTIES, name), propertyValueBuilder.build());
+                querySchema = addParameterToSchema(querySchema, parameter, itemsTypeAlwaysString);
+            } else if ("path".equals(parameter.get("in").getString())) {
+                pathSchema = addParameterToSchema(pathSchema, parameter, itemsTypeAlwaysString);
             }
         }
         return JsonObject.EMPTY.put(Keywords.PROPERTIES, JsonObject.EMPTY
                         .put("request", JsonObject.EMPTY
                                 .put(Keywords.TYPE, "object")
                                 .put(Keywords.ADDITIONAL_PROPERTIES, false)
-                                .put(Keywords.PROPERTIES, JsonObject.EMPTY.put("query", query))))
+                                .put(Keywords.PROPERTIES, JsonObject.EMPTY
+                                        .put("query", querySchema)
+                                        .put("pathParameters", pathSchema)
+                                )))
                 .jsonValue();
+    }
+
+    private static JsonObject addParameterToSchema(JsonObject parameterSchemaToBeUpdated, JsonObject parameter, boolean itemsTypeAlwaysString) {
+        JsonValue name = parameter.get("name");
+        String in = parameter.get("in").getString();
+        JsonValue maxItems = parameter.get("explode", true).getBoolean() ? null : JsonValue.ONE;
+        JsonObjectBuilder propertyValueBuilder = JsonObject.EMPTY.builder();
+        if ("path".equals(in)) {
+            propertyValueBuilder.put(Keywords.TYPE, itemsTypeAlwaysString
+                    ? "string"
+                    : parameter.get("schema", JsonObject.EMPTY).getJsonObject()
+                      .get(Keywords.ITEMS, parameter.get("schema", JsonObject.EMPTY))
+                      .get(Keywords.TYPE, Keywords.STRING).getString());
+        } else { // both query and header parameters are possibly multi-valued
+            propertyValueBuilder
+                    .put(Keywords.TYPE, "array")
+                    .put(Keywords.ITEMS, JsonObject.EMPTY
+                            .put(Keywords.TYPE, itemsTypeAlwaysString
+                                    ? "string"
+                                    : parameter.get("schema", JsonObject.EMPTY).getJsonObject()
+                                      .get(Keywords.ITEMS, parameter.get("schema", JsonObject.EMPTY))
+                                      .get(Keywords.TYPE, Keywords.STRING).getString()));
+            if (maxItems != null) {
+                propertyValueBuilder.put(Keywords.MAX_ITEMS, maxItems);
+            }
+        }
+
+        if (parameter.get("required", false).getBoolean()) {
+            parameterSchemaToBeUpdated = parameterSchemaToBeUpdated.put(Keywords.REQUIRED, parameterSchemaToBeUpdated.get(Keywords.REQUIRED, JsonArray.EMPTY).getJsonArray().add(name));
+        }
+        parameterSchemaToBeUpdated = parameterSchemaToBeUpdated
+                .put(JsonArray.of(Keywords.PROPERTIES, name), propertyValueBuilder.build());
+        return parameterSchemaToBeUpdated;
     }
 
     public static JsonObject parseQueryStringToMultiValueJsonObject(String fieldNameInRequestModel, JsonObject
