@@ -20,6 +20,7 @@ public class ResponseAccessController implements Processor {
         JsonValue body = requestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject().get("body");
         JsonSchemaValidator validator = new JsonSchemaValidator();
         JsonValue filteredRequestContext = validator.filter(requestContext.jsonValue(), responseFilterSchema);
+        filteredRequestContext = filteredRequestContext == null ? JsonObject.EMPTY.jsonValue() : filteredRequestContext;
         JsonObject response = filteredRequestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject();
         JsonValue filteredResponseBody = response.get("body");
 

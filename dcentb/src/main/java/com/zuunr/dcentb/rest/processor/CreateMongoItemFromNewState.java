@@ -1,21 +1,20 @@
-package com.zuunr.dcentb.rest.processor.mongo;
+package com.zuunr.dcentb.rest.processor;
 
-import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class MongoItemCreator implements Processor {
+public class CreateMongoItemFromNewState implements Processor {
 
     private final String path;
 
-    public MongoItemCreator(JsonValue config) {
+    public CreateMongoItemFromNewState(JsonValue config) {
         path = config.get("path").getString();
 
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
-        JsonObject restItem = requestContext.get("apiItem").getJsonObject();
+        JsonObject restItem = requestContext.get("newState").getJsonObject();
 
         JsonObject meta = restItem.get("meta", JsonObject.EMPTY).getJsonObject();
         JsonObject mongoItem = restItem

@@ -9,7 +9,7 @@ public final class MongoToApiItemTranslator {
     public static JsonObject getRestItem(JsonObject mongoItem) {
         JsonValue itemId = null;
         JsonValue _id = mongoItem.get("_id");
-        if (_id.isString()){
+        if (_id.isString()) {
             itemId = _id;
         } else if (_id.get("ObjectId") != null) {
             itemId = _id.get("ObjectId");

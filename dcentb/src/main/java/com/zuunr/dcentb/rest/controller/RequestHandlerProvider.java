@@ -1,8 +1,8 @@
 package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
-import com.zuunr.dcentb.rest.requesthandler.MethodNotAllowedRequestHandler;
-import com.zuunr.dcentb.rest.requesthandler.NotFoundRequestHandler;
+import com.zuunr.dcentb.rest.requesthandler.basic.MethodNotAllowedRequestHandler;
+import com.zuunr.dcentb.rest.requesthandler.basic.NotFoundRequestHandler;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;

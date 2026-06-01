@@ -275,8 +275,11 @@
             "type": "object",
             "properties": {
               "location": {
-                "type": "string",
-                "pattern": "^/players/[a-f0-9]{32}$"
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^/players/[a-f0-9]{32}$"
+                }
               }
             },
             "required": [

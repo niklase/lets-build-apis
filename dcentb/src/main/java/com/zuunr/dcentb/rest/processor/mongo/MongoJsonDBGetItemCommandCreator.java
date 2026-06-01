@@ -22,18 +22,25 @@ public class MongoJsonDBGetItemCommandCreator implements Processor {
     @Override
     public JsonObject process(JsonObject requestContext){
 
-        String collection = requestHandlerConfig.getOperationConfig().getXDcentb().getMongodb().getCollection();
 
-        JsonObject mongoCommand = JsonObject.EMPTY
-                .put("find", JsonObject.EMPTY
-                        .put("collection", collection)
-                        .put("filter", JsonObject.EMPTY
-                                .put("_id", JsonArray.of(
-                                        JsonObject.EMPTY.put("$eq",
-                                        requestContext.get("request").get("pathParameters").get("id"))))));
+        String id = requestContext.get("request", JsonObject.EMPTY).get("pathParameters", JsonObject.EMPTY).get("id", JsonValue.NULL).getString();
+
+        if (id != null) {
+
+            String collection = requestHandlerConfig.getOperationConfig().getXDcentb().getMongodb().getCollection();
+
+            JsonObject mongoCommand = JsonObject.EMPTY
+                    .put("find", JsonObject.EMPTY
+                            .put("collection", collection)
+                            .put("filter", JsonObject.EMPTY
+                                    .put("_id", JsonArray.of(
+                                            JsonObject.EMPTY.put("$eq",
+                                                    requestContext.get("request").get("pathParameters").get("id"))))));
 
 
-        return requestContext.put("mongoCommand", mongoCommand);
+            requestContext = requestContext.put("mongoCommand", mongoCommand);
+        }
+        return requestContext;
     }
 
 

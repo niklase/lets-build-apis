@@ -95,7 +95,7 @@ public abstract class GivenWhenThenTesterBase {
 
         for (int i = 1; i < tests.size(); i = i + 2) {
 
-            LOGGER.info("tests[{}]: {}", i, tests.get(i).get("description", "<no desciption>").getString());
+            LOGGER.info("tests[{}]: {}", i, tests.get(i).get("description", "<no description>").getString());
             JsonValue when = tests.get(i).get("when");
             if (when == null) {
                 throw new RuntimeException("Missing 'when' in test element: " + i);

@@ -1,6 +1,6 @@
 package com.zuunr.dcentb.rest.controller;
 
-import com.zuunr.dcentb.rest.requesthandler.CreateItemRequestHandler;
+import com.zuunr.dcentb.rest.requesthandler.CUDItemRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.ReadCollectionRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.ReadItemRequestHandler;
 import com.zuunr.json.JsonObject;
@@ -23,6 +23,7 @@ public class RequestHandlerConfig {
             String path = config.get("path").getString();
 
 
+
             if (method.equalsIgnoreCase("get")) {
 
                 if (path.matches(".*/\\{[^}]+\\}$")) {
@@ -30,18 +31,18 @@ public class RequestHandlerConfig {
                 } else {
                     requestHandler = config.as(ReadCollectionRequestHandler.class);
                 }
-            }
-            if (method.equalsIgnoreCase("post")) {
-                requestHandler = config.as(CreateItemRequestHandler.class);
+            } else if (method.equalsIgnoreCase("post")) {
+                requestHandler = config.as(CUDItemRequestHandler.class);
+            } else if (method.equalsIgnoreCase("patch")) {
+                requestHandler = config.as(CUDItemRequestHandler.class);
             }
         }
         return requestHandler;
     }
 
 
-
-     public OperationConfig getOperationConfig(){
+    public OperationConfig getOperationConfig() {
         return config.get("operation").as(OperationConfig.class);
-     }
+    }
 
 }

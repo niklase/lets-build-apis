@@ -1,6 +1,5 @@
 package com.zuunr.dcentb.rest.processor;
 
-import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.mongodb.MongoJsonDB;
@@ -16,6 +15,11 @@ public class MongoJsonDBCommandRunner implements Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
-        return requestContext.put("mongoResult",  mongoDB.runCommand(requestContext.get("mongoCommand").getJsonObject()));
+
+        JsonObject mongoCommand = requestContext.get("mongoCommand", JsonValue.NULL).getJsonObject();
+        if (mongoCommand != null) {
+            requestContext = requestContext.put("mongoResult", mongoDB.runCommand(mongoCommand));
+        }
+        return requestContext;
     }
 }

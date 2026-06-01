@@ -1,4 +1,4 @@
-package com.zuunr.dcentb.rest.requesthandler;
+package com.zuunr.dcentb.rest.requesthandler.basic;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.Response;

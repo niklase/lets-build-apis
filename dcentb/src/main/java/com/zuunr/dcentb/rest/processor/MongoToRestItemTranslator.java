@@ -12,6 +12,8 @@ public class MongoToRestItemTranslator implements Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
+
+        JsonObject request = requestContext.get("request").getJsonObject();
         JsonObject mongoResult = requestContext.get("mongoResult", JsonObject.EMPTY).getJsonObject();
 
         if (!mongoResult.get("ok").getInteger().equals(1)) {
@@ -23,10 +25,16 @@ public class MongoToRestItemTranslator implements Processor {
             return requestContext.put("response", JsonObject.EMPTY.put("status", 404));
         }
 
-        JsonObject item = MongoToApiItemTranslator.getRestItem(firstBatch.get(0).getJsonObject());
-        return requestContext
-                .put("response", JsonObject.EMPTY
-                        .put("status", 200)
-                        .put("body", item));
+        JsonObject currentState = MongoToApiItemTranslator.getRestItem(firstBatch.get(0).getJsonObject());
+
+        requestContext = requestContext.put("currentState", currentState);
+
+        if ("GET".equalsIgnoreCase(request.get("method").getString())) {
+            requestContext = requestContext
+                    .put("response", JsonObject.EMPTY
+                            .put("status", 200)
+                            .put("body", currentState));
+        }
+        return requestContext;
     }
 }

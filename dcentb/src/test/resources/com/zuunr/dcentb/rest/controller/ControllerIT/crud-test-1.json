@@ -177,6 +177,141 @@
                   }
                 }
               }
+            },
+            "/players/{id}": {
+              "get": {
+                "parameters": [
+                  {
+                    "in": "path",
+                    "name": "id",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "players",
+                    "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+                    "db": "dcentb-mytest"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "productA",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "customerIdOfOrder": {
+                                      "const": {
+                                        "$data": "/userInfo/customerIdOfUser"
+                                      },
+                                      "equals": [
+                                        "/userInfo/customerIdOfUser"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "permission": "AUTHENTICATED_DEFAULT",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "name": false
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "responseSchema": {
+                          "properties": {
+                            "response": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "name": {
+                                            "enum": [
+                                              "Peter"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "patch": {
+                "parameters": [
+                  {
+                    "in": "path",
+                    "name": "id",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "age": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "players",
+                    "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+                    "db": "dcentb-mytest"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "AUTHENTICATED_DEFAULT",
+                        "requestSchema": {},
+                        "responseSchema": {}
+                      }
+                    ]
+                  }
+                }
+              }
             }
           }
         }
@@ -205,8 +340,11 @@
             "type": "object",
             "properties": {
               "location": {
-                "type": "string",
-                "pattern": "^/players/[a-f0-9]{32}$"
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^/players/[a-f0-9]{32}$"
+                }
               }
             },
             "required": [
@@ -275,8 +413,11 @@
             "type": "object",
             "properties": {
               "location": {
-                "type": "string",
-                "pattern": "^/players/[a-f0-9]{32}$"
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^/players/[a-f0-9]{32}$"
+                }
               }
             },
             "required": [
@@ -320,7 +461,8 @@
       },
       "meta": {
         "setVariables": {
-          "{{peter-id}}": "/body/meta/id"
+          "{{peter-id}}": "/body/meta/id",
+          "{{peter-location}}": "/headers/location/0"
         }
       }
     },
@@ -428,6 +570,148 @@
       },
       "meta": {
         "validationStrategy": "JSON_SCHEMA"
+      }
+    },
+    {
+      "description": "Patching player of {{peter-location}} to new name 'Olle'",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{peter-location}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ]
+        },
+        "body": {
+          "name": "Olle"
+        }
+      }
+    },
+    {
+      "then": {
+        "type": "object",
+        "required": [
+          "status",
+          "body"
+        ],
+        "properties": {
+          "status": {
+            "const": 200
+          },
+          "body": {
+            "type": "object",
+            "required": [
+              "age",
+              "name",
+              "meta"
+            ],
+            "properties": {
+              "age": {
+                "const": 25
+              },
+              "name": {
+                "const": "Olle"
+              },
+              "meta": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "createdAt",
+                  "updatedAt",
+                  "href",
+                  "etag"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "href": {
+                    "type": "string"
+                  },
+                  "etag": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Fetching player of {{peter-location}} to new name 'Olle'",
+      "when": {
+        "method": "GET",
+        "uri": "{{peter-location}}",
+        "headers": {
+        }
+      }
+    },
+    {
+      "then": {
+        "type": "object",
+        "required": [
+          "status",
+          "body"
+        ],
+        "properties": {
+          "status": {
+            "const": 200
+          },
+          "body": {
+            "type": "object",
+            "required": [
+              "age",
+              "name",
+              "meta"
+            ],
+            "properties": {
+              "age": {
+                "const": 25
+              },
+              "name": {
+                "const": "Olle"
+              },
+              "meta": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "createdAt",
+                  "updatedAt",
+                  "href",
+                  "etag"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "href": {
+                    "type": "string"
+                  },
+                  "etag": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   ]
