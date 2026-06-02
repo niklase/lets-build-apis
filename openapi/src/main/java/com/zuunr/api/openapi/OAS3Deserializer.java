@@ -433,8 +433,9 @@ public class OAS3Deserializer {
         } else {
             try {
                 JsonObject convertedModelQuery = convertStringArrayToSchemaType("query", parameterSchema, stringModel);
-                convertedModelQuery = convertedModelQuery.put("pathParameters", JsonObject.EMPTY);
-                return JsonObject.EMPTY.put("query", convertedModelQuery);
+                return JsonObject.EMPTY
+                        .put("query", convertedModelQuery)
+                        .put("pathParameters", JsonObject.EMPTY);
             } catch (JsonSchemaValidationException e) {
                 throw new ApiErrorException(
                         API_ERROR_CREATOR.createErrorsObject(

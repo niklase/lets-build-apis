@@ -25,6 +25,9 @@
     "ok": true,
     "request": {
       "query": {
+      },
+      "pathParameters": {
+
       }
     }
   }

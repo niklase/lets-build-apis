@@ -28,7 +28,8 @@
         "age": [
           27
         ]
-      }
+      },
+        "pathParameters": {}
     }
   }
 }

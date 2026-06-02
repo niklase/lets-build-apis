@@ -4,7 +4,6 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-import java.util.UUID;
 
 public class MongoJsonDBInsertCommandCreator implements Processor {
 
@@ -20,12 +19,21 @@ public class MongoJsonDBInsertCommandCreator implements Processor {
 
         JsonValue mongoItem = requestContext.get("mongoItem");
 
-        JsonValue insertCommand = JsonObject.EMPTY.put("insert", JsonObject.EMPTY
+        JsonValue upsertCommand = JsonObject.EMPTY.put("update", JsonObject.EMPTY
                 .put("collection", collection)
-                .put("documents", JsonArray.of(mongoItem)))
+                .put("updates", JsonArray.of(
+                        JsonObject.EMPTY
+                                .put("q", JsonObject.EMPTY
+                                        .put("$and", JsonArray.of(
+                                                JsonObject.EMPTY.put("_id", JsonArray.of(
+                                                        JsonObject.EMPTY.put("$eq", mongoItem.get("_id")))),
+                                                JsonObject.EMPTY.put("meta.etag", JsonArray.of(
+                                                        JsonObject.EMPTY.put("$eq", mongoItem.get("meta", JsonObject.EMPTY).get("etag")))))))
+                                .put("u", mongoItem)
+                                .put("upsert", true))))
                 .jsonValue();
 
         return requestContext
-                .put("mongoCommand", insertCommand);
+                .put("mongoCommand", upsertCommand);
     }
 }

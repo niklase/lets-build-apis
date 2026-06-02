@@ -46,7 +46,8 @@
           "Peter",
           "Andersson"
         ]
-      }
+      },
+        "pathParameters": {}
     }
   }
 }
