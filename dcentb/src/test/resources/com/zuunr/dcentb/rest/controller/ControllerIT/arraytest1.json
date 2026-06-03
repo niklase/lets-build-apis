@@ -80,9 +80,7 @@
                 ],
                 "x-dcentb": {
                   "mongodb": {
-                    "collection": "players",
-                    "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-                    "db": "dcentb-mytest"
+                    "collection": "players"
                   },
                   "accessControl": {
                     "permissionSchemas": [

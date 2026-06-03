@@ -6,6 +6,8 @@ import com.zuunr.json.JsonValue;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import com.zuunr.mongodb.MongoJsonDB;
 
+import java.util.Map;
+
 /**
  * Base class for dcentb request-handler integration tests.
  *
@@ -33,9 +35,11 @@ import com.zuunr.mongodb.MongoJsonDB;
  */
 public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase {
 
+    protected JsonObject dbSetup;
+
     @Override
     public void doGiven(JsonValue given) {
-        JsonObject dbSetup = given.get("dbSetup", JsonValue.NULL).getJsonObject();
+        dbSetup = given.get("dbSetup", JsonValue.NULL).getJsonObject();
         if (dbSetup != null) {
             JsonObject mongoConfig = JsonObject.EMPTY
                     .put("connection", dbSetup.get("connection"))
@@ -46,5 +50,31 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
                 mongoDB.runCommand(commands.get(i).getJsonObject());
             }
         }
+    }
+
+    protected JsonObject injectDbSetupIntoConfig(JsonObject config) {
+        if (dbSetup == null) return config;
+        JsonValue connection = dbSetup.get("connection");
+        JsonValue db = dbSetup.get("db");
+        JsonObject paths = config.get("paths", JsonObject.EMPTY).getJsonObject();
+        JsonObject patchedPaths = paths;
+        for (Map.Entry<String, JsonValue> pathEntry : paths.entrySet()) {
+            JsonObject pathItem = pathEntry.getValue().getJsonObject();
+            JsonObject patchedPathItem = pathItem;
+            for (Map.Entry<String, JsonValue> methodEntry : pathItem.entrySet()) {
+                JsonObject operation = methodEntry.getValue().getJsonObject();
+                if (operation == null) continue;
+                JsonValue xDcentb = operation.get("x-dcentb");
+                if (xDcentb != null && xDcentb.get("mongodb") != null) {
+                    JsonObject mongodb = xDcentb.get("mongodb").getJsonObject()
+                            .put("connection", connection)
+                            .put("db", db);
+                    operation = operation.put("x-dcentb", xDcentb.getJsonObject().put("mongodb", mongodb));
+                    patchedPathItem = patchedPathItem.put(methodEntry.getKey(), operation);
+                }
+            }
+            patchedPaths = patchedPaths.put(pathEntry.getKey(), patchedPathItem);
+        }
+        return config.put("paths", patchedPaths);
     }
 }

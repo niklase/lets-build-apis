@@ -2,6 +2,7 @@ package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.requesthandler.DcentbGivenWhenThenTester;
+import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +38,8 @@ public class ControllerIT extends DcentbGivenWhenThenTester {
     @Override
     public void doGiven(JsonValue given) {
         super.doGiven(given);
-        requestHandlerProvider =  new RequestHandlerProvider(given.getJsonObject().get("config").getJsonObject());
+        JsonObject config = injectDbSetupIntoConfig(given.getJsonObject().get("config").getJsonObject());
+        requestHandlerProvider = new RequestHandlerProvider(config);
     }
 
     @Override
