@@ -10,7 +10,7 @@
       "given": {
         "dbSetup": {
           "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-          "db": "dcentb-mytest",
+          "db": "dcentb-demo",
           "commands": [
             {
               "drop": {
@@ -20,6 +20,11 @@
           ]
         },
         "config": {
+          "x-dcentb": {
+            "mongodb": {
+              "db": "dcentb-demo"
+            }
+          },
           "openapi": "3.1.0",
           "accessControl": {
             "userInfo": {
@@ -58,6 +63,16 @@
                         "responseSchema": true
                       }
                     ]
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": {}
+                      }
+                    }
                   }
                 }
               },
@@ -307,6 +322,60 @@
             },
             "/players/getCollection": {
               "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "offset": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "filter": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "object",
+                                "properties": {
+                                  "eq": {
+                                    "type": "string"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "age": {
+                                "type": "object",
+                                "properties": {
+                                  "lt": {
+                                    "type": "integer"
+                                  },
+                                  "gt": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "content": {
+                      "application/json": {
+                        "schema": {}
+                      }
+                    }
+                  }
+                },
                 "x-dcentb": {
                   "mongodb": {
                     "collection": "players"
@@ -725,7 +794,7 @@
       }
     },
     {
-      "description": "Fetching player of {{peter-location}} to new name 'Olle'",
+      "description": "Fetching player Alice with getCollection",
       "when": {
         "method": "POST",
         "uri": "/players/getCollection",

@@ -27,6 +27,7 @@ public class PostGetCollectionBodyToQueryProcessor implements Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
+
         JsonObject request = requestContext.get(REQUEST).getJsonObject();
 
         JsonValue methodValue = request.get("method");
@@ -45,20 +46,8 @@ public class PostGetCollectionBodyToQueryProcessor implements Processor {
             return requestContext;
         }
 
-        JsonValue bodyValue = request.get("body");
-        if (bodyValue == null) {
-            return requestContext;
-        }
+        JsonObject body = request.get("body").getJsonObject();
 
-        JsonObject body;
-        try {
-            body = JsonValueFactory.create(bodyValue.getString()).getJsonObject();
-        } catch (Exception e) {
-            return requestContext;
-        }
-        if (body == null) {
-            return requestContext;
-        }
 
         JsonObjectBuilder queryBuilder = JsonObject.EMPTY.builder();
 

@@ -30,17 +30,21 @@ public abstract class RequestHandlerBase implements RequestHandler {
     }
 
     public Response processInternally(Request request) {
-        JsonObject updatedRequestContext = JsonObject.EMPTY.put(Processor.REQUEST, request.asJsonObject());
-        for (Processor processor : getProcessors()) {
-            logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
-            updatedRequestContext = processor.process(updatedRequestContext);
-            JsonObject response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
-            if (response != null) {
+        try {
+            JsonObject updatedRequestContext = JsonObject.EMPTY.put(Processor.REQUEST, request.asJsonObject());
+            for (Processor processor : getProcessors()) {
                 logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
-                updatedRequestContext = responseAccessController.process(updatedRequestContext);
-                response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
-                return response.as(Response.class);
+                updatedRequestContext = processor.process(updatedRequestContext);
+                JsonObject response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
+                if (response != null) {
+                    logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
+                    updatedRequestContext = responseAccessController.process(updatedRequestContext);
+                    response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
+                    return response.as(Response.class);
+                }
             }
+        } catch (Exception e) {
+            logger.error("processInternally exception", e);
         }
         return JsonObject.EMPTY.put("status", 500).as(Response.class);
     }

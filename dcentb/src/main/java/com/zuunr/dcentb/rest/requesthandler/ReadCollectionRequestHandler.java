@@ -27,10 +27,10 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
 
         processors = new Processor[] {
                 apiKeyAuthenticator,
-                new PostGetCollectionBodyToQueryProcessor(),
                 oasRequestDeserializer,
                 userInfoProvider,
                 requestAccessController,
+                new PostGetCollectionBodyToQueryProcessor(),
                 mongoJsonDBCommandCreator,
                 mongoJsonDBCommandRunner,
                 //new RequestContextDebugProcessor()

@@ -1,147 +1,206 @@
-{
-  "openapi": "3.1.0",
-  "accessControl": {
-    "userInfo": {
-    }
-  },
-  "paths": {
-    "/players": {
-      "post": {
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "age": {
-                    "type": "integer"
+  {
+    "x-dcentb": {
+      "mongodb": {
+        "db": "dcentb-demo"
+      }
+    },
+    "openapi": "3.1.0",
+    "accessControl": {
+      "userInfo": {
+      }
+    },
+    "paths": {
+      "/players": {
+        "post": {
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "age": {
+                      "type": "integer"
+                    }
                   }
+                }
+              }
+            }
+          },
+          "x-dcentb": {
+            "mongodb": {
+              "collection": "players"
+            },
+            "accessControl": {
+              "permissionSchemas": [
+                {
+                  "permission": "AUTHENTICATED_DEFAULT",
+                  "requestSchema": {},
+                  "responseSchema": true
+                }
+              ]
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Created",
+              "content": {
+                "application/json": {
+                  "schema": {}
                 }
               }
             }
           }
         },
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players",
-
-            "db": "dcentb-mytest"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {},
-                "responseSchema": true
-              }
-            ]
+        "get": {
+          "parameters": [
+            {
+              "in": "query",
+              "name": "filter.name.eq",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer"
+              },
+              "required": false
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer"
+              },
+              "required": false
+            },
+            {
+              "in": "query",
+              "name": "orderBy",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "required": false
+            }
+          ],
+          "x-dcentb": {
+            "mongodb": {
+              "collection": "players"
+            },
+            "accessControl": {
+              "permissionSchemas": [
+                {
+                  "permission": "productA",
+                  "requestSchema": {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "customerIdOfOrder": {
+                                "const": {
+                                  "$data": "/userInfo/customerIdOfUser"
+                                },
+                                "equals": [
+                                  "/userInfo/customerIdOfUser"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "permission": "AUTHENTICATED_DEFAULT",
+                  "requestSchema": {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "name": false
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "responseSchema": {
+                    "properties": {
+                      "response": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "enum": [
+                                        "Peter"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
           }
         }
       },
-      "get": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter.name.eq",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer"
-            },
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "schema": {
-              "type": "integer"
-            },
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "orderBy",
-            "schema": {
-              "type": "array",
-              "items": {
+      "/players/{id}": {
+        "get": {
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
                 "type": "string"
               }
+            }
+          ],
+          "x-dcentb": {
+            "mongodb": {
+              "collection": "players"
             },
-            "required": false
-          }
-        ],
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players",
-            "db": "dcentb-mytest"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "productA",
-                "requestSchema": {
-                  "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "customerIdOfOrder": {
-                              "const": {
-                                "$data": "/userInfo/customerIdOfUser"
-                              },
-                              "equals": [
-                                "/userInfo/customerIdOfUser"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {
-                  "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "name": false
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "responseSchema": {
-                  "properties": {
-                    "response": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "enum": [
-                                      "Peter"
-                                    ]
-                                  }
-                                }
+            "accessControl": {
+              "permissionSchemas": [
+                {
+                  "permission": "productA",
+                  "requestSchema": {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "customerIdOfOrder": {
+                                "const": {
+                                  "$data": "/userInfo/customerIdOfUser"
+                                },
+                                "equals": [
+                                  "/userInfo/customerIdOfUser"
+                                ]
                               }
                             }
                           }
@@ -149,166 +208,168 @@
                       }
                     }
                   }
-                }
-              }
-            ]
-          }
-        }
-      }
-    },
-    "/players/getCollection": {
-      "post": {
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players",
-            "db": "dcentb-mytest"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {},
-                "responseSchema": true
-              }
-            ]
-          }
-        }
-      }
-    },
-    "/players/{id}": {
-      "get": {
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players",
-            "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-            "db": "dcentb-mytest"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "productA",
-                "requestSchema": {
-                  "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "customerIdOfOrder": {
-                              "const": {
-                                "$data": "/userInfo/customerIdOfUser"
-                              },
-                              "equals": [
-                                "/userInfo/customerIdOfUser"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {
-                  "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "name": false
-                          }
-                        }
-                      }
-                    }
-                  }
                 },
-                "responseSchema": {
-                  "properties": {
-                    "response": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "enum": [
-                                      "Peter"
-                                    ]
-                                  }
-                                }
-                              }
+                {
+                  "permission": "AUTHENTICATED_DEFAULT",
+                  "requestSchema": {
+                    "properties": {
+                      "request": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "name": false
                             }
                           }
                         }
                       }
                     }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      "patch": {
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
                   },
-                  "age": {
-                    "type": "integer"
+                  "responseSchema": {
+                    "properties": {
+                      "response": {
+                        "properties": {
+                          "body": {
+                            "properties": {
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "enum": [
+                                        "Peter"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   }
                 }
-              }
+              ]
             }
           }
         },
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players",
-            "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-            "db": "dcentb-mytest"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {},
-                "responseSchema": {}
+        "patch": {
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
               }
-            ]
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "age": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x-dcentb": {
+            "mongodb": {
+              "collection": "players"
+            },
+            "accessControl": {
+              "permissionSchemas": [
+                {
+                  "permission": "AUTHENTICATED_DEFAULT",
+                  "requestSchema": {},
+                  "responseSchema": {}
+                }
+              ]
+            }
+          }
+        }
+      },
+      "/players/getCollection": {
+        "post": {
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "filter": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "object",
+                          "properties": {
+                            "eq": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "age": {
+                          "type": "object",
+                          "properties": {
+                            "lt": {
+                              "type": "integer"
+                            },
+                            "gt": {
+                              "type": "integer"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          },
+          "x-dcentb": {
+            "mongodb": {
+              "collection": "players"
+            },
+            "accessControl": {
+              "permissionSchemas": [
+                {
+                  "permission": "AUTHENTICATED_DEFAULT",
+                  "requestSchema": {},
+                  "responseSchema": true
+                }
+              ]
+            }
           }
         }
       }
     }
   }
-}
