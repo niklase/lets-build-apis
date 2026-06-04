@@ -304,6 +304,24 @@
                   }
                 }
               }
+            },
+            "/players/getCollection": {
+              "post": {
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "players"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "AUTHENTICATED_DEFAULT",
+                        "requestSchema": {},
+                        "responseSchema": true
+                      }
+                    ]
+                  }
+                }
+              }
             }
           }
         }
@@ -698,6 +716,94 @@
                   },
                   "etag": {
                     "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Fetching player of {{peter-location}} to new name 'Olle'",
+      "when": {
+        "method": "POST",
+        "uri": "/players/getCollection",
+        "body": {
+          "filter": {
+            "name": {
+              "eq": "Alice"
+            }
+          }
+        },
+        "headers": {
+          "content-type": [
+            "application/json"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "type": "object",
+        "required": [
+          "status",
+          "body"
+        ],
+        "properties": {
+          "status": {
+            "const": 200
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "age",
+                    "name",
+                    "meta"
+                  ],
+                  "properties": {
+                    "age": {
+                      "const": 30
+                    },
+                    "name": {
+                      "const": "Alice"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "href",
+                        "etag",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "href": {
+                          "type": "string"
+                        },
+                        "etag": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
                   }
                 }
               }

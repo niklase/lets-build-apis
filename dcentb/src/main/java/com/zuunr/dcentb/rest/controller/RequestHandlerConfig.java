@@ -32,7 +32,11 @@ public class RequestHandlerConfig {
                     requestHandler = config.as(ReadCollectionRequestHandler.class);
                 }
             } else if (method.equalsIgnoreCase("post")) {
-                requestHandler = config.as(CUDItemRequestHandler.class);
+                if (path.endsWith("/getCollection")) {
+                    requestHandler = config.as(ReadCollectionRequestHandler.class);
+                } else {
+                    requestHandler = config.as(CUDItemRequestHandler.class);
+                }
             } else if (method.equalsIgnoreCase("patch")) {
                 requestHandler = config.as(CUDItemRequestHandler.class);
             }

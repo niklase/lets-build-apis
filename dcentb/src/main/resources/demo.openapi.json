@@ -156,6 +156,25 @@
         }
       }
     },
+    "/players/getCollection": {
+      "post": {
+        "x-dcentb": {
+          "mongodb": {
+            "collection": "players",
+            "db": "dcentb-mytest"
+          },
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "AUTHENTICATED_DEFAULT",
+                "requestSchema": {},
+                "responseSchema": true
+              }
+            ]
+          }
+        }
+      }
+    },
     "/players/{id}": {
       "get": {
         "parameters": [
