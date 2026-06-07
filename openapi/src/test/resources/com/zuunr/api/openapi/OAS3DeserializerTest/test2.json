@@ -34,22 +34,23 @@
     {
       "when": {
         "request": {
-          "uri": "/test?anInteger=123"
+          "uri": "/test?anInteger=ABC123"
         }
       }
     },
     {
       "then": {
-        "request": {
-          "query": {
-            "anInteger": [
-              123
-            ]
+        "errors": {
+          "/request/query/anInteger/0": {
+            "rejectedValue": "ABC123",
+            "violations": {
+              "/properties/request/properties/query/properties/anInteger/items/type": "integer"
+            }
           }
-        }
+        },
+        "ok": false
       },
       "meta": {
-        "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
       }
     }
   ]

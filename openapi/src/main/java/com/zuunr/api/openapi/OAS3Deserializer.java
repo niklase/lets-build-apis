@@ -25,34 +25,43 @@ public class OAS3Deserializer {
     private static final JsonValue NUMBER_PATTERN = JsonValue.of("^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$"); // Should be dynamically fetched from JsonSchemaForJsonSchema?
     private static final JsonValue INTEGER_PATTERN = JsonValue.of("^-?(?:0|[1-9]\\d*)(?:\\d+)?(?:[eE][+-]?\\d+)?$"); // Should be dynamically fetched from JsonSchemaForJsonSchema?
 
-    public static JsonObject deserializeRequest(JsonObject exchangeWithRequestAndBody, JsonObject openApiOperationObject) {
-        return deserializeRequest(exchangeWithRequestAndBody, null, openApiOperationObject);
+    public static JsonObject deserializeRequest(JsonObject exchangeWithRequestAndBody, JsonObject openApiDef) {
+        return deserializeRequest(exchangeWithRequestAndBody, openApiDef, JsonArray.EMPTY);
     }
 
-    public static JsonObject deserializeRequest(JsonObject exchangeWithRequest, InputStream requestBodyInputStream, JsonObject openApiOperationObject) {
+    public static JsonObject deserializeRequest(JsonObject exchangeWithRequestAndBody, JsonObject openApiDef, JsonArray pathToOperation) {
+        return deserializeRequest(exchangeWithRequestAndBody, null, openApiDef, pathToOperation);
+    }
+
+    public static JsonObject deserializeRequest(JsonObject exchangeWithRequest, InputStream requestBodyInputStream, JsonObject openApiDef) {
+        return deserializeRequest(exchangeWithRequest, requestBodyInputStream, openApiDef, JsonArray.EMPTY);
+    }
+
+    public static JsonObject deserializeRequest(JsonObject exchangeWithRequest, InputStream requestBodyInputStream, JsonObject openApiDef, JsonArray pathToOperation) {
 
         JsonValue errors;
         JsonValue body;
         final JsonObject request = exchangeWithRequest.get("request").getJsonObject();
         JsonObject deserializedReq = JsonObject.EMPTY;
         try {
-            JsonValue parametersSpec = openApiOperationObject.get("parameters");
+            JsonObject operation = openApiDef.get(pathToOperation, JsonObject.EMPTY).getJsonObject();
+            JsonValue parametersSpec = operation.get("parameters");
             if (parametersSpec == null) {
 
-                JsonValue query = exchangeWithRequest.get("request").get("uri").as(JsonUri.class).getQuery();
+                JsonValue query = request.get("uri").as(JsonUri.class).getQuery();
                 JsonObject requestWithQuery = JsonObject.EMPTY.put("query", query);
 
                 deserializedReq = deserializedReq.put(
                         "query",
                         parseQueryStringToMultiValueJsonObject("query", JsonObject.EMPTY.put("request", requestWithQuery)));
             } else {
-                deserializedReq = deserializedReq.putAll(deserializeParameters(exchangeWithRequest, openApiOperationObject));
+                deserializedReq = deserializedReq.putAll(deserializeParameters(exchangeWithRequest, openApiDef, pathToOperation));
             }
 
             body = deserializeRequestBody(
                     requestBodyInputStream,
                     exchangeWithRequest,
-                    openApiOperationObject.get("requestBody", JsonObject.EMPTY).getJsonObject())
+                    openApiDef, pathToOperation)
                     .get("request", JsonObject.EMPTY).get("body");
 
             errors = null;
@@ -70,9 +79,11 @@ public class OAS3Deserializer {
         return result;
     }
 
-    public static JsonObject deserializeRequestBody(InputStream requestBodyInputStream, JsonObject exchangeWithoutRequestBody, JsonObject openApiRequestBodySpec) {
+    public static JsonObject deserializeRequestBody(InputStream requestBodyInputStream, JsonObject exchangeWithoutRequestBody, JsonObject openApiDef, JsonArray pathToOperation) {
 
         JsonObject errorResult;
+
+        JsonObject openApiRequestBodySpec = openApiDef.get(pathToOperation).get("requestBody", JsonObject.EMPTY).getJsonObject();
 
         JsonObject openApiRequestBodyContent = openApiRequestBodySpec.get("content", JsonObject.EMPTY).getJsonObject();
 
@@ -88,7 +99,7 @@ public class OAS3Deserializer {
                 return exchangeWithoutRequestBody;
             }
         } else if (MediaType.APPLICATION_JSON.isCompatibleWith(contentTypeHeader)) {
-            return deserializeApplicationJson(requestBodyInputStream, exchangeWithoutRequestBody, openApiRequestBodyContent);
+            return deserializeApplicationJson(requestBodyInputStream, exchangeWithoutRequestBody, openApiDef, pathToOperation);
         } else if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentTypeHeader)) {
             return deserializeApplicationFormUrlencoded(exchangeWithoutRequestBody, openApiRequestBodyContent);
         } else {
@@ -96,8 +107,9 @@ public class OAS3Deserializer {
         }
     }
 
-    public static JsonObject deserializeRequestBody(JsonObject exchangeWithRequest, JsonObject openApiRequestBodySpec) {
+    public static JsonObject deserializeRequestBody(JsonObject exchangeWithRequest, JsonObject openApiDef, JsonArray pathToOperation) throws ApiErrorException {
 
+        JsonObject openApiRequestBodySpec = openApiDef.get(pathToOperation).get("requestBody", JsonObject.EMPTY).getJsonObject();
         JsonObject errorResult;
 
         JsonObject openApiRequestBodyContent = openApiRequestBodySpec.get("content", JsonObject.EMPTY).getJsonObject();
@@ -117,7 +129,7 @@ public class OAS3Deserializer {
                 return exchangeWithRequest;
             }
         } else if (MediaType.APPLICATION_JSON.isCompatibleWith(contentTypeHeader)) {
-            return deserializeApplicationJson(exchangeWithRequest, openApiRequestBodyContent);
+            return deserializeApplicationJson(exchangeWithRequest, openApiDef, pathToOperation);
         } else if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentTypeHeader)) {
             return deserializeApplicationFormUrlencoded(exchangeWithRequest, openApiRequestBodyContent);
         } else {
@@ -245,7 +257,8 @@ public class OAS3Deserializer {
         return bodyModel;
     }
 
-    private static JsonObject deserializeApplicationJson(InputStream requestBodyInputStream, JsonObject exchangeWithRequest, JsonObject openApiRequestBodyContent) {
+    private static JsonObject deserializeApplicationJson(InputStream requestBodyInputStream, JsonObject exchangeWithRequest, JsonObject openApiDef, JsonArray pathToOperation) {
+        JsonObject openApiRequestBodyContent = openApiDef.get(pathToOperation).getJsonObject().get("requestBody", JsonObject.EMPTY).getJsonObject().get("content", JsonObject.EMPTY).getJsonObject();
         JsonValue schemaOfBody = openApiRequestBodyContent
                 .get(MediaType.APPLICATION_JSON_VALUE, JsonObject.EMPTY)
                 .get("schema");
@@ -269,6 +282,8 @@ public class OAS3Deserializer {
             }
 
             JsonValue finalRequestSchema = JsonObject.EMPTY
+                    .put("components", JsonObject.EMPTY
+                            .put("schemas", openApiDef.get("components", JsonObject.EMPTY).get("schemas", JsonObject.EMPTY)))
                     .put(Keywords.PROPERTIES, JsonObject.EMPTY
                             .put("request", JsonObject.EMPTY
                                     .put("properties", JsonObject.EMPTY
@@ -279,31 +294,8 @@ public class OAS3Deserializer {
         }
     }
 
-    private static JsonObject deserializeApplicationJson(JsonObject exchangeWithRequest, JsonObject openApiRequestBodyContent) {
-        JsonValue schemaOfBody = openApiRequestBodyContent
-                .get(MediaType.APPLICATION_JSON_VALUE, JsonObject.EMPTY)
-                .get("schema");
-
-        if (schemaOfBody == null) {
-            throw createApiErrorExceptionForUnsupportedContentType(exchangeWithRequest, openApiRequestBodyContent);
-        } else {
-            JsonValue bodyString = exchangeWithRequest.get("request").get("body");
-            JsonValue bodyModel;
-            try {
-                bodyModel = JsonValueFactory.create(bodyString.getString());
-            } catch (Exception e) {
-                throw createApiErrorExceptionForBadJsonBody(JsonObject.EMPTY.put("request", JsonObject.EMPTY.put("body", bodyString)));
-            }
-
-            JsonValue finalRequestSchema = JsonObject.EMPTY
-                    .put(Keywords.PROPERTIES, JsonObject.EMPTY
-                            .put("request", JsonObject.EMPTY
-                                    .put("properties", JsonObject.EMPTY
-                                            .put("body", schemaOfBody)))).jsonValue();
-            JsonObject finalRequestModel = JsonObject.EMPTY.put("request", JsonObject.EMPTY.put("body", bodyModel));
-            validateRequestModel(finalRequestModel, finalRequestSchema);
-            return finalRequestModel;
-        }
+    private static JsonObject deserializeApplicationJson(JsonObject exchangeWithRequest, JsonObject openApiDef, JsonArray pathToOperation) {
+        return deserializeApplicationJson(null, exchangeWithRequest, openApiDef, pathToOperation);
     }
 
 
@@ -407,12 +399,13 @@ public class OAS3Deserializer {
         return schema.getJsonObject().put(Keywords.PROPERTIES, propertiesBuilder.build());
     }
 
-    public static JsonObject deserializeParameters(JsonObject exchangeWithRequest, JsonObject openApiSpec) throws ApiErrorException {
+    public static JsonObject deserializeParameters(JsonObject exchangeWithRequest, JsonObject openApiDef, JsonArray pathToOperation) throws ApiErrorException {
 
-        JsonArray openApiParameters = openApiSpec.get("parameters", JsonArray.EMPTY).getJsonArray();
+        JsonObject operation = openApiDef.get(pathToOperation).getJsonObject();
+        JsonArray openApiParameters = operation.get("parameters", JsonArray.EMPTY).getJsonArray();
         JsonObject errorResult;
-        JsonValue parameterSchemaWhereItemsAreStrings = parametersToJsonSchema(openApiSpec, true);
-        JsonValue parameterSchema = parametersToJsonSchema(openApiSpec, false);
+        JsonValue parameterSchemaWhereItemsAreStrings = parametersToJsonSchema(operation, true);
+        JsonValue parameterSchema = parametersToJsonSchema(operation, false);
         JsonObject request = exchangeWithRequest.get("request", JsonObject.EMPTY).getJsonObject();
         String queryString = URI.create(request.get("uri", JsonValue.EMPTY_STRING).getString()).getQuery();
         JsonObject pathParameters = request.get("pathParameters", JsonObject.EMPTY).getJsonObject();

@@ -7,16 +7,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 
-public class OAS3DeserailizerTest extends GivenWhenThenTesterBase {
+public class OAS3DeserializerTest extends GivenWhenThenTesterBase {
 
     private JsonObject givenOpenApiDefAndPathToOperation;
 

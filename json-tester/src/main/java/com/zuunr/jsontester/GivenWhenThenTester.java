@@ -25,7 +25,7 @@ public abstract class GivenWhenThenTester {
         JsonValue then = testCase.get("then");
 
         if (Boolean.TRUE == testCase.get("exactMatch", true).getBoolean()) {
-            assertEquals(result, then, methodName);
+            assertEquals(then, result, methodName);
         } else {
             JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
             JsonObject resultToBeMerged = JsonObject.EMPTY.put(MERGE_ME, result);
@@ -33,7 +33,7 @@ public abstract class GivenWhenThenTester {
             JsonObject resultMergedByThen = jsonObjectMerger.merge(resultToBeMerged, thenToBeMerged);
 
             if (!resultMergedByThen.get(MERGE_ME).equals(result)) {
-                assertEquals(result, then);
+                assertEquals(then, result);
             }
             assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME));
         }

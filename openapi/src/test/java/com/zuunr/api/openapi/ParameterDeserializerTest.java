@@ -129,7 +129,7 @@ public class ParameterDeserializerTest extends GivenWhenThenTester {
     @Override
     public JsonValue doGivenWhen(JsonValue given, JsonValue when) {
         JsonObject operationObject = given.get("oasOperationObject").getJsonObject();
-        return oas3Deserializer.deserializeRequest(when.getJsonObject(), operationObject).jsonValue();
+        return oas3Deserializer.deserializeRequest(when.getJsonObject(), operationObject, JsonArray.EMPTY).jsonValue();
     }
 
 

@@ -22,7 +22,11 @@ mvn -f ../../pom.xml install -pl public/dcentb -am
 #### 2. Start MongoDB:
 
 ```
-docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest
+docker run --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=adminpassword \
+  -d mongodb/mongodb-community-server:latest
 ```
 
 #### 3. Run the demo backend:
@@ -41,7 +45,7 @@ To override the MongoDB connection or database name at runtime:
 
 ```
 java -jar target/dcentb-1.0-SNAPSHOT.jar \
-  --dcentb.mongodb.connection=mongodb://user:pass@host:27017/?authSource=admin \
+  '--dcentb.mongodb.connection=mongodb://admin:adminpassword@localhost:27017/?authSource=admin' \
   --dcentb.mongodb.db=my-database
 ```
 

@@ -29,19 +29,25 @@
             }
           },
           "components": {
-           "schemas": {
-           "Cars_item_v1": {
-              "type": "object",
-              "properties": {
-                "brand": {
-                  "type": "string"
-                },
-                "productionYear": {
-                  "type": "integer"
+            "schemas": {
+              "Cars_item_v1": {
+                "type": "object",
+                "properties": {
+                  "brand": {
+                    "type": "string"
+                  },
+                  "productionYear": {
+                    "type": "integer"
+                  },
+                  "similarCars": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Cars_item_v1"
+                    }
+                  }
                 }
               }
-             }
-           }
+            }
           }
         }
       }
@@ -50,20 +56,22 @@
       "when": {
         "request": {
           "uri": "/test",
-          "headers":{
-            "content-type":["application/json"]
+          "headers": {
+            "content-type": [
+              "application/json"
+            ]
           },
-          "body": "{\"brand\": \"Audi\", \"productionYear\": \"ABC123\"}"
+          "body": "{\"brand\": \"Audi\", \"productionYear\": 2010, \"similarCars\": [{\"brand\": \"Audi\", \"productionYear\": \"2010\"}]}"
         }
       }
     },
     {
       "then": {
         "errors": {
-          "/request/body/productionYear": {
-            "rejectedValue": "ABC123",
+          "/request/body/similarCars/0/productionYear": {
+            "rejectedValue": "2010",
             "violations": {
-              "/properties/request/properties/body/$ref/properties/productionYear/type": "integer"
+              "/properties/request/properties/body/$ref/properties/similarCars/items/$ref/properties/productionYear/type": "integer"
             }
           }
         },

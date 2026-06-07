@@ -1,6 +1,7 @@
 package com.zuunr.dcentb.rest.processor;
 
 import com.zuunr.api.openapi.OAS3Deserializer;
+import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonObjectMerger;
 import com.zuunr.json.JsonValue;
@@ -17,7 +18,7 @@ public class OASRequestDeserializer implements Processor {
     @Override
     public JsonObject process(JsonObject requestContext) {
 
-        JsonObject result = OAS3Deserializer.deserializeRequest(requestContext, config.get("operation").getJsonObject());
+        JsonObject result = OAS3Deserializer.deserializeRequest(requestContext, config.getJsonObject(), JsonArray.of("operation"));
         if (result.get("ok").getBoolean()) {
             JsonObject request = MERGER.merge(requestContext.get(REQUEST).getJsonObject(), result.get(REQUEST).getJsonObject());
             return requestContext.put(REQUEST, request);
