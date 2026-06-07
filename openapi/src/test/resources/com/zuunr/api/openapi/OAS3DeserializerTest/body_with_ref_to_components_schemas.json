@@ -1,0 +1,76 @@
+{
+  "tests": [
+    {
+      "given": {
+        "pathToOperation": [
+          "paths",
+          "/test",
+          "post"
+        ],
+        "openApiDef": {
+          "openapi": "",
+          "info": {
+            "title": "Test API",
+            "version": ""
+          },
+          "paths": {
+            "/test": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Cars_item_v1"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+           "schemas": {
+           "Cars_item_v1": {
+              "type": "object",
+              "properties": {
+                "brand": {
+                  "type": "string"
+                },
+                "productionYear": {
+                  "type": "integer"
+                }
+              }
+             }
+           }
+          }
+        }
+      }
+    },
+    {
+      "when": {
+        "request": {
+          "uri": "/test",
+          "headers":{
+            "content-type":["application/json"]
+          },
+          "body": "{\"brand\": \"Audi\", \"productionYear\": \"ABC123\"}"
+        }
+      }
+    },
+    {
+      "then": {
+        "errors": {
+          "/request/body/productionYear": {
+            "rejectedValue": "ABC123",
+            "violations": {
+              "/properties/request/properties/body/$ref/properties/productionYear/type": "integer"
+            }
+          }
+        },
+        "ok": false
+      },
+      "meta": {
+      }
+    }
+  ]
+}
