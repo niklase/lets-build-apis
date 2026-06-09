@@ -8,7 +8,6 @@ The goal of **dcentb** is to provide a good default implementation of a REST API
 
 - OpenAPI-format rules API operations including data input and data output
 - JSON Schema to declare fine-grained access control of both input and output data
-- MongoDB connection string and database name
 - Java Spring Boot Application with unlimited options for extensions
 
 # Quickstart
@@ -16,7 +15,7 @@ The goal of **dcentb** is to provide a good default implementation of a REST API
 #### 1. Build the project:
 
 ```
-mvn -f ../../pom.xml install -pl public/dcentb -am
+mvn -f ../pom.xml install -pl dcentb -am
 ```
 
 #### 2. Start MongoDB:
