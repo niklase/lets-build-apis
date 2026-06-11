@@ -35,7 +35,9 @@ public class MongoJsonDB {
     private MongoDatabase mongoDatabase;
 
     public MongoJsonDB(JsonObject config) {
-        this(config.get("connection").getString(), config.get("db").getString());
+        this(
+                config.get("connection").getString(),
+                config.get("db").getString());
     }
 
     public JsonObject validateCommand(JsonObject command) {

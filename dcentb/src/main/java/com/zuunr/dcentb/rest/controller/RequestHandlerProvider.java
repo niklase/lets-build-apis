@@ -57,6 +57,9 @@ public class RequestHandlerProvider {
         JsonObject paths = openApiDocument.get("paths").getJsonObject();
         JsonObject updatedPaths = paths;
         for (String path : paths.keySet()) {
+
+            String defaultMongoCollectionName = getMongoCollectionName(path);
+
             JsonObject operations = paths.get(path).getJsonObject();
             JsonObject updatedOperations = operations;
             for (String method : operations.keySet()) {
@@ -72,6 +75,9 @@ public class RequestHandlerProvider {
                         if (connectionString != null) {
                             updatedMongodb = updatedMongodb.put("connection", connectionString);
                         }
+                        if (updatedMongodb.get("collection", JsonValue.NULL).getString() == null) {
+                            updatedMongodb = updatedMongodb.put("collection", defaultMongoCollectionName);
+                        }
 
                         JsonObject updatedXDcentb = xDcentb.getJsonObject().put("mongodb", updatedMongodb.jsonValue());
                         JsonObject updatedOperation = operation.put("x-dcentb", updatedXDcentb.jsonValue());
@@ -84,6 +90,18 @@ public class RequestHandlerProvider {
         return openApiDocument.put("paths", updatedPaths.jsonValue());
     }
 
+    private static String getMongoCollectionName(String path) {
+        if (path.endsWith("/getCollection")) {
+            path = path.substring(0, path.length() - "/getCollection".length());
+        } else {
+            int braceIndex = path.indexOf('{');
+            if (braceIndex != -1) {
+                path = path.substring(0, braceIndex);
+            }
+        }
+        return path.replaceAll("^/+|/+$", "");
+    }
+
     private static PathConfigMapper setupPathConfigMapper(JsonObject openApiDocument) {
         PathConfigMapper pathConfigMapper = new PathConfigMapper();
         JsonObject paths = openApiDocument.get("paths").getJsonObject();
@@ -91,14 +109,18 @@ public class RequestHandlerProvider {
         for (String path : paths.keySet()) {
             JsonObject operationsPerMethod = paths.get(path).getJsonObject();
             for (String method : operationsPerMethod.keySet()) {
+
+                // Create a config that can be used for caching
+                JsonObject config = openApiDocumentWithoutPaths
+                        .put("method", method)
+                        .put("path", path)
+                        .put("operation", operationsPerMethod.get(method))
+                        .put("components", openApiDocument.get("components", JsonObject.EMPTY).getJsonObject());
+
                 pathConfigMapper.addConfigForPathAndMethod(
                         path,
                         method,
-                        openApiDocumentWithoutPaths
-                                .put("method", method)
-                                .put("path", path)                                  // get anything from
-                                .put("operation", operationsPerMethod.get(method))  // this JsonValue as
-                                .jsonValue()                                        // cached if needed
+                        config.jsonValue()
                 );
             }
         }

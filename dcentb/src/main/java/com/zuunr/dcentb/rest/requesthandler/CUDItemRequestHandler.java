@@ -21,13 +21,11 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
         UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
         MongoJsonDBGetItemCommandCreator mongoJsonDBGetItemCommandCreator = config.as(MongoJsonDBGetItemCommandCreator.class);
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
-        CreateNewStateFromRequest createNewStateFromRequest = config.as(CreateNewStateFromRequest.class);
-        UpdateNewState updateNewState = config.as(UpdateNewState.class);
+            UpdateNewState updateNewState = config.as(UpdateNewState.class);
         SetMongoResultOrNullAsCurrentState setMongoResultOrNullAsCurrentState = config.as(SetMongoResultOrNullAsCurrentState.class);
         NewStateToMongoItem newStateToMongoItem = config.as(NewStateToMongoItem.class);
         MongoJsonDBInsertCommandCreator mongoJsonDBInsertCommandCreator = config.as(MongoJsonDBInsertCommandCreator.class);
         MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
-        CreateMongoItemFromNewState createMongoItemFromNewState = config.as(CreateMongoItemFromNewState.class);
         VerifyMongoCommandExecution verifyMongoCommandExecution = config.as(VerifyMongoCommandExecution.class);
         ResponseFromNewState responseFromNewState = config.as(ResponseFromNewState.class);
 

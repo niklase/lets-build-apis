@@ -77,8 +77,8 @@ public class RequestAccessController implements Processor {
         JsonObjectBuilder builder = JsonObject.EMPTY.builder();
         JsonArray permissionSchemasArray = me
                 .get("operation")
-                .get("x-dcentb")
-                .get("accessControl")
+                .get("x-dcentb", JsonObject.EMPTY)
+                .get("accessControl", JsonObject.EMPTY)
                 .get("permissionSchemas", JsonArray.EMPTY).getJsonArray();
         for (int i = 0; i < permissionSchemasArray.size(); i++) {
             JsonObject permissionSchema = permissionSchemasArray.get(i).getJsonObject();

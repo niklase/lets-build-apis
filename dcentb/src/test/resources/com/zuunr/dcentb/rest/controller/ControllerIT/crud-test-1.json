@@ -9,7 +9,7 @@
     {
       "given": {
         "dbSetup": {
-          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin&dcentb=true",
           "db": "dcentb-demo",
           "commands": [
             {
@@ -53,7 +53,7 @@
                 },
                 "x-dcentb": {
                   "mongodb": {
-                    "collection": "players"
+                    "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
                   },
                   "accessControl": {
                     "permissionSchemas": [
