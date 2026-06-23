@@ -7,8 +7,8 @@ import com.zuunr.dcentb.rest.processor.accesscontrol.RequestAccessController;
 import com.zuunr.dcentb.rest.processor.accesscontrol.UserInfoProvider;
 import com.zuunr.dcentb.rest.processor.apimodel.UpdateNewState;
 import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBCommandRunner;
-import com.zuunr.dcentb.rest.processor.mongo.NewStateToMongoItem;
 import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBGetItemCommandCreator;
+import com.zuunr.dcentb.rest.processor.mongo.NewStateToMongoItem;
 import com.zuunr.json.JsonValue;
 
 public class CUDItemRequestHandler extends RequestHandlerBase {
@@ -22,30 +22,30 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
         UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
         MongoJsonDBGetItemCommandCreator mongoJsonDBGetItemCommandCreator = config.as(MongoJsonDBGetItemCommandCreator.class);
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
-            UpdateNewState updateNewState = config.as(UpdateNewState.class);
+
         SetMongoResultOrNullAsCurrentState setMongoResultOrNullAsCurrentState = config.as(SetMongoResultOrNullAsCurrentState.class);
-        NewStateToMongoItem newStateToMongoItem = config.as(NewStateToMongoItem.class);
-        MongoJsonDBInsertCommandCreator mongoJsonDBInsertCommandCreator = config.as(MongoJsonDBInsertCommandCreator.class);
+
         MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
         VerifyMongoCommandExecution verifyMongoCommandExecution = config.as(VerifyMongoCommandExecution.class);
         ResponseFromNewState responseFromNewState = config.as(ResponseFromNewState.class);
 
-        processors = new Processor[] {
+        processors = new Processor[]{
                 apiKeyAuthenticator,
                 oasRequestDeserializer,
                 userInfoProvider,
                 requestAccessController,
-                mongoJsonDBGetItemCommandCreator,  // create new state (get current state)
-                mongoJsonDBCommandRunner,          // create new state (get current state)
-                verifyMongoCommandExecution, // create new state (get current state -> item)
-                setMongoResultOrNullAsCurrentState, // state from mongo
-                updateNewState,                  // current state + new state (from mongo or from apiModel)
-                newStateToMongoItem,             // new state -> mongo item
-                mongoJsonDBInsertCommandCreator, // mongoitem -> mongo command
-                mongoJsonDBCommandRunner,        // run mongo command
+                mongoJsonDBGetItemCommandCreator,                   // create new state (get current state)
+                mongoJsonDBCommandRunner,                           // create new state (get current state)
+                verifyMongoCommandExecution,                        // create new state (get current state -> item)
+                setMongoResultOrNullAsCurrentState,                 // state from mongo
+                config.as(UpdateNewState.class),                    // current state + new state (from mongo or from apiModel)
+                config.as(StateTransitionValidator.class),
+                config.as(NewStateToMongoItem.class),               // new state -> mongo item
+                config.as(MongoJsonDBInsertCommandCreator.class),   // mongoitem -> mongo command
+                mongoJsonDBCommandRunner,                           // run mongo command
                 verifyMongoCommandExecution,
-                responseFromNewState,                 // itemId={id} and newState={request.body}
-                };
+                responseFromNewState,                               // itemId={id} and newState={request.body}
+        };
     }
 
     @Override

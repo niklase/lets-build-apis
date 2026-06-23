@@ -10,20 +10,24 @@ public class NewStateToMongoItem implements Processor {
 
     public NewStateToMongoItem(JsonValue config) {
         path = config.get("path").getString();
-
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
-        JsonObject newState = requestContext.get("newState").getJsonObject();
 
-        JsonObject meta = newState.get("meta", JsonObject.EMPTY).getJsonObject();
-        JsonObject mongoItem = newState
-                .put("_id", meta.get("id"))
-                .put("meta", meta.remove("id"));
+        JsonValue newStateJsonValue = requestContext.get("newState");
 
-        requestContext = requestContext.put("mongoItem", mongoItem);
+        if (!newStateJsonValue.isNull()) {
 
+            JsonObject newState = newStateJsonValue.getJsonObject();
+
+            JsonObject meta = newState.get("meta", JsonObject.EMPTY).getJsonObject();
+            JsonObject mongoItem = newState
+                    .put("_id", meta.get("id"))
+                    .put("meta", meta.remove("id"));
+
+            requestContext = requestContext.put("mongoItem", mongoItem);
+        }
         return requestContext;
     }
 }

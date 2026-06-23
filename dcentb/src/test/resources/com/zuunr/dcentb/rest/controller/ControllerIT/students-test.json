@@ -357,8 +357,49 @@
                           }
                         },
                         "responseSchema": {}
+                      },
+                      {
+                        "permission": "admin",
+                        "requestSchema": {},
+                        "responseSchema": {}
                       }
                     ]
+                  },
+                  "stateTransitionSchema": {
+                    "properties": {
+                      "newState": {
+                        "anyOf": [
+                          {
+                            "properties": {
+                              "grade": {
+                                "enum": [
+                                  "A",
+                                  "B",
+                                  "C",
+                                  "D",
+                                  "E"
+                                ]
+                              },
+                              "attendancePercent": {
+                                "minimum": 50
+                              }
+                            }
+                          },
+                          {
+                            "properties": {
+                              "grade": {
+                                "enum": [
+                                  "F"
+                                ]
+                              },
+                              "attendancePercent": {
+                                "minimum": 0
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
                   }
                 }
               }
@@ -737,7 +778,7 @@
       }
     },
     {
-      "description": "As student student-s1, cannot get info about other student, not even that the student resource exists.",
+      "description": "As student student-s1, cannot get info about other student, not even info of that the student resource exists.",
       "when": {
         "method": "GET",
         "uri": "{{student-robert-href}}",
@@ -853,7 +894,41 @@
         "headers": {
         },
         "body": {
-
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin, cannot set grade to other than F when attendancePercent is less than 50",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-peter-href}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        },
+        "body": {
+          "studentId": "student-peter",
+          "attendancePercent": 30
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 409,
+        "headers": {
+        },
+        "body": {
         }
       },
       "meta": {
