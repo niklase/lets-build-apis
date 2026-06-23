@@ -54,9 +54,7 @@
           ]
         },
         "config": {
-
           "openapi": "3.1.0",
-
           "paths": {
             "/players": {
               "post": {
@@ -79,9 +77,6 @@
                   }
                 },
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -142,9 +137,6 @@
                   }
                 ],
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -229,9 +221,6 @@
                   }
                 ],
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -332,9 +321,6 @@
                   }
                 },
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -404,9 +390,7 @@
                   }
                 },
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
+
                   "accessControl": {
                     "permissionSchemas": [
                       {

@@ -1,8 +1,10 @@
 package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
+import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.requesthandler.basic.MethodNotAllowedRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.basic.NotFoundRequestHandler;
+import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;
@@ -30,7 +32,9 @@ public class RequestHandlerProvider {
     ) throws IOException {
         this(
                 JsonValueFactory.create(new String(resource.getInputStream().readAllBytes())).getJsonObject(),
-                JsonObject.EMPTY.put("connection", mongodbConnectionString).put("db", databaseName)
+                JsonObject.EMPTY
+                        .put("connection", mongodbConnectionString)
+                        .put("db", databaseName)
         );
     }
 
@@ -54,6 +58,10 @@ public class RequestHandlerProvider {
             databaseName = globalDb.getString();
         }
 
+        openApiDocument = openApiDocument
+                .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "connection"), connectionString)
+                .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "db"), databaseName);
+
         JsonObject paths = openApiDocument.get("paths").getJsonObject();
         JsonObject updatedPaths = paths;
         for (String path : paths.keySet()) {
@@ -64,6 +72,12 @@ public class RequestHandlerProvider {
             JsonObject updatedOperations = operations;
             for (String method : operations.keySet()) {
                 JsonObject operation = operations.get(method).getJsonObject();
+                JsonValue collectionName = operation.get("x-dcentb", JsonObject.EMPTY).getJsonObject().get("mongodb", JsonObject.EMPTY).getJsonObject().get("collection");
+                collectionName = collectionName == null
+                        ? JsonValue.of(defaultMongoCollectionName)
+                        : collectionName;
+                operation = operation.put(JsonArray.of(Processor.X_DCENTB, "mongodb", "collection"), collectionName);
+
                 JsonValue xDcentb = operation.get("x-dcentb");
                 if (xDcentb != null && xDcentb.getJsonObject() != null) {
                     JsonValue mongodb = xDcentb.getJsonObject().get("mongodb");
@@ -75,7 +89,7 @@ public class RequestHandlerProvider {
                         if (connectionString != null) {
                             updatedMongodb = updatedMongodb.put("connection", connectionString);
                         }
-                        if (updatedMongodb.get("collection", JsonValue.NULL).getString() == null) {
+                        if (updatedMongodb.get("collection") == null) {
                             updatedMongodb = updatedMongodb.put("collection", defaultMongoCollectionName);
                         }
 

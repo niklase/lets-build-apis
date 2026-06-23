@@ -111,9 +111,6 @@
                   }
                 ],
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -198,9 +195,6 @@
                   }
                 ],
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {
@@ -301,9 +295,6 @@
                   }
                 },
                 "x-dcentb": {
-                  "mongodb": {
-                    "collection": "players"
-                  },
                   "accessControl": {
                     "permissionSchemas": [
                       {

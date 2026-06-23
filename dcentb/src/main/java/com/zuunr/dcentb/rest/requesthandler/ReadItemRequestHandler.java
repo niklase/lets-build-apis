@@ -6,6 +6,7 @@ import com.zuunr.dcentb.rest.processor.accesscontrol.ApiKeyAuthenticator;
 import com.zuunr.dcentb.rest.processor.accesscontrol.Authenticator;
 import com.zuunr.dcentb.rest.processor.accesscontrol.RequestAccessController;
 import com.zuunr.dcentb.rest.processor.accesscontrol.UserInfoProvider;
+import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBCommandRunner;
 import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBGetItemCommandCreator;
 import com.zuunr.dcentb.rest.processor.MongoToRestItemTranslator;
 import com.zuunr.json.JsonValue;

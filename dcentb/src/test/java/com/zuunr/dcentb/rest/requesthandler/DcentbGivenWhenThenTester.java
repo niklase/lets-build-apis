@@ -1,5 +1,6 @@
 package com.zuunr.dcentb.rest.requesthandler;
 
+import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
@@ -56,6 +57,12 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
         if (dbSetup == null) return config;
         JsonValue connection = dbSetup.get("connection");
         JsonValue db = dbSetup.get("db");
+
+        return config
+                .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "connection"), connection)
+                .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "db"), db);
+
+        /*
         JsonObject paths = config.get("paths", JsonObject.EMPTY).getJsonObject();
         JsonObject patchedPaths = paths;
         for (Map.Entry<String, JsonValue> pathEntry : paths.entrySet()) {
@@ -76,5 +83,7 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
             patchedPaths = patchedPaths.put(pathEntry.getKey(), patchedPathItem);
         }
         return config.put("paths", patchedPaths);
+
+         */
     }
 }

@@ -1,5 +1,6 @@
-package com.zuunr.dcentb.rest.processor;
+package com.zuunr.dcentb.rest.processor.mongo;
 
+import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.mongodb.MongoJsonDB;
@@ -10,7 +11,7 @@ public class MongoJsonDBCommandRunner implements Processor {
 
     public MongoJsonDBCommandRunner(JsonValue config) {
         JsonObject mongodbConfig = config.get("operation", JsonObject.EMPTY).get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
-        mongoDB = new MongoJsonDB(mongodbConfig);
+        mongoDB = config.as(MongoJsonDBHandle.class).getMongoJsonDB();
     }
 
     @Override

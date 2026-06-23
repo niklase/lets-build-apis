@@ -11,12 +11,17 @@
           "commands": [
             {
               "drop": {
+                "collection": "players-with-other-name"
+              }
+            },
+            {
+              "drop": {
                 "collection": "players"
               }
             },
             {
               "insert": {
-                "collection": "players",
+                "collection": "players-with-other-name",
                 "documents": [
                   {
                     "_id": {
@@ -83,7 +88,7 @@
                 ],
                 "x-dcentb": {
                   "mongodb": {
-                    "collection": "players"
+                    "collection": "players-with-other-name"
                   },
                   "accessControl": {
                     "permissionSchemas": [
