@@ -57,5 +57,7 @@ Supported operations are:
 - Create ```POST /{item-type}```
 - Read item ```GET /{item-type}/{id}``` and read collection of items ```GET /{item-type}?{query}``` (to follow OWASP recommendations and avoid PII - Personal Identifiable Information, in URL: ```POST /{item-type}/getCollection```)
 - Update ```PATCH /{item-type}/{id}```
-- Delete ```DELETE /{item-type}/{id}```
+
+####  To be done
+- Delete ```DELETE /{item-type}/{id}``` 
 
