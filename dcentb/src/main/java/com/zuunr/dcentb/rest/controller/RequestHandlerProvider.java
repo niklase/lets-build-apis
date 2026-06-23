@@ -27,7 +27,7 @@ public class RequestHandlerProvider {
     public RequestHandlerProvider(
             @Value("${dcentb.openapi.file:classpath:demo.openapi.json}") Resource resource,
             @Value("${dcentb.mongodb.connection:mongodb://admin:adminpassword@localhost:27017/?authSource=admin}") String mongodbConnectionString,
-            @Value("${dcentb.mongodb.db:}") String databaseName // TODO: This should not be default. This could be stated in the demo.openapi.json instead
+            @Value("${dcentb.mongodb.db:}") String databaseName
 
     ) throws IOException {
         this(

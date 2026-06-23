@@ -22,7 +22,7 @@ public class CreateItemRequestHandler extends RequestHandlerBase {
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
         UpdateNewState updateNewState = config.as(UpdateNewState.class);
         NewStateToMongoItem newStateToMongoItem = config.as(NewStateToMongoItem.class);
-        MongoJsonDBInsertCommandCreator mongoJsonDBInsertCommandCreator = config.as(MongoJsonDBInsertCommandCreator.class);
+        MongoJsonDBCUDItemCommandCreator mongoJsonDBCUDItemCommandCreator = config.as(MongoJsonDBCUDItemCommandCreator.class);
         MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
         VerifyMongoCommandExecution verifyMongoCommandExecution = config.as(VerifyMongoCommandExecution.class);
 
@@ -33,7 +33,7 @@ public class CreateItemRequestHandler extends RequestHandlerBase {
                 requestAccessController,
                 updateNewState,
                 newStateToMongoItem,
-                mongoJsonDBInsertCommandCreator,
+                mongoJsonDBCUDItemCommandCreator,
                 mongoJsonDBCommandRunner,
                 verifyMongoCommandExecution};
     }

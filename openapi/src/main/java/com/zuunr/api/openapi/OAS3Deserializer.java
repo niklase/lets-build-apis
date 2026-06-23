@@ -564,7 +564,8 @@ public class OAS3Deserializer {
         } else { // both query and header parameters are possibly multi-valued
             propertyValueBuilder
                     .put(Keywords.TYPE, "array")
-                    .put(Keywords.ITEMS, JsonObject.EMPTY
+                    .put(Keywords.ITEMS, parameter.get("schema", JsonObject.EMPTY).getJsonObject()
+                            .get(Keywords.ITEMS, JsonObject.EMPTY).getJsonObject()
                             .put(Keywords.TYPE, itemsTypeAlwaysString
                                     ? "string"
                                     : parameter.get("schema", JsonObject.EMPTY).getJsonObject()

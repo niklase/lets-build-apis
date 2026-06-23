@@ -2,38 +2,95 @@
   "x-dcentb": {
     "mongodb": {
       "db": "dcentb-demo"
+    },
+    "users": {
+      "user-s1": {
+        "studentId": "student-anna"
+      },
+      "user-s2": {
+        "studentId": "student-peter"
+      },
+      "user-s3": {
+        "studentId": "student-robert"
+      },
+      "user-t1": {
+        "teacherId": "teacher-A"
+      },
+      "user-t2": {
+        "teacherId": "teacher-B"
+      },
+      "user-a1": {
+      }
+    },
+    "accessControl": {
+      "apiKeys": {
+        "<random-secret>_<user-id>_<roles>": {},
+        "ak-demo-87162534_user-s1_student": {},
+        "ak-demo-18783325_user-s2_student": {},
+        "ak-demo-18783325_user-s3_student": {},
+        "ak-demo-84441136_user-t1_teacher": {},
+        "ak-demo-35365462_user-t2_teacher": {},
+        "ak-demo-42288333_user-a1_admin": {}
+      }
+    },
+    "collections": {
+      "students": {
+        "stateTransitionSchema": {
+          "properties": {
+            "newState": {
+              "anyOf": [
+                {
+                  "properties": {
+                    "grade": {
+                      "enum": [
+                        "A",
+                        "B",
+                        "C",
+                        "D",
+                        "E"
+                      ]
+                    },
+                    "attendancePercent": {
+                      "minimum": 50
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "grade": {
+                      "enum": [
+                        "F"
+                      ]
+                    },
+                    "attendancePercent": {
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
     }
   },
   "openapi": "3.1.0",
-  "accessControl": {
-    "userInfo": {
+  "security": [
+    {
+      "ApiKeyAuth": []
     }
-  },
+  ],
   "paths": {
-    "/players": {
+    "/students": {
       "post": {
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Players_item_v1"
+                "$ref": "#/components/schemas/Students_item_v1"
               }
             }
-          }
-        },
-        "x-dcentb": {
-          "mongodb": {
-            "collection": "players"
-          },
-          "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {},
-                "responseSchema": true
-              }
-            ]
           }
         },
         "responses": {
@@ -41,9 +98,28 @@
             "description": "Created",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
+                }
               }
             }
+          }
+        },
+        "x-dcentb": {
+          "mongodb": {
+            "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
+          },
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "admin",
+                "requestSchema": {},
+                "responseSchema": true
+              }
+            ]
+          },
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       },
@@ -52,6 +128,14 @@
           {
             "in": "query",
             "name": "filter.name.eq",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "filter.teacherId.eq",
             "schema": {
               "type": "string"
             },
@@ -79,35 +163,70 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "anyOf": [{"const": "teacherId"}, {"const": "studentId"}]
               }
             },
             "required": false
           }
         ],
         "x-dcentb": {
-          "mongodb": {
-            "collection": "players"
-          },
           "accessControl": {
             "permissionSchemas": [
               {
-                "permission": "productA",
+                "permission": "admin",
+                "requestSchema": {},
+                "responseSchema": {}
+              },
+              {
+                "permission": "teacher",
                 "requestSchema": {
                   "properties": {
                     "request": {
+                      "required": [
+                        "query"
+                      ],
+                      "properties": {
+                        "query": {
+                          "required": [
+                            "filter.teacherId.eq"
+                          ],
+                          "properties": {
+                            "filter.teacherId.eq": {
+                              "items": {
+                                "const": {
+                                  "$data": "/authenticatedUser/teacherId"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {
+                  "properties": {
+                    "response": {
                       "properties": {
                         "body": {
                           "properties": {
-                            "customerIdOfOrder": {
-                              "const": {
-                                "$data": "/userInfo/customerIdOfUser"
-                              },
-                              "equals": [
-                                "/userInfo/customerIdOfUser"
-                              ]
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": true,
+                                  "meta": true,
+                                  "grade": true,
+                                  "teacherId": true,
+                                  "email": true
+                                },
+                                "additionalProperties": false
+                              }
                             }
-                          }
+                          },
+                          "additionalProperties": false
                         }
                       }
                     }
@@ -115,18 +234,10 @@
                 }
               },
               {
-                "permission": "AUTHENTICATED_DEFAULT",
+                "permission": "TEMPLATE-never_used...",
                 "requestSchema": {
                   "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "name": false
-                          }
-                        }
-                      }
-                    }
+                    "request": false
                   }
                 },
                 "responseSchema": {
@@ -157,10 +268,58 @@
               }
             ]
           }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
         }
       }
     },
-    "/players/{id}": {
+    "/students/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "admin",
+                "requestSchema": {
+                  "properties": {
+                    "request": true
+                  }
+                },
+                "responseSchema": {
+                }
+              }
+            ]
+          },
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
+          }
+        }
+      },
       "get": {
         "parameters": [
           {
@@ -172,48 +331,32 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
+                }
+              }
+            }
+          }
+        },
         "x-dcentb": {
-          "mongodb": {
-            "collection": "players"
-          },
           "accessControl": {
             "permissionSchemas": [
               {
-                "permission": "productA",
+                "permission": "admin",
                 "requestSchema": {
-                  "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "customerIdOfOrder": {
-                              "const": {
-                                "$data": "/userInfo/customerIdOfUser"
-                              },
-                              "equals": [
-                                "/userInfo/customerIdOfUser"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
+                },
+                "responseSchema": {
                 }
               },
               {
-                "permission": "AUTHENTICATED_DEFAULT",
+                "permission": "student",
                 "requestSchema": {
                   "properties": {
-                    "request": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "name": false
-                          }
-                        }
-                      }
-                    }
+                    "request": true
                   }
                 },
                 "responseSchema": {
@@ -221,21 +364,23 @@
                     "response": {
                       "properties": {
                         "body": {
+                          "required": [
+                            "studentId"
+                          ],
                           "properties": {
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "enum": [
-                                      "Peter"
-                                    ]
-                                  }
-                                }
+                            "studentId": {
+                              "const": {
+                                "$data": "/authenticatedUser/studentId"
                               }
-                            }
-                          }
+                            },
+                            "name": true,
+                            "meta": true,
+                            "grade": true,
+                            "teacherId": true,
+                            "email": true,
+                            "attendancePercent": true
+                          },
+                          "additionalProperties": false
                         }
                       }
                     }
@@ -258,40 +403,63 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "age": {
-                    "type": "integer"
+                "$ref": "#/components/schemas/Students_item_v1",
+                "allOf": [
+                  {
+                    "required": [
+                      "studentId"
+                    ]
                   }
-                }
+                ]
               }
             }
           }
         },
         "x-dcentb": {
-          "mongodb": {
-            "collection": "players"
-          },
           "accessControl": {
             "permissionSchemas": [
               {
-                "permission": "AUTHENTICATED_DEFAULT",
+                "permission": "student",
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "email": {
+                              "type": "string"
+                            },
+                            "studentId": {
+                              "const": {
+                                "$data": "/authenticatedUser/studentId"
+                              }
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {}
+              },
+              {
+                "permission": "admin",
                 "requestSchema": {},
                 "responseSchema": {}
               }
             ]
+          },
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       }
     },
-    "/players/getCollection": {
+    "/students/getCollection": {
       "post": {
         "requestBody": {
           "content": {
@@ -348,9 +516,6 @@
           }
         },
         "x-dcentb": {
-          "mongodb": {
-            "collection": "players"
-          },
           "accessControl": {
             "permissionSchemas": [
               {
@@ -365,14 +530,59 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "api-key"
+      }
+    },
     "schemas": {
-      "Players_item_v1": {
+      "Meta_item_v1": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {}
+        }
+      },
+      "Students_item_v1": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "teacherId": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta_item_v1"
+          },
           "name": {
             "type": "string"
           },
-          "age": {
+          "email": {
+            "type": "string"
+          },
+          "grade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F"
+            ]
+          },
+          "attendancePercent": {
             "type": "integer"
           }
         }

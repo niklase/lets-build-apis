@@ -43,6 +43,8 @@ public class RequestHandlerConfig {
             }
         } else if (method.equalsIgnoreCase("patch")) {
             requestHandler = config.as(CUDItemRequestHandler.class);
+        } else if (method.equalsIgnoreCase("delete")) {
+            requestHandler = config.as(CUDItemRequestHandler.class);
         }
     }
 

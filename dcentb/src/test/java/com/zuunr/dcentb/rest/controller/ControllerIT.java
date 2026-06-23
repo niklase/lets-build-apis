@@ -29,7 +29,7 @@ public class ControllerIT extends DcentbGivenWhenThenTester {
     @DisplayName("Run test for each JSON file")
     @ParameterizedTest(name = "{index} => JSON file: {0}")
     @MethodSource("testFiles")
-    void test(Path testsFolderPath) throws Exception {
+    void  test(Path testsFolderPath) throws Exception {
         executeTest(testsFolderPath);
     }
 

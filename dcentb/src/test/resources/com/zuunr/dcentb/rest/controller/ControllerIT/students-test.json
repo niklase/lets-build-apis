@@ -53,9 +53,54 @@
                 "ak-demo-35365462_user-t2_teacher": {},
                 "ak-demo-42288333_user-a1_admin": {}
               }
+            },
+            "collections": {
+              "students": {
+                "stateTransitionSchema": {
+                  "properties": {
+                    "newState": {
+                      "anyOf": [
+                        {
+                          "properties": {
+                            "grade": {
+                              "enum": [
+                                "A",
+                                "B",
+                                "C",
+                                "D",
+                                "E"
+                              ]
+                            },
+                            "attendancePercent": {
+                              "minimum": 50
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "grade": {
+                              "enum": [
+                                "F"
+                              ]
+                            },
+                            "attendancePercent": {
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
             }
           },
           "openapi": "3.1.0",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
           "paths": {
             "/students": {
               "post": {
@@ -93,6 +138,9 @@
                         "responseSchema": true
                       }
                     ]
+                  },
+                  "stateTransitionSchema": {
+                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
                   }
                 }
               },
@@ -145,6 +193,11 @@
                 "x-dcentb": {
                   "accessControl": {
                     "permissionSchemas": [
+                      {
+                        "permission": "admin",
+                        "requestSchema": {},
+                        "responseSchema": {}
+                      },
                       {
                         "permission": "teacher",
                         "requestSchema": {
@@ -239,6 +292,42 @@
               }
             },
             "/students/{id}": {
+              "delete": {
+                "parameters": [
+                  {
+                    "in": "path",
+                    "name": "id",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "No content"
+                  }
+                },
+                "x-dcentb": {
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "admin",
+                        "requestSchema": {
+                          "properties": {
+                            "request": true
+                          }
+                        },
+                        "responseSchema": {
+                        }
+                      }
+                    ]
+                  },
+                  "stateTransitionSchema": {
+                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
+                  }
+                }
+              },
               "get": {
                 "parameters": [
                   {
@@ -264,6 +353,13 @@
                 "x-dcentb": {
                   "accessControl": {
                     "permissionSchemas": [
+                      {
+                        "permission": "admin",
+                        "requestSchema": {
+                        },
+                        "responseSchema": {
+                        }
+                      },
                       {
                         "permission": "student",
                         "requestSchema": {
@@ -366,40 +462,7 @@
                     ]
                   },
                   "stateTransitionSchema": {
-                    "properties": {
-                      "newState": {
-                        "anyOf": [
-                          {
-                            "properties": {
-                              "grade": {
-                                "enum": [
-                                  "A",
-                                  "B",
-                                  "C",
-                                  "D",
-                                  "E"
-                                ]
-                              },
-                              "attendancePercent": {
-                                "minimum": 50
-                              }
-                            }
-                          },
-                          {
-                            "properties": {
-                              "grade": {
-                                "enum": [
-                                  "F"
-                                ]
-                              },
-                              "attendancePercent": {
-                                "minimum": 0
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    }
+                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
                   }
                 }
               }
@@ -475,6 +538,13 @@
             }
           },
           "components": {
+            "securitySchemes": {
+              "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "api-key"
+              }
+            },
             "schemas": {
               "Meta_item_v1": {
                 "type": "object",
@@ -929,6 +999,97 @@
         "headers": {
         },
         "body": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin , get all students",
+      "when": {
+        "method": "GET",
+        "uri": "/students",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "items": [
+            {
+              "teacherId": "teacher-A"
+            },
+            {
+              "teacherId": "teacher-A"
+            },
+            {
+              "teacherId": "teacher-A"
+            }
+          ]
+        },
+        "status": 200,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin, delete student robert",
+      "when": {
+        "method": "DELETE",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 204,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin, try to get deleted student robert",
+      "when": {
+        "method": "GET",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {
         }
       },
       "meta": {

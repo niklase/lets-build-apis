@@ -4,6 +4,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.zuunr.json.JsonObject;
+import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;
 import com.zuunr.json.schema.JsonSchema;
 import com.zuunr.json.schema.validation.JsonSchemaValidator;
@@ -12,27 +13,32 @@ import com.zuunr.json.util.JsonObjectWrapper;
 import org.bson.Document;
 
 
-public class MongoJsonDB {
+public class MongoJsonDB implements AutoCloseable{
 
     private final ResourceDeserializer resourceDeserializer = new ResourceDeserializer().init();
 
 
-    private CreateCommandTranslator create = new CreateCommandTranslator();
-    private CreateIndexesCommandTranslator createIndexes = new CreateIndexesCommandTranslator();
-    private CreateUserCommandTranslator createUser = new CreateUserCommandTranslator();
-    private DropDatabaseCommandTranslator dropDatabase = new DropDatabaseCommandTranslator();
-    private AggregateCommandTranslator aggregate = new AggregateCommandTranslator();
-    private FindCommandTranslator find = new FindCommandTranslator();
-    private FindAndModifyCommandTranslator findAndModify = new FindAndModifyCommandTranslator();
-    private InsertCommandTranslator insert = new InsertCommandTranslator();
-    private UpdateCommandTranslator update = new UpdateCommandTranslator();
-    private DeleteCommandTranslator delete = new DeleteCommandTranslator();
-    private DropCommandTranslator drop = new DropCommandTranslator();
+    private final CreateCommandTranslator create = new CreateCommandTranslator();
+    private final CreateIndexesCommandTranslator createIndexes = new CreateIndexesCommandTranslator();
+    private final CreateUserCommandTranslator createUser = new CreateUserCommandTranslator();
+    private final DropDatabaseCommandTranslator dropDatabase = new DropDatabaseCommandTranslator();
+    private final AggregateCommandTranslator aggregate = new AggregateCommandTranslator();
+    private final FindCommandTranslator find = new FindCommandTranslator();
+    private final FindAndModifyCommandTranslator findAndModify = new FindAndModifyCommandTranslator();
+    private final InsertCommandTranslator insert = new InsertCommandTranslator();
+    private final UpdateCommandTranslator update = new UpdateCommandTranslator();
+    private final DeleteCommandTranslator delete = new DeleteCommandTranslator();
+    private final DropCommandTranslator drop = new DropCommandTranslator();
 
     private static final JsonSchema MONGODB_JSON_SCHEMA = JsonValueFactory.create(MongoJsonDB.class.getResourceAsStream("mongodb.schema.json")).as(JsonSchema.class);
     private static final JsonSchemaValidator JSON_SCHEMA_VALIDATOR = new JsonSchemaValidator();
 
+    private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
+
+    public MongoJsonDB(JsonValue mongoConfig) {
+        this(mongoConfig.getJsonObject());
+    }
 
     public MongoJsonDB(JsonObject config) {
         this(
@@ -48,7 +54,7 @@ public class MongoJsonDB {
 
         // Create a MongoClient instance
         try {
-            MongoClient mongoClient = MongoClients.create(connectionString);
+            mongoClient = MongoClients.create(connectionString);
             // Access a specific database
             mongoDatabase = mongoClient.getDatabase(databaseName);
             System.out.println("mongodb ping result: " + mongoDatabase.runCommand(new Document("ping", 1)));
@@ -113,6 +119,13 @@ public class MongoJsonDB {
                 return drop.translate(commandValue);
             default:
                 throw new RuntimeException("Unsupported command");
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (mongoClient != null) {
+            mongoClient.close();
         }
     }
 }

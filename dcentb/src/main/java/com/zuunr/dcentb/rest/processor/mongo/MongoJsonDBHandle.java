@@ -10,8 +10,8 @@ public class MongoJsonDBHandle {
     private MongoJsonDB mongoJsonDB;
 
     public MongoJsonDBHandle(JsonValue openApiConfig) {
-        JsonObject config = openApiConfig.getJsonObject().get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
-        mongoJsonDB = new MongoJsonDB(config);
+        JsonObject mongoConfig = openApiConfig.getJsonObject().get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
+        mongoJsonDB = mongoConfig.as(MongoJsonDB.class); // As mongoconfig is exactly the same object instance in all operations - MongoClient will be created only  once and be reused
     }
 
     public MongoJsonDB getMongoJsonDB() {

@@ -2,7 +2,6 @@ package com.zuunr.dcentb.rest.processor.apimodel;
 
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.util.BackendTime;
-import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonObjectMerger;
 import com.zuunr.json.JsonValue;
@@ -26,12 +25,13 @@ public class UpdateNewState implements Processor {
 
         JsonObject request = requestContext.get("request").getJsonObject();
         JsonValue newState = request.get("body");
-        String itemId;
+        String itemId = request.get("pathParameters", JsonObject.EMPTY).get("id", JsonValue.NULL).getString();
         JsonValue currentState = requestContext.get("currentState", JsonValue.NULL);
 
         switch (method.toUpperCase()) {
             case "DELETE": {
                 requestContext = requestContext.put("newState", JsonValue.NULL);
+                break;
             }
             case "POST": {
                 JsonValue createdAt = JsonValue.of(BackendTime.dateTimeNow());
@@ -44,8 +44,7 @@ public class UpdateNewState implements Processor {
                         .put("href", path + "/" + itemId)
                         .put("etag", UUID.randomUUID().toString().replace("-", ""))).jsonValue();
                 requestContext = requestContext
-                        .put("newState", newState)
-                        .put("itemId", itemId);
+                        .put("newState", newState);
                 break;
             }
             case "PATCH": {
@@ -57,8 +56,11 @@ public class UpdateNewState implements Processor {
                 newStateMeta = newStateMeta.put("id", itemId).put("updatedAt", updatedAt);
                 newState = newState.getJsonObject().put("meta", newStateMeta).jsonValue();
                 requestContext = requestContext.put("newState", newState);
+                break;
             }
+            default:
+                throw new IllegalStateException("Unexpected value: " + method.toUpperCase());
         }
-        return requestContext;
+        return requestContext.put("itemId", itemId);
     }
 }

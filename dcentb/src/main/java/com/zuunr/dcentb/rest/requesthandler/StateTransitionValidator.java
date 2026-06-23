@@ -1,6 +1,7 @@
 package com.zuunr.dcentb.rest.requesthandler;
 
 import com.zuunr.dcentb.rest.processor.Processor;
+import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.schema.JsonSchema;
@@ -22,8 +23,15 @@ public class StateTransitionValidator implements Processor {
 
         stateTransitionSchema = config
                 .get("operation", JsonObject.EMPTY)
-                .get("x-dcentb", JsonObject.EMPTY)
-                .get("stateTransitionSchema", JsonObject.EMPTY).as(JsonSchema.class);
+                .get(X_DCENTB, JsonObject.EMPTY)
+                .get("stateTransitionSchema", JsonObject.EMPTY).getJsonObject()
+                .put(JsonArray.of(X_DCENTB, "collections"), config.get(X_DCENTB, JsonObject.EMPTY).getJsonObject().get("collections", JsonObject.EMPTY
+
+
+
+
+                ))
+                .as(JsonSchema.class);
     }
 
     @Override
@@ -39,7 +47,7 @@ public class StateTransitionValidator implements Processor {
                     .put("response", JsonObject.EMPTY
                             .put("status", 409)
                             .put("body", ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY
-                                            .createErrorsAndSchemaObject(result, instance, stateTransitionSchema)));
+                                    .createErrorsAndSchemaObject(result, instance, stateTransitionSchema)));
         }
 
         return requestContext;
