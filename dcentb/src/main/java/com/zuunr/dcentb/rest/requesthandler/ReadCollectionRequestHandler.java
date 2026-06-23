@@ -15,7 +15,6 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
 
     public ReadCollectionRequestHandler(JsonValue config) {
         super(config);
-        Authenticator authenticator = config.as(Authenticator.class);
         ApiKeyAuthenticator apiKeyAuthenticator = config.as(ApiKeyAuthenticator.class);
         OASRequestDeserializer oasRequestDeserializer = config.as(OASRequestDeserializer.class);
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);

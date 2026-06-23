@@ -21,10 +21,6 @@
         },
         "config": {
           "openapi": "3.1.0",
-          "accessControl": {
-            "userInfo": {
-            }
-          },
           "paths": {
             "/players": {
               "post": {
@@ -237,6 +233,18 @@
                 }
               }
             }
+          },
+          "x-dcentb": {
+            "users": {
+              "user1234": {}
+            },
+            "accessControl": {
+              "apiKeys": {
+                "RANDOMUUID_user1234_PERMISSION-A": {
+                  "userId": "user1234"
+                }
+              }
+            }
           }
         }
       }
@@ -246,6 +254,9 @@
         "method": "POST",
         "uri": "/players",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "content-type": [
             "application/json"
           ]
@@ -322,7 +333,9 @@
         "method": "GET",
         "uri": "{{href_of_alice}}",
         "headers": {
-        }
+        "api-key": [
+          "RANDOMUUID_user1234_PERMISSION-A"
+        ]}
       }
     },
     {

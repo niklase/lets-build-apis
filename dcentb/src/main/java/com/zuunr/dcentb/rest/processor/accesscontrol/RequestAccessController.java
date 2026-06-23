@@ -93,7 +93,7 @@ public class RequestAccessController implements Processor {
 
     public JsonObject process(JsonObject requestContext) {
 
-        JsonArray permissions = requestContext.get("authenticatedUser", JsonObject.EMPTY).get("userPermissions", JsonArray.EMPTY).getJsonArray();
+        JsonArray permissions = requestContext.get("authenticatedUser", JsonObject.EMPTY).get("permissions", JsonArray.EMPTY).getJsonArray();
 
         JsonValue authenticatedDefault = permissionSchemas.get("AUTHENTICATED_DEFAULT");
         boolean authenticatedDefaultPermissionExist = authenticatedDefault != null;
@@ -101,12 +101,15 @@ public class RequestAccessController implements Processor {
             permissions = permissions.add("AUTHENTICATED_DEFAULT");
         }
 
-        JsonObject candidateErrorResult = JsonObject.EMPTY.put("valid", false);
+        JsonObject candidateErrorResult = JsonObject.EMPTY.put("message", "Invalid request");
         for (int i = 0; i < permissions.size(); i++) {
             String permission = permissions.get(i).getString();
             JsonObject permissionAndSchemas = permissionSchemas.get(permission, JsonObject.EMPTY).getJsonObject();
-            JsonValue requestSchemaOfPermission = permissionAndSchemas.get("requestSchema", JsonValue.FALSE);
+            JsonValue requestSchemaOfPermission = permissionAndSchemas.get("requestSchema");
 
+            if (requestSchemaOfPermission == null) {
+                continue;
+            }
             JsonObject result = checkPermission(
                     permission,
                     requestSchemaOfPermission,
@@ -115,13 +118,13 @@ public class RequestAccessController implements Processor {
                 return requestContext.put("responseFilterSchema", permissionAndSchemas.get("responseSchema", JsonValue.FALSE));
             } else {
                 JsonValue errors = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(result, requestContext.jsonValue(), requestSchemaOfPermission.as(JsonSchema.class));
-                candidateErrorResult = requestContext.put(RESPONSE, JsonObject.EMPTY.put("status", 403).put("body", JsonObject.EMPTY.put("message", "Invalid request").put("errors", errors)));
+                candidateErrorResult = candidateErrorResult.put("errors", errors);
             }
         }
         // TODO: Create "anyOf" where each item per permission.
         //       Make sure first validation only uses FLAG and then a full anyOf validation is done to give best feedback to user
         //throw new RuntimeException("Implement anyOf-schema based on all permissions of user");
-        return candidateErrorResult;
+        return requestContext.put("response", JsonObject.EMPTY.put("status", 403).put("body", candidateErrorResult));
     }
 
     private JsonObject checkPermission(String permission, JsonValue schemaOfPermission, JsonObject exchange) {

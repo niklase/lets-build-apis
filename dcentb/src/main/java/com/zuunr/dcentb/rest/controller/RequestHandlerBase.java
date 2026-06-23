@@ -37,9 +37,12 @@ public abstract class RequestHandlerBase implements RequestHandler {
                 updatedRequestContext = processor.process(updatedRequestContext);
                 JsonObject response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
                 if (response != null) {
+                    processor = responseAccessController;
                     logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
                     updatedRequestContext = responseAccessController.process(updatedRequestContext);
                     response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
+                    JsonObject headers = updatedRequestContext.get(Processor.RESPONSE, JsonObject.EMPTY).getJsonObject().get("headers", JsonObject.EMPTY).getJsonObject();
+                    response = response.put("headers", headers);
                     return response.as(Response.class);
                 }
             }

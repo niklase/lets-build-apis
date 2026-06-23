@@ -12,6 +12,8 @@ public class SetMongoResultOrNullAsCurrentState implements Processor {
     @Override
     public JsonObject process(JsonObject requestContect) {
         JsonValue currentState = requestContect.get("mongoResult", JsonObject.EMPTY).get("cursor", JsonObject.EMPTY).get("firstBatch", JsonArray.of(JsonValue.NULL)).getJsonArray().get(0);
-        return requestContect.put("currentState", currentState.isNull() ? currentState : MongoToApiItemTranslator.getRestItem(currentState.getJsonObject()).jsonValue());
+        return requestContect.put("currentState", currentState.isNull()
+                ? currentState :
+                MongoToApiItemTranslator.getRestItem(currentState.getJsonObject()).jsonValue());
     }
 }

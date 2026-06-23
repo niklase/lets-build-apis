@@ -26,10 +26,6 @@
             }
           },
           "openapi": "3.1.0",
-          "accessControl": {
-            "userInfo": {
-            }
-          },
           "paths": {
             "/players": {
               "post": {
@@ -392,6 +388,18 @@
                 }
               }
             }
+          },
+          "x-dcentb": {
+            "users": {
+              "user1234": {}
+            },
+            "accessControl": {
+              "apiKeys": {
+                "RANDOMUUID_user1234_PERMISSION-A": {
+                  "userId": "user1234"
+                }
+              }
+            }
           }
         }
       }
@@ -401,6 +409,9 @@
         "method": "POST",
         "uri": "/players",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "content-type": [
             "application/json"
           ]
@@ -471,6 +482,9 @@
         "method": "POST",
         "uri": "/players",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "content-type": [
             "application/json"
           ]
@@ -548,6 +562,11 @@
     {
       "when": {
         "method": "GET",
+        "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ]
+        },
         "uri": "/players"
       }
     },
@@ -578,7 +597,12 @@
     {
       "when": {
         "method": "GET",
-        "uri": "/not-part-of-the-api"
+        "uri": "/not-part-of-the-api",
+        "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ]
+        }
       }
     },
     {
@@ -593,7 +617,12 @@
     {
       "when": {
         "method": "PATCH",
-        "uri": "/players"
+        "uri": "/players",
+        "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ]
+        }
       }
     },
     {
@@ -611,7 +640,12 @@
     {
       "when": {
         "method": "GET",
-        "uri": "/players?filter.name.eq=Peter"
+        "uri": "/players?filter.name.eq=Peter",
+        "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ]
+        }
       }
     },
     {
@@ -657,6 +691,9 @@
         "method": "PATCH",
         "uri": "{{peter-location}}",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "content-type": [
             "application/json"
           ]
@@ -731,6 +768,9 @@
         "method": "GET",
         "uri": "{{peter-location}}",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ]
         }
       }
     },
@@ -806,6 +846,9 @@
           }
         },
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "content-type": [
             "application/json"
           ]

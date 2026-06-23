@@ -1,6 +1,5 @@
 package com.zuunr.dcentb.rest.processor.mongo;
 
-import com.zuunr.dcentb.rest.controller.DcentbConfig;
 import com.zuunr.dcentb.rest.controller.RequestHandlerConfig;
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonArray;
@@ -20,7 +19,7 @@ public class MongoJsonDBGetItemCommandCreator implements Processor {
     }
 
     @Override
-    public JsonObject process(JsonObject requestContext){
+    public JsonObject process(JsonObject requestContext) {
 
 
         String id = requestContext.get("request", JsonObject.EMPTY).get("pathParameters", JsonObject.EMPTY).get("id", JsonValue.NULL).getString();
@@ -42,7 +41,6 @@ public class MongoJsonDBGetItemCommandCreator implements Processor {
         }
         return requestContext;
     }
-
 
 
 }

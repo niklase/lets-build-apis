@@ -1,4 +1,7 @@
 {
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+  },
   "tests": [
     {
       "given": {
@@ -153,6 +156,18 @@
                 }
               }
             }
+          },
+          "x-dcentb": {
+            "users": {
+              "user1234": {}
+            },
+            "accessControl": {
+              "apiKeys": {
+                "RANDOMUUID_user1234_PERMISSION-A": {
+                  "userId": "user1234"
+                }
+              }
+            }
           }
         }
       }
@@ -162,6 +177,9 @@
         "method": "GET",
         "uri": "/players?limit=2&offset=0&orderBy=name%20desc",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "priority": [
             "u=0, i"
           ],
@@ -229,6 +247,9 @@
         "method": "GET",
         "uri": "/players?limit=1",
         "headers": {
+          "api-key": [
+            "RANDOMUUID_user1234_PERMISSION-A"
+          ],
           "priority": [
             "u=0, i"
           ],

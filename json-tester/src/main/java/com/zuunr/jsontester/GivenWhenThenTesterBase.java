@@ -95,7 +95,9 @@ public abstract class GivenWhenThenTesterBase {
 
         for (int i = 1; i < tests.size(); i = i + 2) {
 
-            LOGGER.info("tests[{}]: {}", i, tests.get(i).get("description", "<no description>").getString());
+            String description = "tests["+i+"]: "+tests.get(i).get("description", JsonValue.EMPTY_STRING).getString();
+
+            LOGGER.info("{}", description);
             JsonValue when = tests.get(i).get("when");
             if (when == null) {
                 throw new RuntimeException("Missing 'when' in test element: " + i);
@@ -103,7 +105,7 @@ public abstract class GivenWhenThenTesterBase {
 
             when = updateWithVariableValues(when, variables);
 
-            JsonObject testItem = tests.get(i + 1 ).getJsonObject();
+            JsonObject testItem = tests.get(i + 1).getJsonObject();
             JsonValue then = testItem.get("then");
 
             if (then == null) {
@@ -119,26 +121,20 @@ public abstract class GivenWhenThenTesterBase {
 
             switch (validationStrategy) {
                 case "ALLOWING_EXTRA_PROPERTIES": {
-                    JsonObject thenToBeMerged = JsonObject.EMPTY.put(MERGE_ME, then);
-                    JsonObject resultToBeMerged = JsonObject.EMPTY.put(MERGE_ME, result);
 
-                    // JSON Merge Patch:  "then" patched by "actual result"
-                    JsonObject thenMergedByResult = JSON_OBJECT_MERGER.merge(thenToBeMerged, resultToBeMerged);
+                    for (JsonValue pathJsonValue : then.getPaths(true)) {
+                        JsonArray pathAndValue = pathJsonValue.getJsonArray();
+                        JsonArray path = pathAndValue.allButLast();
+                        JsonValue last = pathAndValue.last();
 
-                    // JSON Merge Patch: "actual result" patched by "then"
-                    JsonObject resultMergedByThen = JSON_OBJECT_MERGER.merge(resultToBeMerged, thenToBeMerged);
-                    assertEquals(thenMergedByResult.get(MERGE_ME), resultMergedByThen.get(MERGE_ME), "Present properties of 'then' mismatch");
-                    assertEquals(resultMergedByThen.get(MERGE_ME), thenMergedByResult.get(MERGE_ME), "Present properties of 'then' mismatch");
-                    JsonArray propertiesOfThen = then.getPaths(false);
-                    JsonArrayBuilder failures = JsonArray.EMPTY.builder();
-                    for (int propIndex = 0; propIndex < propertiesOfThen.size(); propIndex++) {
-                        JsonPointer propertyPointer = propertiesOfThen.get(propIndex).getJsonArray().as(JsonPointer.class);
-                        JsonValue resultingValue = result.get(propertyPointer);
-                        if (resultingValue == null) {
-                            failures.add(propertyPointer.getJsonPointerString());
+                        JsonValue actualValue = result.get(path);
+                        if (last.isJsonObject() && actualValue != null && actualValue.isJsonObject()) {
+                            // This then-leaf-object should not be validated as a leaf because it may contain more properties.
+                        } else {
+                            String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
+                            assertEquals(pointer + ": " +last, pointer + ": " +actualValue, description);
                         }
                     }
-                    assertEquals("Mismatching pointers of 'then': " + JsonArray.EMPTY, "Mismatching pointers of 'then': " + failures.build(), "Present properties of 'then' mismatch:");
                     break;
                 }
                 case "JSON_SCHEMA": {
@@ -160,14 +156,14 @@ public abstract class GivenWhenThenTesterBase {
 
             }
             JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
-            variables  = variables.putAll(setVariables(setVariables, result));
+            variables = variables.putAll(setVariables(setVariables, result));
         }
         LOGGER.info("Test ended: {}", jsonFileName);
     }
 
     private JsonValue updateWithVariableValues(JsonValue tobeUpdated, JsonObject variables) {
         JsonObject wrapper = JsonObject.EMPTY.put("_", tobeUpdated);
-        for (JsonValue pathValue: wrapper.jsonValue().getPaths(true)) {
+        for (JsonValue pathValue : wrapper.jsonValue().getPaths(true)) {
             JsonArray path = pathValue.getJsonArray();
             JsonValue last = path.last();
             if (last.isString()) {

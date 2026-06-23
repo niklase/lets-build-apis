@@ -1,0 +1,874 @@
+{
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES",
+    "variables": {
+      "##var1##": "students"
+    }
+  },
+  "tests": [
+    {
+      "given": {
+        "dbSetup": {
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "db": "dcentb-demo",
+          "commands": [
+            {
+              "drop": {
+                "collection": "students"
+              }
+            }
+          ]
+        },
+        "config": {
+          "x-dcentb": {
+            "mongodb": {
+              "db": "dcentb-demo"
+            },
+            "users": {
+              "user-s1": {
+                "studentId": "student-anna"
+              },
+              "user-s2": {
+                "studentId": "student-peter"
+              },
+              "user-s3": {
+                "studentId": "student-robert"
+              },
+              "user-t1": {
+                "teacherId": "teacher-A"
+              },
+              "user-t2": {
+                "teacherId": "teacher-B"
+              },
+              "user-a1": {
+              }
+            },
+            "accessControl": {
+              "apiKeys": {
+                "<random-secret>_<user-id>_<roles>": {},
+                "ak-demo-87162534_user-s1_student": {},
+                "ak-demo-18783325_user-s2_student": {},
+                "ak-demo-18783325_user-s3_student": {},
+                "ak-demo-84441136_user-t1_teacher": {},
+                "ak-demo-35365462_user-t2_teacher": {},
+                "ak-demo-42288333_user-a1_admin": {}
+              }
+            }
+          },
+          "openapi": "3.1.0",
+          "paths": {
+            "/students": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Students_item_v1"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$ref": "#/components/schemas/Students_item_v1"
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-dcentb": {
+                  "mongodb": {
+                    "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "admin",
+                        "requestSchema": {},
+                        "responseSchema": true
+                      }
+                    ]
+                  }
+                }
+              },
+              "get": {
+                "parameters": [
+                  {
+                    "in": "query",
+                    "name": "filter.name.eq",
+                    "schema": {
+                      "type": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "filter.teacherId.eq",
+                    "schema": {
+                      "type": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "limit",
+                    "schema": {
+                      "type": "integer"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "offset",
+                    "schema": {
+                      "type": "integer"
+                    },
+                    "required": false
+                  },
+                  {
+                    "in": "query",
+                    "name": "orderBy",
+                    "schema": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "required": false
+                  }
+                ],
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "students"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "teacher",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "required": [
+                                "query"
+                              ],
+                              "properties": {
+                                "query": {
+                                  "required": [
+                                    "filter.teacherId.eq"
+                                  ],
+                                  "properties": {
+                                    "filter.teacherId.eq": {
+                                      "items": {
+                                        "const": {
+                                          "$data": "/authenticatedUser/teacherId"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "responseSchema": {
+                          "properties": {
+                            "response": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "name": true,
+                                          "meta": true,
+                                          "grade": true,
+                                          "teacherId": true,
+                                          "email": true
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "permission": "TEMPLATE-never_used...",
+                        "requestSchema": {
+                          "properties": {
+                            "request": false
+                          }
+                        },
+                        "responseSchema": {
+                          "properties": {
+                            "response": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "name": {
+                                            "enum": [
+                                              "Peter"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "/students/{id}": {
+              "get": {
+                "parameters": [
+                  {
+                    "in": "path",
+                    "name": "id",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$ref": "#/components/schemas/Students_item_v1"
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "students"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "student",
+                        "requestSchema": {
+                          "properties": {
+                            "request": true
+                          }
+                        },
+                        "responseSchema": {
+                          "properties": {
+                            "response": {
+                              "properties": {
+                                "body": {
+                                  "required": [
+                                    "studentId"
+                                  ],
+                                  "properties": {
+                                    "studentId": {
+                                      "const": {
+                                        "$data": "/authenticatedUser/studentId"
+                                      }
+                                    },
+                                    "name": true,
+                                    "meta": true,
+                                    "grade": true,
+                                    "teacherId": true,
+                                    "email": true,
+                                    "attendancePercent": true
+                                  },
+                                  "additionalProperties": false
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "patch": {
+                "parameters": [
+                  {
+                    "in": "path",
+                    "name": "id",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Students_item_v1",
+                        "allOf": [
+                          {
+                            "required": [
+                              "studentId"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "x-dcentb": {
+                  "mongodb": {
+                    "collection": "students"
+                  },
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "student",
+                        "requestSchema": {
+                          "properties": {
+                            "request": {
+                              "properties": {
+                                "body": {
+                                  "properties": {
+                                    "email": {
+                                      "type": "string"
+                                    },
+                                    "studentId": {
+                                      "const": {
+                                        "$data": "/authenticatedUser/studentId"
+                                      }
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "responseSchema": {}
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "/students/getCollection": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "offset": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "filter": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "object",
+                                "properties": {
+                                  "eq": {
+                                    "type": "string"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "age": {
+                                "type": "object",
+                                "properties": {
+                                  "lt": {
+                                    "type": "integer"
+                                  },
+                                  "gt": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "content": {
+                      "application/json": {
+                        "schema": {}
+                      }
+                    }
+                  }
+                },
+                "x-dcentb": {
+                  "accessControl": {
+                    "permissionSchemas": [
+                      {
+                        "permission": "AUTHENTICATED_DEFAULT",
+                        "requestSchema": {},
+                        "responseSchema": true
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Meta_item_v1": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "href": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {}
+                }
+              },
+              "Students_item_v1": {
+                "type": "object",
+                "properties": {
+                  "studentId": {
+                    "type": "string"
+                  },
+                  "teacherId": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "$ref": "#/components/schemas/Meta_item_v1"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "grade": {
+                    "enum": [
+                      "A",
+                      "B",
+                      "C",
+                      "D",
+                      "E",
+                      "F"
+                    ]
+                  },
+                  "attendancePercent": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Create a new student Anna",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        },
+        "body": {
+          "name": "Anna",
+          "email": "anna@example.com",
+          "studentId": "student-anna",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 100
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Anna",
+          "meta": {
+          }
+        },
+        "status": 201,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+          "{{student-anna-href}}": "/headers/location/0"
+        }
+      }
+    },
+    {
+      "description": "Create a new student Peter",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        },
+        "body": {
+          "name": "Peter",
+          "email": "peter@example.com",
+          "studentId": "student-peter",
+          "teacherId": "teacher-A",
+          "grade": "D",
+          "attendancePercent": 92
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Peter",
+          "meta": {
+          }
+        },
+        "status": 201,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+          "{{student-peter-href}}": "/headers/location/0"
+        }
+      }
+    },
+    {
+      "description": "Create a new student Robert",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        },
+        "body": {
+          "name": "Robert",
+          "email": "robert@example.com",
+          "studentId": "student-robert",
+          "teacherId": "teacher-A",
+          "grade": "A",
+          "attendancePercent": 98
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Robert",
+          "meta": {
+          }
+        },
+        "status": 201,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+          "{{student-robert-href}}": "/headers/location/0"
+        }
+      }
+    },
+    {
+      "description": "As teacher user-t1, try to get all students of any teacher",
+      "when": {
+        "method": "GET",
+        "uri": "/students",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-84441136_user-t1_teacher"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+        },
+        "status": 403,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As teacher user-t1, get all students of other teacherId",
+      "when": {
+        "method": "GET",
+        "uri": "/students?filter.teacherId.eq=teacher-A",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-84441136_user-t1_teacher"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "items": [
+            {
+              "teacherId": "teacher-A"
+            },
+            {
+              "teacherId": "teacher-A"
+            }
+          ]
+        },
+        "status": 200,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As teacher user-t1, get all students of other teacherId",
+      "when": {
+        "method": "GET",
+        "uri": "/students?filter.teacherId.eq=teacher-B",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-84441136_user-t1_teacher"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "errors": [
+            {
+              "rejectedValue": "teacher-B",
+              "field": "/request/query/filter.teacherId.eq/0"
+            }
+          ]
+        },
+        "status": 403,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As student student-s1, get info about myself",
+      "when": {
+        "method": "GET",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-87162534_user-s1_student"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "studentId": "student-anna"
+        },
+        "status": 200,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As student student-s1, cannot get info about other student, not even that the student resource exists.",
+      "when": {
+        "method": "GET",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-87162534_user-s1_student"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As student student-s2 and get info about robert",
+      "when": {
+        "method": "GET",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-18783325_user-s3_student"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 200,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As student student-s3 (robert), update email of  robert",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-18783325_user-s3_student"
+          ]
+        },
+        "body": {
+          "studentId": "student-robert",
+          "email": "rob@example.com"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "email": "rob@example.com",
+          "studentId": "student-robert"
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As student student-s1 (anna), failing to update email of  robert",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-87162534_user-s1_student"
+          ]
+        },
+        "body": {
+          "studentId": "student-robert",
+          "email": "rob@example.com"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 403,
+        "headers": {
+        },
+        "body": {
+
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    }
+  ]
+}

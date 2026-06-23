@@ -18,30 +18,32 @@ public class RequestHandlerConfig {
     public RequestHandler getRequestHandler() {
 
         if (requestHandler == null) {
-            String method = config.get("method").getString();
-
-            String path = config.get("path").getString();
-
-
-
-            if (method.equalsIgnoreCase("get")) {
-
-                if (path.matches(".*/\\{[^}]+\\}$")) {
-                    requestHandler = config.as(ReadItemRequestHandler.class);
-                } else {
-                    requestHandler = config.as(ReadCollectionRequestHandler.class);
-                }
-            } else if (method.equalsIgnoreCase("post")) {
-                if (path.endsWith("/getCollection")) {
-                    requestHandler = config.as(ReadCollectionRequestHandler.class);
-                } else {
-                    requestHandler = config.as(CUDItemRequestHandler.class);
-                }
-            } else if (method.equalsIgnoreCase("patch")) {
-                requestHandler = config.as(CUDItemRequestHandler.class);
-            }
+            initRequestHandler();
         }
         return requestHandler;
+    }
+
+    private void initRequestHandler() {
+        String method = config.get("method").getString();
+
+        String path = config.get("path").getString();
+
+        if (method.equalsIgnoreCase("get")) {
+
+            if (path.matches(".*/\\{[^}]+\\}$")) {
+                requestHandler = config.as(ReadItemRequestHandler.class);
+            } else {
+                requestHandler = config.as(ReadCollectionRequestHandler.class);
+            }
+        } else if (method.equalsIgnoreCase("post")) {
+            if (path.endsWith("/getCollection")) {
+                requestHandler = config.as(ReadCollectionRequestHandler.class);
+            } else {
+                requestHandler = config.as(CUDItemRequestHandler.class);
+            }
+        } else if (method.equalsIgnoreCase("patch")) {
+            requestHandler = config.as(CUDItemRequestHandler.class);
+        }
     }
 
 
