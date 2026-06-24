@@ -5,6 +5,8 @@ import com.zuunr.dcentb.rest.controller.Controller;
 import com.zuunr.json.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,7 @@ import java.io.IOException;
  * @author Niklas Eldberger
  */
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 @RestController
 public class HttpController {
 

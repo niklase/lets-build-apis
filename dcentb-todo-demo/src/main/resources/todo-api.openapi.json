@@ -1,0 +1,200 @@
+{
+  "x-dcentb": {
+    "mongodb": {
+      "db": "todo-demo"
+    },
+    "accessControl": {
+      "apiKeys": {
+        "demo-secret_alice_user": {},
+        "demo-secret_bob_user": {}
+      }
+    }
+  },
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Todo API",
+    "version": "1.0.0",
+    "description": "A minimal todo list API powered by dcentb — no Java code, only this spec."
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/todos": {
+      "post": {
+        "summary": "Create a todo item",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Todo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          }
+        },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "user",
+                "requestSchema": {},
+                "responseSchema": true
+              }
+            ]
+          }
+        }
+      },
+      "get": {
+        "summary": "List all todo items",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter.done.eq",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "user",
+                "requestSchema": {},
+                "responseSchema": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "/todos/{id}": {
+      "get": {
+        "summary": "Get a single todo item",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": [
+              {
+                "permission": "user",
+                "requestSchema": {},
+                "responseSchema": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "api-key"
+      }
+    },
+    "schemas": {
+      "Todo": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Buy oat milk"
+          },
+          "done": {
+            "type": "boolean",
+            "example": false
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["title"]
+      },
+      "Meta": {
+        "type": "object",
+        "description": "Auto-populated by dcentb on write.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {}
+        }
+      }
+    }
+  }
+}

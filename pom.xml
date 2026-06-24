@@ -12,6 +12,7 @@
         -->
         <module>parent</module>
         <module>dcentb</module>
+        <module>dcentb-todo-demo</module>
         <module>json-tester</module>
         <module>mongodb</module>
         <module>mongoschema</module>

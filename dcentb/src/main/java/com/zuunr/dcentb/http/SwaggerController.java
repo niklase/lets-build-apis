@@ -13,8 +13,11 @@ import java.io.IOException;
 @RestController
 public class SwaggerController {
 
-    @Value("${dcentb.openapi.file:classpath:demo.openapi.json}")
-    private Resource openapiResource;
+    private final Resource openapiResource;
+
+    public SwaggerController(@Value("${dcentb.openapi.file:classpath:demo.openapi.json}") Resource openapiResource) {
+        this.openapiResource = openapiResource;
+    }
 
     @GetMapping(value = "/swagger", produces = MediaType.TEXT_HTML_VALUE)
     public String swaggerUi() {
