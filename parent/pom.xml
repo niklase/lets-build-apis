@@ -59,6 +59,11 @@
             </dependency>
             <dependency>
                 <groupId>com.zuunr</groupId>
+                <artifactId>sqlschema</artifactId>
+                <version>${databiit}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zuunr</groupId>
                 <artifactId>openapi</artifactId>
                 <version>${databiit}</version>
             </dependency>

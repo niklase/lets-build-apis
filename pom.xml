@@ -26,6 +26,7 @@
         <module>services-app</module>
         <module>mermaid-schema</module>
         <module>form-builder</module>
+        <module>sqlschema</module>
     </modules>
     <name>databiit-opensource</name>
 </project>
