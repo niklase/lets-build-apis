@@ -1,14 +1,89 @@
-# dcentb - A Data Centric Backend
+# DcentB - a Data Centric Backend
 
-**dcentb** is a declarative REST API backend that integrates with MongoDB.
+> A declarative backend framework for Spring Boot — CRUD, validation, filtering and fine-grained authorization in configuration instead of boilerplate code.
 
 # Why?
 
-The goal of **dcentb** is to provide a good default implementation of a REST API for any data entities. A highly opinionated and consistent API design system provides a good developer experience for your API consumers as well as for you as     API provider. 
+The goal of **dcentb** is to provide a good default implementation of a REST API for any type of data entity. A highly opinionated and consistent _API design system_ provides a good developer experience for your API consumers as well as for you as API provider. 
 
-- OpenAPI-format rules API operations including data input and data output
+
+
+- OpenAPI-format as specification (and implementation!) of API operations including data input and data output
 - JSON Schema to declare fine-grained access control of both input and output data
 - Java Spring Boot Application with unlimited options for extensions
+
+# What it looks like
+
+Define your schema in OpenAPI once — dcentb serves the full CRUD API immediately.
+
+**Create**
+```http
+POST /students
+{
+    "name": "Anna", 
+    "email": "anna@school.com", 
+    "grade": "A", 
+    "attendancePercent": 92
+}
+
+201 Created
+{
+    "name": "Anna", 
+    "email": "anna@school.com", 
+    "grade": "A", "attendancePercent": 92,
+    "meta": {
+        "id": "abc123", 
+        "href": "/students/abc123", 
+        "createdAt": "2024-09-01T09:00:00Z"
+    }
+}
+```
+
+Every item gets `meta.id`, `meta.href`, `meta.createdAt` and `meta.updatedAt` for free.
+
+**Filter, paginate and sort — built in**
+```http
+GET /students?filter.teacherId.eq=teacher-A&limit=10&orderBy=name+desc
+
+200 OK
+{
+    "items": [...], 
+    "meta":{
+        "size": 20, 
+        "offset": 0, 
+        "limit": 20
+    }
+}    
+```
+
+**Partial update and delete**
+```http
+PATCH /students/abc123   {"grade": "B"}   → 200
+DELETE /students/abc123                   → 204
+```
+
+**Access control is a JSON Schema rule in the spec — not middleware, not annotations.** Declare which roles can access which operations and which response fields they can see. Rules are data-driven: a teacher can only query students assigned to them:
+
+```json
+{
+  "permission": "teacher",
+  "requestSchema": {
+    "properties": { "query": {
+      "required": ["filter.teacherId.eq"],
+      "properties": { "filter.teacherId.eq": { "items": { "const": { "$data": "/authenticatedUser/teacherId" } } } }
+    }}
+  },
+  "responseSchema": {
+    "properties": { "body": { "properties": { "items": {
+      "items": { "properties": {"name": true, "grade": true, "email": true}, "additionalProperties": false }
+    }}}}
+  }
+}
+```
+
+A student can only update their own email. An admin sees everything. All of this lives in the OpenAPI file — no Java code needed.
+
+---
 
 # Add dcentb to an existing Spring Boot application
 

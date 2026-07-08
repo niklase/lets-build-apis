@@ -56,7 +56,60 @@
             },
             "collections": {
               "students": {
+                "permissions": {
+                  "student": {
+                    "readItemSchema": {
+                      "properties": {
+                        "response": {
+                          "properties": {
+                            "body": {
+                              "if": {
+                                "required": [
+                                  "studentId"
+                                ],
+                                "properties": {
+                                  "studentId": {
+                                    "const": {
+                                      "$data": "/authenticatedUser/studentId"
+                                    }
+                                  }
+                                }
+                              },
+                              "then": {
+                              },
+                              "else": false
+                            }
+                          }
+                        }
+                      }
+
+                    }
+                  }
+                },
                 "stateTransitionSchema": {
+                  "if": {
+                    "required": [
+                      "currentState"
+                    ],
+                    "properties": {
+                      "currentState": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "newState": {
+                        "properties": {
+                          "studentId": {
+                            "const": {
+                              "$data": "/currentState/studentId"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
                   "properties": {
                     "newState": {
                       "anyOf": [
@@ -109,7 +162,20 @@
                   "content": {
                     "application/json": {
                       "schema": {
-                        "$ref": "#/components/schemas/Students_item_v1"
+                        "$ref": "#/components/schemas/Students_item_v1",
+                        "allOf": [
+                          {
+                            "properties": {
+                              "name": true,
+                              "email": true,
+                              "studentId": true,
+                              "teacherId": true,
+                              "grade": true,
+                              "attendancePercent": true
+                            },
+                            "additionalProperties": false
+                          }
+                        ]
                       }
                     }
                   }
@@ -184,7 +250,13 @@
                     "schema": {
                       "type": "array",
                       "items": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                          "name",
+                          "name desc",
+                          "meta.createdAt",
+                          "meta.createdAt desc"
+                        ]
                       }
                     },
                     "required": false
@@ -320,6 +392,24 @@
                         },
                         "responseSchema": {
                         }
+                      },
+                      {
+                        "permission": "student",
+                        "requestSchema": {
+                          "properties": {
+                            "currentState": {
+                              "properties": {
+                                "studentId": {
+                                  "const": {
+                                    "$data": "/authenticatedUser/studentId"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "responseSchema": {
+                        }
                       }
                     ]
                   },
@@ -417,9 +507,14 @@
                         "$ref": "#/components/schemas/Students_item_v1",
                         "allOf": [
                           {
-                            "required": [
-                              "studentId"
-                            ]
+                            "properties": {
+                              "name": true,
+                              "email": true,
+                              "teacherId": true,
+                              "grade": true,
+                              "attendancePercent": true
+                            },
+                            "additionalProperties": false
                           }
                         ]
                       }
@@ -433,17 +528,21 @@
                         "permission": "student",
                         "requestSchema": {
                           "properties": {
+                            "currentState": {
+                              "properties": {
+                                "studentId": {
+                                  "const": {
+                                    "$data": "/authenticatedUser/studentId"
+                                  }
+                                }
+                              }
+                            },
                             "request": {
                               "properties": {
                                 "body": {
                                   "properties": {
                                     "email": {
                                       "type": "string"
-                                    },
-                                    "studentId": {
-                                      "const": {
-                                        "$data": "/authenticatedUser/studentId"
-                                      }
                                     }
                                   },
                                   "additionalProperties": false
@@ -749,7 +848,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, get all students of other teacherId",
+      "description": "As teacher user-t1, get all students of other teacher-A (same as user-t1)",
       "when": {
         "method": "GET",
         "uri": "/students?filter.teacherId.eq=teacher-A",
@@ -916,7 +1015,6 @@
           ]
         },
         "body": {
-          "studentId": "student-robert",
           "email": "rob@example.com"
         }
       }
@@ -953,14 +1051,13 @@
           ]
         },
         "body": {
-          "studentId": "student-robert",
           "email": "rob@example.com"
         }
       }
     },
     {
       "then": {
-        "status": 403,
+        "status": 404,
         "headers": {
         },
         "body": {
@@ -988,7 +1085,6 @@
           ]
         },
         "body": {
-          "studentId": "student-peter",
           "attendancePercent": 30
         }
       }
@@ -1082,6 +1178,58 @@
           ],
           "api-key": [
             "ak-demo-42288333_user-a1_admin"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin, get all with special ids (in=abc123,def456) failing",
+      "when": {
+        "method": "GET",
+        "uri": "/students?filter.meta.id.in=abc123,def456",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-42288333_user-a1_admin"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {
+        }
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As Peter, delete student Anna",
+      "when": {
+        "method": "DELETE",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "ak-demo-18783325_user-s2_student"
           ]
         }
       }

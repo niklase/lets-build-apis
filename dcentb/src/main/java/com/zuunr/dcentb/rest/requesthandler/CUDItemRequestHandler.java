@@ -3,6 +3,7 @@ package com.zuunr.dcentb.rest.requesthandler;
 import com.zuunr.dcentb.rest.controller.RequestHandlerBase;
 import com.zuunr.dcentb.rest.processor.*;
 import com.zuunr.dcentb.rest.processor.accesscontrol.ApiKeyAuthenticator;
+import com.zuunr.dcentb.rest.processor.accesscontrol.CurrentStateAccessController;
 import com.zuunr.dcentb.rest.processor.accesscontrol.RequestAccessController;
 import com.zuunr.dcentb.rest.processor.accesscontrol.UserInfoProvider;
 import com.zuunr.dcentb.rest.processor.apimodel.UpdateNewState;
@@ -27,6 +28,7 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
                 config.as(MongoJsonDBCommandRunner.class),          // create new state (get current state)
                 config.as(VerifyMongoCommandExecution.class),       // create new state (get current state -> item)
                 config.as(SetMongoResultOrNullAsCurrentState.class),// state from mongo
+                config.as(CurrentStateAccessController.class),      // verify if operation is authorized with current state
                 config.as(UpdateNewState.class),                    // current state + new state (from mongo or from apiModel)
                 config.as(StateTransitionValidator.class),
                 config.as(NewStateToMongoItem.class),               // new state -> mongo item
