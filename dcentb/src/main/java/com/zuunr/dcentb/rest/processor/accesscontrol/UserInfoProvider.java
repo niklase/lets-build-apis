@@ -24,7 +24,7 @@ public class UserInfoProvider implements Processor {
         JsonObject authenticatedUser = requestContext.get("authenticatedUser", JsonObject.EMPTY).getJsonObject();
         JsonValue userId = requestContext.get("authenticatedUser", JsonObject.EMPTY).get("userId");
         if (userId == null) {
-            return JsonObject.EMPTY.put("repsonse", JsonObject.EMPTY.put("status", 401));
+            return JsonObject.EMPTY.put("response", JsonObject.EMPTY.put("status", 401));
         }
 
         JsonObject userInfo = config.get("x-dcentb", JsonObject.EMPTY).get("users", JsonObject.EMPTY).get(userId.getString(), JsonObject.EMPTY).getJsonObject();

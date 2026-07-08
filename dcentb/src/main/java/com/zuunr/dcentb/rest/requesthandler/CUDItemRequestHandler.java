@@ -24,9 +24,9 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
                 config.as(UserInfoProvider.class),
                 config.as(RequestAccessController.class),
                 config.as(MongoJsonDBGetItemCommandCreator.class),  // create new state (get current state)
-                config.as(MongoJsonDBCommandRunner.class),                           // create new state (get current state)
-                config.as(VerifyMongoCommandExecution.class),                        // create new state (get current state -> item)
-                config.as(SetMongoResultOrNullAsCurrentState.class),                 // state from mongo
+                config.as(MongoJsonDBCommandRunner.class),          // create new state (get current state)
+                config.as(VerifyMongoCommandExecution.class),       // create new state (get current state -> item)
+                config.as(SetMongoResultOrNullAsCurrentState.class),// state from mongo
                 config.as(UpdateNewState.class),                    // current state + new state (from mongo or from apiModel)
                 config.as(StateTransitionValidator.class),
                 config.as(NewStateToMongoItem.class),               // new state -> mongo item

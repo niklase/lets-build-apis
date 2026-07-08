@@ -25,12 +25,7 @@ public class StateTransitionValidator implements Processor {
                 .get("operation", JsonObject.EMPTY)
                 .get(X_DCENTB, JsonObject.EMPTY)
                 .get("stateTransitionSchema", JsonObject.EMPTY).getJsonObject()
-                .put(JsonArray.of(X_DCENTB, "collections"), config.get(X_DCENTB, JsonObject.EMPTY).getJsonObject().get("collections", JsonObject.EMPTY
-
-
-
-
-                ))
+                .put(JsonArray.of(X_DCENTB, "collections"), config.get(X_DCENTB, JsonObject.EMPTY).getJsonObject().get("collections", JsonObject.EMPTY))
                 .as(JsonSchema.class);
     }
 
