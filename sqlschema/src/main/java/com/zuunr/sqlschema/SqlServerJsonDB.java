@@ -37,7 +37,7 @@ public class SqlServerJsonDB implements AutoCloseable {
 
     private final DataSource dataSource;
     private final String jdbcUrl;
-    private final JsonValue schema;
+    private final JsonObject schemas;
 
     private final FlywayMigrationGenerator migrationGenerator = new FlywayMigrationGenerator();
     private final SqlUpsertGenerator upsertGenerator = new SqlUpsertGenerator();
@@ -46,21 +46,27 @@ public class SqlServerJsonDB implements AutoCloseable {
     /**
      * Construct with JDBC URL. Each {@code runCommand} will create a new {@link Connection}
      * via {@link DriverManager}.
+     *
+     * @param jdbcUrl JDBC connection URL
+     * @param schemas JsonObject mapping collection names to their schemas
      */
-    public SqlServerJsonDB(String jdbcUrl, JsonValue schema) {
+    public SqlServerJsonDB(String jdbcUrl, JsonObject schemas) {
         this.jdbcUrl = jdbcUrl;
         this.dataSource = null;
-        this.schema = schema;
+        this.schemas = schemas;
     }
 
     /**
      * Construct with {@link DataSource}. Each {@code runCommand} will borrow a {@link Connection}
      * from the pool.
+     *
+     * @param dataSource connection pool
+     * @param schemas JsonObject mapping collection names to their schemas
      */
-    public SqlServerJsonDB(DataSource dataSource, JsonValue schema) {
+    public SqlServerJsonDB(DataSource dataSource, JsonObject schemas) {
         this.dataSource = dataSource;
         this.jdbcUrl = null;
-        this.schema = schema;
+        this.schemas = schemas;
     }
 
     /**
@@ -82,10 +88,20 @@ public class SqlServerJsonDB implements AutoCloseable {
         if (dataSource != null) {
             return dataSource.getConnection();
         } else {
-            // Extract credentials from JDBC URL or use default
-            // Format: jdbc:sqlserver://localhost:1433;database=test1;user=sa;password=pwd;trustServerCertificate=true;
             return DriverManager.getConnection(jdbcUrl);
         }
+    }
+
+    private JsonObject getSchema(String collection) throws SQLException {
+        JsonValue schemaValue = schemas.get(collection, JsonValue.NULL);
+        if (schemaValue.isNull()) {
+            throw new SQLException("No schema defined for collection: " + collection);
+        }
+        JsonObject schema = schemaValue.getJsonObject();
+        if (schema == null) {
+            throw new SQLException("Schema for collection " + collection + " is not a valid object");
+        }
+        return schema;
     }
 
     private JsonObject dispatch(Connection conn, JsonObject command) throws SQLException {
@@ -115,7 +131,12 @@ public class SqlServerJsonDB implements AutoCloseable {
     }
 
     private JsonObject handleFind(Connection conn, JsonObject findArgs) throws SQLException {
-        JsonArray results = queryGenerator.queryDocuments(conn, findArgs, schema.getJsonObject());
+        String collection = findArgs.get("collection", JsonValue.NULL).getString();
+        if (collection == null) {
+            throw new SQLException("find requires collection");
+        }
+        JsonObject schema = getSchema(collection);
+        JsonArray results = queryGenerator.queryDocuments(conn, findArgs, schema);
         return JsonObject.EMPTY
             .put("ok", JsonValue.of(1))
             .put("cursor", JsonObject.EMPTY
@@ -159,13 +180,15 @@ public class SqlServerJsonDB implements AutoCloseable {
     private JsonObject handleUpdate(Connection conn, JsonObject updateArgs) throws SQLException {
         JsonArray updates = updateArgs.get("updates", JsonValue.NULL).getJsonArray();
         if (updates == null || updates.isEmpty()) {
-            throw new RuntimeException("update requires updates array");
+            throw new SQLException("update requires updates array");
         }
 
         String collection = updateArgs.get("collection", JsonValue.NULL).getString();
         if (collection == null) {
-            throw new RuntimeException("update requires collection");
+            throw new SQLException("update requires collection");
         }
+
+        JsonObject schema = getSchema(collection);
 
         boolean autoTx = updates.size() > 1;
         if (autoTx) {
@@ -194,7 +217,7 @@ public class SqlServerJsonDB implements AutoCloseable {
                     totalModified++;
                 } else {
                     // UPDATE WHERE (not upsert)
-                    int modified = executeUpdate(conn, collection, q, u);
+                    int modified = executeUpdate(conn, collection, q, u, schema);
                     totalModified += modified;
                 }
             }
@@ -219,8 +242,7 @@ public class SqlServerJsonDB implements AutoCloseable {
         }
     }
 
-    private int executeUpdate(Connection conn, String collection, JsonObject filter, JsonObject updateDoc) throws SQLException {
-        JsonObject schema = this.schema.getJsonObject();
+    private int executeUpdate(Connection conn, String collection, JsonObject filter, JsonObject updateDoc, JsonObject schema) throws SQLException {
 
         // Build UPDATE SET from updateDoc (flatten nested objects)
         List<String> setClauses = new ArrayList<>();
@@ -353,10 +375,10 @@ public class SqlServerJsonDB implements AutoCloseable {
     private JsonObject handleDrop(Connection conn, JsonObject dropArgs) throws SQLException {
         String collection = dropArgs.get("collection", JsonValue.NULL).getString();
         if (collection == null) {
-            throw new RuntimeException("drop requires collection");
+            throw new SQLException("drop requires collection");
         }
 
-        JsonObject schema = this.schema.getJsonObject();
+        JsonObject schema = getSchema(collection);
         JsonObject properties = schema.get("properties", JsonValue.NULL).getJsonObject();
 
         try (Statement stmt = conn.createStatement()) {
@@ -389,10 +411,10 @@ public class SqlServerJsonDB implements AutoCloseable {
     private JsonObject handleCreate(Connection conn, JsonObject createArgs) throws SQLException {
         String collection = createArgs.get("collection", JsonValue.NULL).getString();
         if (collection == null) {
-            throw new RuntimeException("create requires collection");
+            throw new SQLException("create requires collection");
         }
 
-        JsonObject schema = this.schema.getJsonObject();
+        JsonObject schema = getSchema(collection);
         String ddl = migrationGenerator.generateCreateTableIfNotExists(collection, schema);
 
         executeMultipleStatements(conn, ddl);
@@ -403,13 +425,15 @@ public class SqlServerJsonDB implements AutoCloseable {
     private JsonObject handleAggregate(Connection conn, JsonObject aggregateArgs) throws SQLException {
         String collection = aggregateArgs.get("collection", JsonValue.NULL).getString();
         if (collection == null) {
-            throw new RuntimeException("aggregate requires collection");
+            throw new SQLException("aggregate requires collection");
         }
 
         JsonArray pipeline = aggregateArgs.get("pipeline", JsonValue.NULL).getJsonArray();
         if (pipeline == null || pipeline.isEmpty()) {
-            throw new RuntimeException("aggregate requires pipeline");
+            throw new SQLException("aggregate requires pipeline");
         }
+
+        JsonObject schema = getSchema(collection);
 
         // Support $match and $count stages
         JsonObject matchStage = null;
@@ -452,7 +476,7 @@ public class SqlServerJsonDB implements AutoCloseable {
             if (matchStage != null) {
                 findArgs = findArgs.put("filter", matchStage.jsonValue());
             }
-            results = queryGenerator.queryDocuments(conn, findArgs, schema.getJsonObject());
+            results = queryGenerator.queryDocuments(conn, findArgs, schema);
         }
 
         return JsonObject.EMPTY
@@ -470,6 +494,8 @@ public class SqlServerJsonDB implements AutoCloseable {
         JsonValue newVal_jsonValue = fmArgs.get("new", JsonValue.NULL);
         boolean newVal = newVal_jsonValue.isNull() ? false : newVal_jsonValue.getBoolean();
 
+        JsonObject schema = getSchema(collection);
+
         conn.setAutoCommit(false);
         try {
             // Find the matching document
@@ -478,7 +504,7 @@ public class SqlServerJsonDB implements AutoCloseable {
                 findArgs = findArgs.put("filter", query.jsonValue());
             }
 
-            JsonArray found = queryGenerator.queryDocuments(conn, findArgs, schema.getJsonObject());
+            JsonArray found = queryGenerator.queryDocuments(conn, findArgs, schema);
             JsonObject value = found.isEmpty() ? null : found.get(0).getJsonObject();
 
             if (remove) {
@@ -496,14 +522,14 @@ public class SqlServerJsonDB implements AutoCloseable {
                 // Update the document
                 String id = value.get("id").getString();
                 JsonObject updateFilter = JsonObject.EMPTY.put("id", JsonArray.EMPTY.add(JsonObject.EMPTY.put("$eq", JsonValue.of(id))));
-                executeUpdate(conn, collection, updateFilter, update);
+                executeUpdate(conn, collection, updateFilter, update, schema);
 
                 if (newVal) {
                     // Query back the updated document
                     JsonObject findArgsAfter = JsonObject.EMPTY
                         .put("collection", JsonValue.of(collection))
                         .put("filter", updateFilter.jsonValue());
-                    JsonArray foundAfter = queryGenerator.queryDocuments(conn, findArgsAfter, schema.getJsonObject());
+                    JsonArray foundAfter = queryGenerator.queryDocuments(conn, findArgsAfter, schema);
                     if (!foundAfter.isEmpty()) {
                         value = foundAfter.get(0).getJsonObject();
                     }

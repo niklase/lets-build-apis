@@ -69,7 +69,7 @@ class SqlServerJsonDBIT {
               "age": 30,
               "salary": 75000.50,
               "active": true,
-              
+
               "address": {
                 "street": "123 Main St",
                 "city": "Springfield",
@@ -115,8 +115,11 @@ class SqlServerJsonDBIT {
         JsonObject schemaObj = schemaGenerator.generateSchema(docs);
         schema = schemaObj.get("items");
 
-        // Create SqlServerJsonDB with the schema
-        sqlDb = new SqlServerJsonDB(JDBC_URL, schema);
+        // Create schemas map with collection name as key
+        JsonObject schemas = JsonObject.EMPTY.put(COLLECTION, schema);
+
+        // Create SqlServerJsonDB with schemas map
+        sqlDb = new SqlServerJsonDB(JDBC_URL, schemas);
     }
 
     @AfterAll
