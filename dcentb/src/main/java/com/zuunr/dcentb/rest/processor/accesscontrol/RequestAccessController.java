@@ -6,7 +6,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.schema.validation.JsonSchemaValidator;
 
-public class RequestAccessController extends CurrentStateAccessController {
+public class RequestAccessController extends PreOperationAccessController {
 
     // background
     // {
