@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SqlRoundTripIT {
@@ -344,7 +345,7 @@ class SqlRoundTripIT {
         assertEquals("Widget Pro - Updated", result.get("name").getString());
         assertEquals(150, (long) result.get("stock").getInteger());
         assertFalse(result.get("active").getBoolean());
-        assertTrue(result.get("alwaysNull").isNull());
+        assertNull(result.get("alwaysNull"));
         assertEquals("Acme Corp", result.get("specs").getJsonObject().get("brand").getString());
     }
 }

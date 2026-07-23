@@ -38,7 +38,8 @@ class FlywayMigrationGeneratorTest {
 
         assertTrue(sql.contains("CREATE TABLE person ("));
         assertTrue(sql.contains("id NVARCHAR(255) NOT NULL"));
-        assertTrue(sql.contains("name NVARCHAR(255) NOT NULL"));
+        // All non-root fields are nullable to support absent JSON properties mapping to NULL
+        assertTrue(sql.contains("name NVARCHAR(255)"));
         assertTrue(sql.contains("age BIGINT"));
         assertTrue(sql.contains("score FLOAT"));
         assertTrue(sql.contains("active BIT"));

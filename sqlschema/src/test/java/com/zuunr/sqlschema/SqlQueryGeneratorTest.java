@@ -115,8 +115,7 @@ class SqlQueryGeneratorTest {
 
         String sql = generator.generateSelect(find);
         assertTrue(sql.contains("ORDER BY name ASC, age DESC"));
-        assertTrue(sql.contains("LIMIT 10"));
-        assertTrue(sql.contains("OFFSET 20"));
+        assertTrue(sql.contains("OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY"));
     }
 
     @Test

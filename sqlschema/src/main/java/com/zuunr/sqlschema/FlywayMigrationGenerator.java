@@ -64,6 +64,33 @@ public class FlywayMigrationGenerator {
         return sb.toString();
     }
 
+    public String generateCreateTableIfNotExists(String tableName, JsonObject schema) {
+        String ddl = generateCreateTable(tableName, schema);
+        // Wrap each CREATE TABLE statement in IF OBJECT_ID check
+        String[] statements = ddl.split(";\n");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < statements.length; i++) {
+            String stmt = statements[i].trim();
+            if (!stmt.isEmpty()) {
+                if (i > 0) sb.append("\n");
+                // Extract table name from "CREATE TABLE tableName ("
+                String extractedTableName = extractTableNameFromCreateStatement(stmt);
+                sb.append("IF OBJECT_ID(N'").append(extractedTableName).append("', N'U') IS NULL BEGIN\n");
+                sb.append("    ").append(stmt.replace("\n", "\n    "));
+                sb.append("\nEND;");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String extractTableNameFromCreateStatement(String createTableStmt) {
+        // Parse "CREATE TABLE tableName (" to get tableName
+        String trimmed = createTableStmt.trim();
+        int start = trimmed.indexOf("CREATE TABLE") + "CREATE TABLE".length();
+        int end = trimmed.indexOf("(", start);
+        return trimmed.substring(start, end).trim();
+    }
+
     private void generateTable(String tableName, JsonObject schema,
                                List<ParentRef> parentRefs, String parentTable,
                                List<String> statements) {
@@ -89,7 +116,7 @@ public class FlywayMigrationGenerator {
             collectFields(schema, "", isRoot, defs, arrays);
         } else if (!isRoot) {
             // Scalar array: the single item value
-            String itemType = schema.get("type", JsonValue.NULL).getString();
+            String itemType = extractTypeString(schema.get("type", JsonValue.NULL));
             defs.add("value " + toSqlType(itemType));
         }
 
@@ -146,16 +173,13 @@ public class FlywayMigrationGenerator {
         JsonObject properties = schema.get("properties", JsonValue.NULL).getJsonObject();
         if (properties == null) return;
 
-        JsonArray required = schema.get("required", JsonValue.NULL).getJsonArray();
-
         for (int i = 0; i < properties.keys().size(); i++) {
             String field = properties.keys().get(i).getString();
             if (skipRootId && "id".equals(field) && prefix.isEmpty()) continue;
 
             JsonObject fieldSchema = properties.values().get(i).getJsonObject();
             String column = prefix.isEmpty() ? field : prefix + "__" + field;
-            String type = fieldSchema.get("type", JsonValue.NULL).getString();
-            boolean required_ = containsString(required, field);
+            String type = extractTypeString(fieldSchema.get("type", JsonValue.NULL));
 
             if ("object".equals(type)) {
                 // Flatten nested-object scalar fields into this table; recurse for arrays inside
@@ -165,7 +189,8 @@ public class FlywayMigrationGenerator {
                 JsonObject items = itemsVal.isJsonObject() ? itemsVal.getJsonObject() : JsonObject.EMPTY;
                 arrays.add(new ArrayField(column, items));
             } else {
-                defs.add(column + " " + toSqlType(type) + (required_ ? " NOT NULL" : ""));
+                // All non-root fields are nullable to support absent JSON fields mapping to NULL
+                defs.add(column + " " + toSqlType(type));
             }
         }
     }
@@ -197,5 +222,21 @@ public class FlywayMigrationGenerator {
             case "boolean": return "BIT";
             default:        return "NVARCHAR(MAX)";
         }
+    }
+
+    private String extractTypeString(JsonValue typeValue) {
+        if (typeValue.isString()) {
+            return typeValue.getString();
+        } else if (typeValue.isJsonArray()) {
+            JsonArray typeArray = typeValue.getJsonArray();
+            for (int i = 0; i < typeArray.size(); i++) {
+                String t = typeArray.get(i).getString();
+                if (!"null".equals(t)) {
+                    return t;
+                }
+            }
+            return "null";
+        }
+        return null;
     }
 }

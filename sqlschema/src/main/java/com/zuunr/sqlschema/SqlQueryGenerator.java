@@ -52,14 +52,17 @@ public class SqlQueryGenerator {
             sql.append(" ORDER BY ").append(orderByClause(sort));
         }
 
-        Integer limit = findArgs.get("limit", JsonValue.NULL).getInteger();
-        if (limit != null) {
-            sql.append(" LIMIT ").append(limit);
-        }
-
         Integer skip = findArgs.get("skip", JsonValue.NULL).getInteger();
-        if (skip != null) {
-            sql.append(" OFFSET ").append(skip);
+        Integer limit = findArgs.get("limit", JsonValue.NULL).getInteger();
+
+        if (limit != null || skip != null) {
+            if (sort == null || sort.isEmpty()) {
+                sql.append(" ORDER BY (SELECT NULL)");
+            }
+            sql.append(" OFFSET ").append(skip != null ? skip : 0).append(" ROWS");
+            if (limit != null) {
+                sql.append(" FETCH NEXT ").append(limit).append(" ROWS ONLY");
+            }
         }
 
         return sql.toString();
@@ -80,14 +83,17 @@ public class SqlQueryGenerator {
             sql.append(" ORDER BY ").append(orderByClause(sort));
         }
 
-        Integer limit = findArgs.get("limit", JsonValue.NULL).getInteger();
-        if (limit != null) {
-            sql.append(" LIMIT ").append(limit);
-        }
-
         Integer skip = findArgs.get("skip", JsonValue.NULL).getInteger();
-        if (skip != null) {
-            sql.append(" OFFSET ").append(skip);
+        Integer limit = findArgs.get("limit", JsonValue.NULL).getInteger();
+
+        if (limit != null || skip != null) {
+            if (sort == null || sort.isEmpty()) {
+                sql.append(" ORDER BY (SELECT NULL)");
+            }
+            sql.append(" OFFSET ").append(skip != null ? skip : 0).append(" ROWS");
+            if (limit != null) {
+                sql.append(" FETCH NEXT ").append(limit).append(" ROWS ONLY");
+            }
         }
 
         return new PreparedQuery(sql.toString(), params);
@@ -111,6 +117,17 @@ public class SqlQueryGenerator {
             }
         }
         return results;
+    }
+
+    public PreparedQuery generatePreparedDelete(String collection, JsonObject filter) {
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("DELETE FROM ").append(collection);
+
+        if (filter != null && !filter.isEmpty()) {
+            sql.append(" WHERE ").append(whereClausePrepared(filter, params));
+        }
+
+        return new PreparedQuery(sql.toString(), params);
     }
 
     private String whereClause(JsonObject query) {
@@ -312,7 +329,7 @@ public class SqlQueryGenerator {
         for (int i = 0; i < properties.keys().size(); i++) {
             String fieldName = properties.keys().get(i).getString();
             JsonObject propSchema = properties.values().get(i).getJsonObject();
-            String type = propSchema.get("type", JsonValue.NULL).getString();
+            String type = extractTypeString(propSchema.get("type", JsonValue.NULL));
 
             if ("object".equals(type)) {
                 JsonObject nested = JsonObject.EMPTY;
@@ -320,13 +337,13 @@ public class SqlQueryGenerator {
                 for (Map.Entry<String, Object> entry : rowMap.entrySet()) {
                     if (entry.getKey().startsWith(prefix)) {
                         String subField = entry.getKey().substring(prefix.length());
-                        nested = nested.put(subField, toJsonValue(entry.getValue()));
+                        if (entry.getValue() != null) {
+                            nested = nested.put(subField, toJsonValue(entry.getValue()));
+                        }
                     }
                 }
                 if (!nested.isEmpty()) {
                     doc = doc.put(fieldName, nested);
-                } else {
-                    doc = doc.put(fieldName, JsonValue.NULL);
                 }
             } else if ("array".equals(type)) {
                 JsonArray array = JsonArray.EMPTY;
@@ -355,7 +372,10 @@ public class SqlQueryGenerator {
                 doc = doc.put(fieldName, array);
             } else {
                 String colName = fieldName.toLowerCase();
-                doc = doc.put(fieldName, toJsonValue(rowMap.get(colName)));
+                Object value = rowMap.get(colName);
+                if (value != null) {
+                    doc = doc.put(fieldName, toJsonValue(value));
+                }
             }
         }
         return doc;
@@ -370,12 +390,30 @@ public class SqlQueryGenerator {
             String fieldName = properties.keys().get(i).getString();
             try {
                 Object value = rs.getObject(fieldName);
-                item = item.put(fieldName, toJsonValue(value));
+                if (value != null) {
+                    item = item.put(fieldName, toJsonValue(value));
+                }
             } catch (Exception e) {
                 // Column might not exist (e.g., FK columns, position column)
                 // Skip it
             }
         }
         return item;
+    }
+
+    private String extractTypeString(JsonValue typeValue) {
+        if (typeValue.isString()) {
+            return typeValue.getString();
+        } else if (typeValue.isJsonArray()) {
+            JsonArray typeArray = typeValue.getJsonArray();
+            for (int i = 0; i < typeArray.size(); i++) {
+                String t = typeArray.get(i).getString();
+                if (!"null".equals(t)) {
+                    return t;
+                }
+            }
+            return "null";
+        }
+        return null;
     }
 }
