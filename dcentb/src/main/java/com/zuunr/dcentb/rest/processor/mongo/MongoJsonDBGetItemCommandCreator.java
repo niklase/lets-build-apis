@@ -6,7 +6,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class MongoJsonDBGetItemCommandCreator implements Processor {
+public class MongoJsonDBGetItemCommandCreator extends Processor {
 
     RequestHandlerConfig requestHandlerConfig;
 

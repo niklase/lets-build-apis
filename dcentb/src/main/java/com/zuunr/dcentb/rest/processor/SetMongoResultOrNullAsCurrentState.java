@@ -5,7 +5,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class SetMongoResultOrNullAsCurrentState implements Processor {
+public class SetMongoResultOrNullAsCurrentState extends Processor {
 
     public SetMongoResultOrNullAsCurrentState(JsonValue config) {}
 

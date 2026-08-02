@@ -5,7 +5,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class UserInfoProvider implements Processor {
+public class UserInfoProvider extends Processor {
 
     private JsonObject config;
 

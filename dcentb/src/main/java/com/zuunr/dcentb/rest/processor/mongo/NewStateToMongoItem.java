@@ -4,7 +4,7 @@ import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class NewStateToMongoItem implements Processor {
+public class NewStateToMongoItem extends Processor {
 
     private final String path;
 

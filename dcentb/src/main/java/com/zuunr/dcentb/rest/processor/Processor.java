@@ -2,14 +2,18 @@ package com.zuunr.dcentb.rest.processor;
 
 import com.zuunr.json.JsonObject;
 
-public interface Processor {
+public abstract class Processor {
 
     public static final String X_DCENTB = "x-dcentb";
     public static final String REQUEST = "request";
     public static final String RESPONSE = "response";
     public static final String MONGODB = "mongodb";
 
-    public JsonObject process(JsonObject requestContext);
+    public abstract JsonObject process(JsonObject requestContext);
 
 
+    @Override
+    public String toString(){
+        return getClass().getSimpleName();
+    }
 }

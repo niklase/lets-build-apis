@@ -1,41 +1,48 @@
 package com.zuunr.dcentb.rest.processor.accesscontrol;
 
 import com.zuunr.dcentb.rest.processor.Processor;
-import com.zuunr.json.*;
+import com.zuunr.dcentb.rest.util.CollectionNameProvider;
+import com.zuunr.json.JsonArray;
+import com.zuunr.json.JsonArrayBuilder;
+import com.zuunr.json.JsonObject;
+import com.zuunr.json.JsonValue;
 import com.zuunr.json.pointer.JsonPointer;
 import com.zuunr.json.schema.JsonSchema;
 import com.zuunr.json.schema.validation.JsonSchemaValidator;
 import com.zuunr.json.schema.validation.OutputStructure;
 import com.zuunr.json.util.ApiErrorCreator;
 
-public abstract class PreOperationAccessController implements Processor {
+public abstract class PreOperationAccessController extends Processor {
 
+    private static final JsonPointer OPERATION_PERMISSION_SCHEMAS_POINTER = JsonPointer.of("#/operation/x-dcentb/accessControl/permissionSchemas");
     private static final JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
+
+    private JsonObject config;
 
     private JsonObject permissionSchemas;
     private ResponseAccessController responseAccessController;
-    private JsonObject collectionPermissionSchemas;
+    private JsonObject permissionSchemasPerCollection;
+    private PermissionSchemasProvider permissionSchemasProvider;
+    private String collectionName;
 
-    public PreOperationAccessController(JsonValue me) {
-        JsonObjectBuilder builder = JsonObject.EMPTY.builder();
-        JsonArray permissionSchemasArray = me
+    public PreOperationAccessController(JsonValue config) {
+        this.config = config.getJsonObject();
+        permissionSchemas = config
                 .get("operation")
                 .get("x-dcentb", JsonObject.EMPTY)
                 .get("accessControl", JsonObject.EMPTY)
-                .get("permissionSchemas", JsonArray.EMPTY).getJsonArray();
-        for (int i = 0; i < permissionSchemasArray.size(); i++) {
-            JsonObject permissionSchema = permissionSchemasArray.get(i).getJsonObject();
-            builder.put(permissionSchema.get("permission").getString(), permissionSchema);
-        }
-        permissionSchemas = builder.build();
-        responseAccessController = me.as(ResponseAccessController.class);
-        String collectionName = me.get("path").getString();
-        collectionPermissionSchemas = me
+                .get("permissionSchemas", JsonObject.EMPTY).getJsonObject();
+
+        responseAccessController = config.as(ResponseAccessController.class);
+        collectionName = CollectionNameProvider.getCollectionName(config.getJsonObject());
+        permissionSchemasPerCollection = config
                 .get("x-dcentb", JsonObject.EMPTY)
                 .get("collections", JsonObject.EMPTY)
-                .get("students", JsonObject.EMPTY) // TODO: How get students?
+                .get(collectionName, JsonObject.EMPTY)
                 .get("permissions", JsonObject.EMPTY)
                 .getJsonObject();
+
+        permissionSchemasProvider = config.as(PermissionSchemasProvider.class);
     }
 
     private static final JsonPointer userPermissionsPointer = JsonPointer.of("/userPermissions/body/items");
@@ -53,40 +60,55 @@ public abstract class PreOperationAccessController implements Processor {
         }
 
         JsonObject candidateErrorResult = JsonObject.EMPTY.put("message", "Invalid request");
+
+
         for (int i = 0; i < permissions.size(); i++) {
             String permission = permissions.get(i).getString();
             JsonObject permissionAndSchemas = permissionSchemas.get(permission, JsonObject.EMPTY).getJsonObject();
-            JsonValue requestSchemaOfPermission = permissionAndSchemas.get("requestSchema");
+            JsonArray permissionSchemasPointer = OPERATION_PERMISSION_SCHEMAS_POINTER.asArray().add(permission);
+            JsonArray requestSchemaPointer = permissionSchemasPointer.add("requestSchema");
 
-            if (requestSchemaOfPermission == null) {
-                continue;
+            JsonValue requestSchemaOfPermission = config.put("$ref", requestSchemaPointer.as(JsonPointer.class).getJsonPointerString()).jsonValue();
+            JsonValue requestSchema = config.get(JsonPointer.of(requestSchemaPointer)); // TODO: This code could be optimized (cache per permission). Repeated creation of JSONPointer should be removed
+            if (requestSchema == null) {
+                requestSchemaOfPermission = JsonValue.FALSE;
             }
+
+
             JsonObject result = checkPermission(
                     requestSchemaOfPermission,
                     requestContext);
+
             if (result.get("valid", JsonValue.FALSE).getBoolean()) {
-                return requestContext.put("responseFilterSchema", permissionAndSchemas.get("responseSchema", JsonValue.FALSE));
+
+                JsonArray responseSchemaPointer = permissionSchemasPointer.add("responseSchema");
+                JsonValue responseSchema = config.get(responseSchemaPointer);
+                if (responseSchema == null) {
+                    responseSchema = JsonValue.FALSE;
+                } else {
+                    responseSchema = config.put("$ref", responseSchemaPointer.as(JsonPointer.class).getJsonPointerString().getString()).jsonValue();
+                }
+                return requestContext.put("responseFilterSchemaPointer", responseSchemaPointer);
             } else {
                 errorstatus = JsonValue.of(403);
                 // Filter the currentstate as if it was the response
                 JsonObject currentState = requestContext.get("currentState", JsonValue.NULL).getJsonObject();
                 JsonObject requestContextWithCurrentStateFiltered = requestContext;
                 if (currentState != null) {
-                    JsonValue readItemSchema = collectionPermissionSchemas
-                            .get(permission, JsonObject.EMPTY)
-                            .get("readItemSchema", JsonValue.FALSE);
-                    JsonObject contextWhereCurrentStateIsResponse = requestContext
-                            .put("responseFilterSchema", readItemSchema)
-                            .put("response", JsonObject.EMPTY
-                                    .put("status", 200)
-                                    .put("body", currentState));
-                    JsonObject context = responseAccessController.process(contextWhereCurrentStateIsResponse);
-                    JsonObject currentStateFiltered = context.get("response", JsonObject.EMPTY).getJsonObject().get("body", JsonObject.EMPTY).getJsonObject();
-                    JsonValue errorStatusOfFictiveResponse = context.get("response", JsonObject.EMPTY).getJsonObject().get("status");
-                    if (errorStatusOfFictiveResponse.getInteger() == 404) {
-                        errorstatus = errorStatusOfFictiveResponse;
+
+                    JsonObject readItemSchema = config
+                            .put("$ref", "#/$defs/Temp_Schema")
+                            .put(JsonArray.of("$defs", "Temp_Schema"), JsonObject.EMPTY
+                                    .put("properties", JsonObject.EMPTY
+                                            .put("currentState", JsonObject.EMPTY
+                                                    .put("$ref", JsonPointer.of(JsonArray.of("x-dcentb", "collections", collectionName, "permissions", permission, "readItem")).getJsonPointerString()))));
+                    requestContextWithCurrentStateFiltered = jsonSchemaValidator.filter(requestContext.jsonValue(), readItemSchema.as(JsonSchema.class)).getJsonObject();
+                    JsonValue currentStateFiltered = requestContextWithCurrentStateFiltered.get("currentState");
+                    if (currentStateFiltered == null) {
+                        errorstatus = JsonValue.of(404);
                     }
-                    requestContextWithCurrentStateFiltered = requestContext.put("currentState", currentStateFiltered);
+
+                    //requestContextWithCurrentStateFiltered = requestContext.put("currentState", currentStateFiltered);
                 }
 
                 JsonArray errors = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY

@@ -1,0 +1,20 @@
+{
+  "comment": "BSON data types spec is here: http://bsonspec.org/",
+  "tests": [{
+    "given": ,
+    "when": {
+      "schema": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "x-db-type": ["ObjectId"]
+          },
+          "b": {
+            "type": "string",
+            "x-db-type": ["ObjectId"]
+          }
+        }
+      }
+    }
+  }]
+}

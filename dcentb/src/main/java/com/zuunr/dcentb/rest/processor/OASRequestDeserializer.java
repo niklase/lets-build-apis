@@ -6,7 +6,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonObjectMerger;
 import com.zuunr.json.JsonValue;
 
-public class OASRequestDeserializer implements Processor {
+public class OASRequestDeserializer extends Processor {
 
     private static final JsonObjectMerger MERGER = new JsonObjectMerger();
     private JsonValue config;

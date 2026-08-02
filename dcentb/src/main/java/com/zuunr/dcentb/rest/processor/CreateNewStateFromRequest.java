@@ -3,7 +3,7 @@ package com.zuunr.dcentb.rest.processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class CreateNewStateFromRequest implements Processor{
+public class CreateNewStateFromRequest extends Processor{
 
     public CreateNewStateFromRequest(JsonValue config) {}
 

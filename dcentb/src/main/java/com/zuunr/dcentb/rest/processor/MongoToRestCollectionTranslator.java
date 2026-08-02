@@ -6,7 +6,7 @@ import com.zuunr.json.JsonArrayBuilder;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class MongoToRestCollectionTranslator implements Processor {
+public class MongoToRestCollectionTranslator extends Processor {
 
     public MongoToRestCollectionTranslator(JsonValue config) {
     }

@@ -8,7 +8,7 @@ import com.zuunr.json.JsonValue;
 
 import java.util.UUID;
 
-public class UpdateNewState implements Processor {
+public class UpdateNewState extends Processor {
 
     public static final JsonObjectMerger merger = new JsonObjectMerger();
 

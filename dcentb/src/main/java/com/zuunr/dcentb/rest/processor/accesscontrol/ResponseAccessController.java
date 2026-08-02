@@ -3,13 +3,16 @@ package com.zuunr.dcentb.rest.processor.accesscontrol;
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
+import com.zuunr.json.pointer.JsonPointer;
 import com.zuunr.json.schema.JsonSchema;
 import com.zuunr.json.schema.validation.JsonSchemaValidator;
 
-public class ResponseAccessController implements Processor {
+public class ResponseAccessController extends Processor {
+
+    private JsonObject config;
 
     public ResponseAccessController(JsonValue config) {
-
+        this.config = config.getJsonObject();
     }
 
     @Override
@@ -31,12 +34,16 @@ public class ResponseAccessController implements Processor {
     private JsonObject filterResponse(JsonObject requestContext) {
 
         JsonObject response = requestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject();
-        JsonSchema responseFilterSchema = requestContext.get("responseFilterSchema", false).as(JsonSchema.class);
+        //JsonSchema responseFilterSchema = requestContext.get("responseFilterSchema", false).as(JsonSchema.class);
+        JsonPointer responseFilterSchemaPointer = requestContext.get("responseFilterSchemaPointer").as(JsonPointer.class);
+        JsonObject responseFilterSchema = config.put("$ref", responseFilterSchemaPointer.getJsonPointerString());
+
+
         JsonValue status = response.get("status");
 
         JsonValue body = response.get("body");
         JsonSchemaValidator validator = new JsonSchemaValidator();
-        JsonValue filteredRequestContext = validator.filter(requestContext.jsonValue(), responseFilterSchema);
+        JsonValue filteredRequestContext = validator.filter(requestContext.jsonValue(), responseFilterSchema.as(JsonSchema.class));
         filteredRequestContext = filteredRequestContext == null ? JsonObject.EMPTY.jsonValue() : filteredRequestContext;
         JsonObject filteredResponse = filteredRequestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject();
 

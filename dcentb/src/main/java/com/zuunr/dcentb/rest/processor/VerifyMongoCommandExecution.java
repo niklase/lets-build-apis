@@ -4,7 +4,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class VerifyMongoCommandExecution implements Processor {
+public class VerifyMongoCommandExecution extends Processor {
 
     public VerifyMongoCommandExecution(JsonValue config) {
     }

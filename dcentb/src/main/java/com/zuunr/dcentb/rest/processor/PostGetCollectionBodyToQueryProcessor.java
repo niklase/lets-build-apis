@@ -21,7 +21,7 @@ import com.zuunr.json.*;
  * Each value is wrapped in a single-element JsonArray to match the
  * multi-value query-parameter representation used throughout the pipeline.
  */
-public class PostGetCollectionBodyToQueryProcessor implements Processor {
+public class PostGetCollectionBodyToQueryProcessor extends Processor {
 
     private static final String GET_COLLECTION_SUFFIX = "/getCollection";
 

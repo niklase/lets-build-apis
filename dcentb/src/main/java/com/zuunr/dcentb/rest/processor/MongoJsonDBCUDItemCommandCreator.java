@@ -5,7 +5,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
 
-public class MongoJsonDBCUDItemCommandCreator implements Processor {
+public class MongoJsonDBCUDItemCommandCreator extends Processor {
 
     private final JsonValue config;
 

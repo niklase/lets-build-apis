@@ -5,7 +5,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.mongodb.MongoJsonDB;
 
-public class MongoJsonDBCommandRunner implements Processor {
+public class MongoJsonDBCommandRunner extends Processor {
 
     private MongoJsonDB mongoDB;
 

@@ -9,7 +9,7 @@ import com.zuunr.json.JsonValue;
  * itemId and newState will be set on requestContextß
  */
 
-public class ResponseFromNewState implements Processor {
+public class ResponseFromNewState extends Processor {
 
     public ResponseFromNewState(JsonValue config){}
 

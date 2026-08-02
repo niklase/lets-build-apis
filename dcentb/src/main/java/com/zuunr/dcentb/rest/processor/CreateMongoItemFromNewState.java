@@ -3,7 +3,7 @@ package com.zuunr.dcentb.rest.processor;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class CreateMongoItemFromNewState implements Processor {
+public class CreateMongoItemFromNewState extends Processor {
 
     private final String path;
 

@@ -6,7 +6,7 @@ import com.zuunr.json.util.StringSplitter;
 
 import java.util.regex.Matcher;
 
-public class MongoJsonDBCommandCreator implements Processor {
+public class MongoJsonDBCommandCreator extends Processor {
 
     private static final JsonArray COLLECTION_NAME = JsonArray.of("operation", "x-dcentb", "mongodb", "collection");
 

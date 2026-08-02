@@ -9,7 +9,7 @@ import com.zuunr.json.schema.validation.JsonSchemaValidator;
 import com.zuunr.json.schema.validation.OutputStructure;
 import com.zuunr.json.util.ApiErrorCreator;
 
-public class StateTransitionValidator implements Processor {
+public class StateTransitionValidator extends Processor {
 
     private JsonObject config;
 

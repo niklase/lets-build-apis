@@ -6,7 +6,7 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.util.StringSplitter;
 
-public class ApiKeyAuthenticator implements Processor {
+public class ApiKeyAuthenticator extends Processor {
 
     JsonObject config;
 

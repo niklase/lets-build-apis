@@ -5,7 +5,7 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class Authenticator implements Processor {
+public class Authenticator extends Processor {
 
     private final boolean authRequired;
 

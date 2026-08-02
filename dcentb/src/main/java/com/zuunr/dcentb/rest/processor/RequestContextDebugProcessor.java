@@ -2,7 +2,7 @@ package com.zuunr.dcentb.rest.processor;
 
 import com.zuunr.json.JsonObject;
 
-public class RequestContextDebugProcessor implements Processor {
+public class RequestContextDebugProcessor extends Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
