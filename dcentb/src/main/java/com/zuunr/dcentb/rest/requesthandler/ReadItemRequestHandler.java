@@ -6,8 +6,8 @@ import com.zuunr.dcentb.rest.processor.accesscontrol.ApiKeyAuthenticator;
 import com.zuunr.dcentb.rest.processor.accesscontrol.Authenticator;
 import com.zuunr.dcentb.rest.processor.accesscontrol.RequestAccessController;
 import com.zuunr.dcentb.rest.processor.accesscontrol.UserInfoProvider;
-import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBCommandRunner;
-import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBGetItemCommandCreator;
+import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandRunner;
+import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandReadCreator;
 import com.zuunr.dcentb.rest.processor.MongoToRestItemTranslator;
 import com.zuunr.json.JsonValue;
 
@@ -23,8 +23,8 @@ public class ReadItemRequestHandler extends RequestHandlerBase {
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
         UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
 
-        MongoJsonDBGetItemCommandCreator mongoJsonDBGetItemCommandCreator = config.as(MongoJsonDBGetItemCommandCreator.class);
-        MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
+        DatabaseCommandReadCreator databaseCommandReadCreator = config.as(DatabaseCommandReadCreator.class);
+        DatabaseCommandRunner databaseCommandRunner = config.as(DatabaseCommandRunner.class);
         MongoToRestItemTranslator mongoToRestItemTranslator = config.as(MongoToRestItemTranslator.class);
 
         processors = new Processor[] {
@@ -32,8 +32,8 @@ public class ReadItemRequestHandler extends RequestHandlerBase {
                 oasRequestDeserializer,
                 userInfoProvider,
                 requestAccessController,
-                mongoJsonDBGetItemCommandCreator,
-                mongoJsonDBCommandRunner,
+                databaseCommandReadCreator,
+                databaseCommandRunner,
                 mongoToRestItemTranslator
         };
     }

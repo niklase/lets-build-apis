@@ -5,11 +5,11 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.mongodb.MongoJsonDB;
 
-public class MongoJsonDBCommandRunner extends Processor {
+public class DatabaseCommandRunner extends Processor {
 
     private MongoJsonDB mongoDB;
 
-    public MongoJsonDBCommandRunner(JsonValue config) {
+    public DatabaseCommandRunner(JsonValue config) {
         JsonObject mongodbConfig = config.get("operation", JsonObject.EMPTY).get(Processor.X_DCENTB, JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
         mongoDB = config.as(MongoJsonDBHandle.class).getMongoJsonDB();
     }

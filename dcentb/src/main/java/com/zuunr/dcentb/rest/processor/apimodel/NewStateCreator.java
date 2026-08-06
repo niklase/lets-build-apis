@@ -8,14 +8,14 @@ import com.zuunr.json.JsonValue;
 
 import java.util.UUID;
 
-public class UpdateNewState extends Processor {
+public class NewStateCreator extends Processor {
 
     public static final JsonObjectMerger merger = new JsonObjectMerger();
 
     private final String path;
     private final String method;
 
-    public UpdateNewState(JsonValue config) {
+    public NewStateCreator(JsonValue config) {
         path = config.get("path").getString();
         method = config.get("method").getString();
     }

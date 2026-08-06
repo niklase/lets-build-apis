@@ -5,11 +5,11 @@ import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
 
-public class MongoJsonDBCUDItemCommandCreator extends Processor {
+public class DatabaseCUDItemCommandCreator extends Processor {
 
     private final JsonValue config;
 
-    public MongoJsonDBCUDItemCommandCreator(JsonValue config) {
+    public DatabaseCUDItemCommandCreator(JsonValue config) {
         this.config = config;
     }
 

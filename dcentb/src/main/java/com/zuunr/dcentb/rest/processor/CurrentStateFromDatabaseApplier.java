@@ -5,9 +5,9 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class SetMongoResultOrNullAsCurrentState extends Processor {
+public class CurrentStateFromDatabaseApplier extends Processor {
 
-    public SetMongoResultOrNullAsCurrentState(JsonValue config) {}
+    public CurrentStateFromDatabaseApplier(JsonValue config) {}
 
     @Override
     public JsonObject process(JsonObject requestContect) {

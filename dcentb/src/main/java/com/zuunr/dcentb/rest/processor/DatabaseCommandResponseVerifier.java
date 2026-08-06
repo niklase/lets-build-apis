@@ -4,9 +4,9 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class VerifyMongoCommandExecution extends Processor {
+public class DatabaseCommandResponseVerifier extends Processor {
 
-    public VerifyMongoCommandExecution(JsonValue config) {
+    public DatabaseCommandResponseVerifier(JsonValue config) {
     }
 
     @Override

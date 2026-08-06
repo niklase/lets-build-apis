@@ -6,12 +6,13 @@ import com.zuunr.json.JsonObjectBuilder;
 import com.zuunr.json.JsonValue;
 
 /**
- * itemId and newState will be set on requestContextß
+ * itemId and newState will be set on requestContext
  */
 
-public class ResponseFromNewState extends Processor {
+public class NewStateResponseCreator extends Processor {
 
-    public ResponseFromNewState(JsonValue config){}
+    public NewStateResponseCreator(JsonValue config) {
+    }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
@@ -24,7 +25,6 @@ public class ResponseFromNewState extends Processor {
         JsonObjectBuilder responseBuilder = JsonObject.EMPTY.builder();
 
         if (method.equals("POST")) {
-
             responseBuilder.put("body", newState);
             responseBuilder.put("headers", JsonObject.EMPTY
                     .put("location", JsonArray.of(newState.get("meta").get("href"))));

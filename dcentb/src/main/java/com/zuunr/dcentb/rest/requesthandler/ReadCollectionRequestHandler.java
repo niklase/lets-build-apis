@@ -3,7 +3,7 @@ package com.zuunr.dcentb.rest.requesthandler;
 import com.zuunr.dcentb.rest.controller.RequestHandlerBase;
 import com.zuunr.dcentb.rest.processor.*;
 import com.zuunr.dcentb.rest.processor.accesscontrol.*;
-import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBCommandRunner;
+import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandRunner;
 import com.zuunr.json.JsonValue;
 
 public class ReadCollectionRequestHandler extends RequestHandlerBase {
@@ -18,7 +18,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
         UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
 
         MongoJsonDBCommandCreator mongoJsonDBCommandCreator = config.as(MongoJsonDBCommandCreator.class);
-        MongoJsonDBCommandRunner mongoJsonDBCommandRunner = config.as(MongoJsonDBCommandRunner.class);
+        DatabaseCommandRunner databaseCommandRunner = config.as(DatabaseCommandRunner.class);
         MongoToRestCollectionTranslator mongoToRestCollectionTranslator = config.as(MongoToRestCollectionTranslator.class);
 
         processors = new Processor[] {
@@ -28,7 +28,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
                 requestAccessController,
                 new PostGetCollectionBodyToQueryProcessor(),
                 mongoJsonDBCommandCreator,
-                mongoJsonDBCommandRunner,
+                databaseCommandRunner,
                 //new RequestContextDebugProcessor()
                 mongoToRestCollectionTranslator
         };

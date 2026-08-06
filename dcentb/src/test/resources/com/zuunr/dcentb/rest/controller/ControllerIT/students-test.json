@@ -458,7 +458,7 @@
                             "response": {
                               "properties": {
                                 "body": {
-                                  "$ref": "#/x-dcentb/collection/students/permissions/admin/readItem"
+                                  "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
                                 }
                               }
                             }

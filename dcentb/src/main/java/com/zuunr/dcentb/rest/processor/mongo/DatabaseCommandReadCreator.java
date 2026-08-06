@@ -6,15 +6,15 @@ import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 
-public class MongoJsonDBGetItemCommandCreator extends Processor {
+public class DatabaseCommandReadCreator extends Processor {
 
     RequestHandlerConfig requestHandlerConfig;
 
-    public MongoJsonDBGetItemCommandCreator(JsonValue jsonValue) {
+    public DatabaseCommandReadCreator(JsonValue jsonValue) {
         this(jsonValue.as(RequestHandlerConfig.class));
     }
 
-    private MongoJsonDBGetItemCommandCreator(RequestHandlerConfig requestHandlerConfig) {
+    private DatabaseCommandReadCreator(RequestHandlerConfig requestHandlerConfig) {
         this.requestHandlerConfig = requestHandlerConfig;
     }
 

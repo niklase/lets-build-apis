@@ -37,32 +37,65 @@
       "students": {
         "permissions": {
           "student": {
-            "readItemSchema": {
+            "readCollection": {
               "properties": {
-                "response": {
-                  "properties": {
-                    "body": {
-                      "if": {
-                        "required": [
-                          "studentId"
-                        ],
-                        "properties": {
-                          "studentId": {
-                            "const": {
-                              "$data": "/authenticatedUser/studentId"
-                            }
-                          }
-                        }
-                      },
-                      "then": {
-                      },
-                      "else": false
-                    }
+                "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
+                "items": {
+                  "type": "array",
+                  "items": {
                   }
                 }
               }
-
+            },
+            "readItem": {
+              "required": ["studentId"],
+              "properties": {
+                "studentId": {
+                  "const": {
+                    "$data": "/authenticatedUser/studentId"
+                  }
+                }
+              }
+            },
+            "writeItem": {
+              "properties": {
+                "studentId": {
+                  "const": {
+                    "$data": "#/authenticatedUser/studentId"
+                  }
+                }
+              }
             }
+          },
+          "admin": {
+            "readCollection": {},
+            "readItem": {},
+            "writeItem": {}
+          },
+          "teacher": {
+            "readCollection": {
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/x-dcentb/collections/students/permissions/teacher/readItem"
+                  }
+                }
+              }
+            },
+            "readItem": {
+              "required": [
+                "teacherId"
+              ],
+              "properties": {
+                "teacherId": {
+                  "const": {
+                    "$data": "#/authenticatedUser/teacherId"
+                  }
+                }
+              }
+            },
+            "writeItem": {}
           }
         },
         "stateTransitionSchema": {
@@ -176,13 +209,30 @@
             "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
           },
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "admin",
-                "requestSchema": {},
-                "responseSchema": true
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/writeItem"
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {
+                  "response": {
+                    "properties": {
+                      "body": {
+                        "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
+                      }
+                    }
+                  }
+                }
               }
-            ]
+            }
           },
           "stateTransitionSchema": {
             "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
@@ -243,14 +293,22 @@
         ],
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "admin",
+            "permissionSchemas": {
+              "admin": {
                 "requestSchema": {},
-                "responseSchema": {}
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/readCollection"
+                        }
+                      }
+                    }
+                  }
+                }
               },
-              {
-                "permission": "teacher",
+              "teacher": {
                 "requestSchema": {
                   "properties": {
                     "request": {
@@ -281,63 +339,14 @@
                     "response": {
                       "properties": {
                         "body": {
-                          "properties": {
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": true,
-                                  "meta": true,
-                                  "grade": true,
-                                  "teacherId": true,
-                                  "email": true
-                                },
-                                "additionalProperties": false
-                              }
-                            }
-                          },
-                          "additionalProperties": false
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "permission": "TEMPLATE-never_used...",
-                "requestSchema": {
-                  "properties": {
-                    "request": false
-                  }
-                },
-                "responseSchema": {
-                  "properties": {
-                    "response": {
-                      "properties": {
-                        "body": {
-                          "properties": {
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "enum": [
-                                      "Peter"
-                                    ]
-                                  }
-                                }
-                              }
-                            }
-                          }
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
                         }
                       }
                     }
                   }
                 }
               }
-            ]
+            }
           }
         }
       }
@@ -361,9 +370,8 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "admin",
+            "permissionSchemas": {
+              "admin": {
                 "requestSchema": {
                   "properties": {
                     "request": true
@@ -372,8 +380,7 @@
                 "responseSchema": {
                 }
               },
-              {
-                "permission": "student",
+              "student": {
                 "requestSchema": {
                   "properties": {
                     "currentState": {
@@ -390,7 +397,7 @@
                 "responseSchema": {
                 }
               }
-            ]
+            }
           },
           "stateTransitionSchema": {
             "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
@@ -421,16 +428,23 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "admin",
+            "permissionSchemas": {
+              "admin": {
                 "requestSchema": {
                 },
                 "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
+                        }
+                      }
+                    }
+                  }
                 }
               },
-              {
-                "permission": "student",
+              "student": {
                 "requestSchema": {
                   "properties": {
                     "request": true
@@ -464,7 +478,7 @@
                   }
                 }
               }
-            ]
+            }
           }
         }
       },
@@ -502,29 +516,20 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "student",
+            "permissionSchemas": {
+              "student": {
                 "requestSchema": {
                   "properties": {
                     "currentState": {
-                      "properties": {
-                        "studentId": {
-                          "const": {
-                            "$data": "/authenticatedUser/studentId"
-                          }
-                        }
-                      }
+                      "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem",
+                      "required": [
+                        "studentId"
+                      ]
                     },
                     "request": {
                       "properties": {
                         "body": {
-                          "properties": {
-                            "email": {
-                              "type": "string"
-                            }
-                          },
-                          "additionalProperties": false
+                          "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem"
                         }
                       }
                     }
@@ -532,12 +537,11 @@
                 },
                 "responseSchema": {}
               },
-              {
-                "permission": "admin",
+              "admin": {
                 "requestSchema": {},
                 "responseSchema": {}
               }
-            ]
+            }
           },
           "stateTransitionSchema": {
             "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
@@ -571,14 +575,11 @@
                         },
                         "additionalProperties": false
                       },
-                      "age": {
+                      "teacherId": {
                         "type": "object",
                         "properties": {
-                          "lt": {
-                            "type": "integer"
-                          },
-                          "gt": {
-                            "type": "integer"
+                          "eq": {
+                            "type": "string"
                           }
                         },
                         "additionalProperties": false
@@ -603,13 +604,52 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "AUTHENTICATED_DEFAULT",
-                "requestSchema": {},
-                "responseSchema": true
+            "permissionSchemas": {
+              "teacher": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "required": [
+                            "filter"
+                          ],
+                          "properties": {
+                            "filter": {
+                              "required": [
+                                "teacherId"
+                              ],
+                              "properties": {
+                                "teacherId": {
+                                  "properties": {
+                                    "eq": {
+                                      "const": {
+                                        "$data": "#/authenticatedUser/teacherId"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
+                        }
+                      }
+                    }
+                  }
+                }
               }
-            ]
+            }
           }
         }
       }

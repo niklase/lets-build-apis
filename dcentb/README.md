@@ -30,7 +30,8 @@ POST /students
 {
     "name": "Anna", 
     "email": "anna@school.com", 
-    "grade": "A", "attendancePercent": 92,
+    "grade": "A", 
+    "attendancePercent": 92,
     "meta": {
         "id": "abc123", 
         "href": "/students/abc123", 
@@ -166,5 +167,94 @@ Supported operations are:
 - Update ```PATCH /{item-type}/{id}```
 
 ####  To be done
-- Delete ```DELETE /{item-type}/{id}``` 
+- Delete ```DELETE /{item-type}/{id}```
+
+# The processing of a Create, Update an Delete (CUD) operations
+
+CUD requests are handled by the CUDItemRequestHandler by executing the Processors below. Each processor reads and updates the requestContext.
+
+![CUDItemRequestHandler Flow](./pics/CUDItemRequestHandler.svg)
+
+## ApiKeyAuthenticator
+
+Authenticates the user/client by looking up the api-key HTTP header. Response status 401 means the api-key is either not provided or is not valid.
+
+## OASRequestDeserializer
+
+Deserializes (header, path and query) parameters and the request body (if there is one) according to the OpeanAPI doucument
+
+## UserInfoProvider
+
+Looks up user information about the authenticated user/client like permissions and other attributes needed for authorization.
+
+## RequestAccessController
+
+Verifies that user with userInfo from UserInfoProvider is authorized to send the request.
+
+## DatabaseCommandReadCreator
+
+Creates a database command that later can be processed by DatabaseCommandRunner. Separation from the DatabaseCommandRunner is done to enable different implementations of DatabaseCommandRunner for different databases.
+
+## DatabaseCommandRunner
+
+Executes the database command and updates the requestContext with the result
+
+## DatabaseCommandResponseVerifier
+
+Verifies the database command execution worked or returns a 5xx response
+
+## CurrentStateFromDatabaseApplier
+
+Creates the current state from the database item returned by DatabaseCommandRunner
+
+## CurrentStateAccessController
+
+Verifies that user with userInfo from UserInfoProvider is authorized to write update the curren state according to the request (e.g POST or PATCH with request JSON body or DELETE).
+
+## NewStateCreator
+
+POST  - new state is JSON body decorations of that 
+PATCH - new state is current state that is updated with the requests JSON body by applying JSON Merge Patch
+DELETE - new state is null
+
+## StateTransitionValidator
+
+Validates a JSON schema of a model that contains currentState and newState. If validation fails a 409 response is created
+
+## NewStateToDatabaseItemCreator
+
+Creates the database item that should be persisted by the database
+
+## DatabaseCUDItemCommandCreator
+
+Creates a database command to write/delete the database item
+
+## NewStateResponseCreator
+
+Put the new state in the response or no body at all the new state is null (ie reult from DELETE)
+
+## ResponseAccessController
+
+Verifies that the user with userInfo is authorized to read the information that is contained in the response and filters averything else (and possibly changes the status code too accordingly)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
