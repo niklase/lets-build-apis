@@ -1,4 +1,9 @@
 {
+  "info": {
+    "title": "Demo Student API",
+    "summary": "API for managing students grades and attendence to demonstrate fine grained access control and business rules in a declarative way with JSON Schema",
+    "description": "<h1>Access control</h1>\n<p>There are three different roles in this API.</p>\n<table>\n<thead>\n<tr>\n<th>Role/Permission name</th>\n<th>Description</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>admin</code></td>\n<td>is allowed to do everything that the API allows</td>\n</tr>\n<tr>\n<td><code>teacher</code></td>\n<td>is allowed to update grade and attendence of his/her students</td>\n</tr>\n<tr>\n<td><code>student</code></td>\n<td>is allowed to update email of himself/herself</td>\n</tr>\n</tbody>\n</table>\n<p>Api keys are used in this demo because it is an easy way to demonstrate authorization. Api keys which defined in <code>apiKeyGeneration</code> are generated if they are not present in database.</p>\n<p>Authentication mechanisms like OIDC or cookies can be used with the same athorization behavior as in the demo.</p>\n<h1>Business rules</h1>\n<p>Business rules are constraints for the transition from a current state of an existing entity to a new state of that entity.</p>\n<p>Current state in the case of a new entity (create with <code>POST</code>) is <code>null</code>. New state in the case of deleting an existing entity (<code>DELETE</code>) is <code>null</code>.</p>\n<p>In this demo API there is one business rule that only allows <code>grade</code> \"F\" for students with <code>attendencePercent</code> lower than <code>50</code>.</p>"
+  },
   "x-dcentb": {
     "mongodb": {
       "db": "dcentb-demo"
@@ -12,8 +17,7 @@
                 "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
                 "items": {
                   "type": "array",
-                  "items": {
-                  }
+                  "items": {}
                 }
               }
             },
@@ -25,6 +29,11 @@
                 "studentId": {
                   "const": {
                     "$data": "/authenticatedUser/studentId"
+                  }
+                },
+                "meta": {
+                  "properties": {
+                    "etag": false
                   }
                 }
               }
@@ -176,6 +185,7 @@
     ]
   },
   "openapi": "3.1.0",
+  "version": "v1",
   "security": [
     {
       "ApiKeyAuth": []
@@ -222,8 +232,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -231,8 +240,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -240,8 +248,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -249,8 +256,7 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           }
@@ -357,8 +363,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -366,8 +371,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -375,8 +379,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           }
@@ -456,6 +459,38 @@
         "responses": {
           "204": {
             "description": "No content"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error. api-key missing or invalid. ",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization error",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           }
         },
         "x-dcentb": {
@@ -467,8 +502,7 @@
                     "request": true
                   }
                 },
-                "responseSchema": {
-                }
+                "responseSchema": {}
               },
               "student": {
                 "requestSchema": {
@@ -484,8 +518,7 @@
                     }
                   }
                 },
-                "responseSchema": {
-                }
+                "responseSchema": {}
               }
             }
           },
@@ -520,8 +553,7 @@
           "accessControl": {
             "permissionSchemas": {
               "admin": {
-                "requestSchema": {
-                },
+                "requestSchema": {},
                 "responseSchema": {
                   "properties": {
                     "response": {
@@ -652,8 +684,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -661,8 +692,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -670,8 +700,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -679,8 +708,7 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           }
@@ -746,8 +774,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -755,8 +782,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           },
@@ -764,8 +790,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           }
@@ -832,6 +857,9 @@
       }
     },
     "schemas": {
+      "Meta_collection_v1": {
+        "type": "object"
+      },
       "Meta_item_v1": {
         "type": "object",
         "properties": {
@@ -857,7 +885,9 @@
               "$ref": "#/components/schemas/Students_item_v1"
             }
           },
-          "meta": {}
+          "meta": {
+            "$ref": "#/components/schemas/Meta_collection_v1"
+          }
         }
       },
       "Students_item_v1": {

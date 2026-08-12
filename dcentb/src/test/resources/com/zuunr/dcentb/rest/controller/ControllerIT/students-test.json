@@ -662,6 +662,29 @@
       "meta": {
         "setVariables": {}
       }
+    },
+    {
+      "description": "As Admin, delete non-existing student",
+      "when": {
+        "method": "DELETE",
+        "uri": "/students/nonexisting-1234567890",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },{
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
     }
   ]
 }

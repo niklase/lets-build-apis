@@ -8,12 +8,6 @@ import com.zuunr.json.schema.validation.JsonSchemaValidator;
 
 public class CurrentStateAccessController extends PreOperationAccessController {
 
-    private static final JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
-    private static final JsonArray PATH_TO_PERMISSION_SCHEMAS = JsonArray.of("x-dcentb", "accessControl", "permissionSchemas");
-    private static final JsonArray PATH_TO_REQUEST_IN_ONE_PERMISSION_SCHEMA = JsonArray.of("requestSchema", "properties", "request");
-
-    private JsonObject permissionSchemas;
-
     public CurrentStateAccessController(JsonValue config) {
         super(config);
     }
