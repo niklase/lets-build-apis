@@ -17,5 +17,5 @@ Business rules are constraints for the transition from a current state of an exi
 
 Current state in the case of a new entity (create with `POST`) is `null`. New state in the case of deleting an existing entity (`DELETE`) is `null`.  
 
-In this demo API there is one business rule that only allows `grade` "F" for students with `attendencePercent` lower than `50`. 
+In this demo API there is one business rule that only allows `grade` `"F"` for students with `attendencePercent` lower than `50`. 
 

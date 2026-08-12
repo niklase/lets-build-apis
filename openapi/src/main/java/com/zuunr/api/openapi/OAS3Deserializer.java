@@ -671,8 +671,10 @@ public class OAS3Deserializer {
         return JsonObject.EMPTY
                 .put(Keywords.PROPERTIES, JsonObject.EMPTY
                         .put("request", JsonObject.EMPTY
+                                .put(Keywords.REQUIRED, JsonArray.of("headers"))
                                 .put(Keywords.PROPERTIES, JsonObject.EMPTY
                                         .put("headers", JsonObject.EMPTY
+                                                .put(Keywords.REQUIRED, JsonArray.of("content-type"))
                                                 .put(Keywords.PROPERTIES, JsonObject.EMPTY
                                                         .put("content-type", JsonObject.EMPTY
                                                                 .put("items", JsonObject.EMPTY
@@ -683,7 +685,7 @@ public class OAS3Deserializer {
         JsonValue finalRequestSchema = getRequestSchemaForContentType(openApiRequestBodyContent);
 
         JsonObject validationResult = VALIDATOR.validate(exchangeWithRequest.jsonValue(), finalRequestSchema, OutputStructure.DETAILED);
-        if (validationResult == null) {
+        if (validationResult.get("valid", JsonValue.FALSE).getBoolean()) {
             return null;
         }
         return new ApiErrorException(API_ERROR_CREATOR.createErrors(validationResult, exchangeWithRequest.jsonValue(), finalRequestSchema.as(JsonSchema.class)));

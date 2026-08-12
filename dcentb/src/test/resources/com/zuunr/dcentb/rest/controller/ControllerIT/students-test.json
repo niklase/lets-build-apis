@@ -685,6 +685,69 @@
       "meta": {
         "setVariables": {}
       }
+    },
+    {
+      "description": "As student Anna, update email",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "student-anna-apikey"
+          ],
+          "content-type": ["application/json"]
+        },
+        "body": {
+          "email": "ANNA@example.com"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "email": "ANNA@example.com"
+        }
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As student Anna, fails to update email and grade",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "student-anna-apikey"
+          ],
+          "content-type": ["application/json"]
+        },
+        "body": {
+          "email": "aNnA@example.com",
+          "grade": "A"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 403,
+        "headers": {},
+        "body": {
+
+        }
+      },
+      "meta": {
+        "setVariables": {}
+      }
     }
   ]
 }

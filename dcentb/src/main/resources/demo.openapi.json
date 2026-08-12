@@ -44,8 +44,10 @@
                   "const": {
                     "$data": "#/authenticatedUser/studentId"
                   }
-                }
-              }
+                },
+                "email": true
+              },
+              "additionalProperties": false
             }
           },
           "admin": {
@@ -643,10 +645,16 @@
                 "requestSchema": {
                   "properties": {
                     "currentState": {
-                      "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem",
                       "required": [
                         "studentId"
-                      ]
+                      ],
+                      "properties": {
+                        "studentId": {
+                          "const": {
+                            "$data": "/authenticatedUser/studentId"
+                          }
+                        }
+                      }
                     },
                     "request": {
                       "properties": {
