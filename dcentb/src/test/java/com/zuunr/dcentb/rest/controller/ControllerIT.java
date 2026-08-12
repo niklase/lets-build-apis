@@ -4,11 +4,14 @@ import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.requesthandler.DcentbGivenWhenThenTester;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
+import com.zuunr.json.JsonValueFactory;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -38,8 +41,23 @@ public class ControllerIT extends DcentbGivenWhenThenTester {
     @Override
     public void doGiven(JsonValue given) {
         super.doGiven(given);
-        JsonObject config = injectDbSetupIntoConfig(given.getJsonObject().get("config").getJsonObject());
+        JsonObject config = injectDbSetupIntoConfig(resolveConfig(given.getJsonObject().get("config")));
         requestHandlerProvider = new RequestHandlerProvider(config);
+    }
+
+    private JsonObject resolveConfig(JsonValue configValue) {
+        String resourceName = configValue.getString();
+        if (resourceName == null) {
+            return configValue.getJsonObject();
+        }
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new RuntimeException("Config resource not found on classpath: " + resourceName);
+            }
+            return JsonValueFactory.create(new String(is.readAllBytes())).getJsonObject();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config resource: " + resourceName, e);
+        }
     }
 
     @Override

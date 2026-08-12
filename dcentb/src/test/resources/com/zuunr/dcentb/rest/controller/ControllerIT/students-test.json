@@ -26,705 +26,59 @@
               "insert": {
                 "collection": "api-keys",
                 "documents": [
-                  { "_id": "teacher-a-apikey", "userId": "teacher-A", "teacherId": "teacher-A", "permissions": ["teacher"] },
-                  { "_id": "teacher-b-apikey", "userId": "teacher-B", "teacherId": "teacher-B", "permissions": ["teacher"] },
-                  { "_id": "student-anna-apikey", "userId": "student-anna", "studentId": "student-anna", "permissions": ["student"] },
-                  { "_id": "student-peter-apikey", "userId": "student-peter", "studentId": "student-peter", "permissions": ["student"] },
-                  { "_id": "student-robert-apikey", "userId": "student-robert", "studentId": "student-robert", "permissions": ["student"] },
-                  { "_id": "admin-a1-apikey", "userId": "admin-a1", "permissions": ["admin"] }
+                  {
+                    "_id": "teacher-a-apikey",
+                    "userId": "teacher-A",
+                    "teacherId": "teacher-A",
+                    "permissions": [
+                      "teacher"
+                    ]
+                  },
+                  {
+                    "_id": "teacher-b-apikey",
+                    "userId": "teacher-B",
+                    "teacherId": "teacher-B",
+                    "permissions": [
+                      "teacher"
+                    ]
+                  },
+                  {
+                    "_id": "student-anna-apikey",
+                    "userId": "student-anna",
+                    "studentId": "student-anna",
+                    "permissions": [
+                      "student"
+                    ]
+                  },
+                  {
+                    "_id": "student-peter-apikey",
+                    "userId": "student-peter",
+                    "studentId": "student-peter",
+                    "permissions": [
+                      "student"
+                    ]
+                  },
+                  {
+                    "_id": "student-robert-apikey",
+                    "userId": "student-robert",
+                    "studentId": "student-robert",
+                    "permissions": [
+                      "student"
+                    ]
+                  },
+                  {
+                    "_id": "admin-a1-apikey",
+                    "userId": "admin-a1",
+                    "permissions": [
+                      "admin"
+                    ]
+                  }
                 ]
               }
             }
           ]
         },
-        "config": {
-          "x-dcentb": {
-            "mongodb": {
-              "db": "dcentb-demo"
-            },
-            "collections": {
-              "students": {
-                "permissions": {
-                  "student": {
-                    "readCollection": {
-                      "properties": {
-                        "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
-                        "items": {
-                          "type": "array",
-                          "items": {
-                          }
-                        }
-                      }
-                    },
-                    "readItem": {
-                      "required": ["studentId"],
-                      "properties": {
-                        "studentId": {
-                          "const": {
-                            "$data": "/authenticatedUser/studentId"
-                          }
-                        }
-                      }
-                    },
-                    "writeItem": {
-                      "properties": {
-                        "studentId": {
-                          "const": {
-                            "$data": "#/authenticatedUser/studentId"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "admin": {
-                    "readCollection": {},
-                    "readItem": {},
-                    "writeItem": {}
-                  },
-                  "teacher": {
-                    "readCollection": {
-                      "properties": {
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/x-dcentb/collections/students/permissions/teacher/readItem"
-                          }
-                        }
-                      }
-                    },
-                    "readItem": {
-                      "required": [
-                        "teacherId"
-                      ],
-                      "properties": {
-                        "teacherId": {
-                          "const": {
-                            "$data": "#/authenticatedUser/teacherId"
-                          }
-                        }
-                      }
-                    },
-                    "writeItem": {}
-                  }
-                },
-                "stateTransitionSchema": {
-                  "if": {
-                    "required": [
-                      "currentState"
-                    ],
-                    "properties": {
-                      "currentState": {
-                        "type": "object"
-                      }
-                    }
-                  },
-                  "then": {
-                    "properties": {
-                      "newState": {
-                        "properties": {
-                          "studentId": {
-                            "const": {
-                              "$data": "/currentState/studentId"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "properties": {
-                    "newState": {
-                      "anyOf": [
-                        {
-                          "properties": {
-                            "grade": {
-                              "enum": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "E"
-                              ]
-                            },
-                            "attendancePercent": {
-                              "minimum": 50
-                            }
-                          }
-                        },
-                        {
-                          "properties": {
-                            "grade": {
-                              "enum": [
-                                "F"
-                              ]
-                            },
-                            "attendancePercent": {
-                              "minimum": 0
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "openapi": "3.1.0",
-          "security": [
-            {
-              "ApiKeyAuth": []
-            }
-          ],
-          "paths": {
-            "/students": {
-              "post": {
-                "requestBody": {
-                  "required": true,
-                  "content": {
-                    "application/json": {
-                      "schema": {
-                        "$ref": "#/components/schemas/Students_item_v1",
-                        "allOf": [
-                          {
-                            "properties": {
-                              "name": true,
-                              "email": true,
-                              "studentId": true,
-                              "teacherId": true,
-                              "grade": true,
-                              "attendancePercent": true
-                            },
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
-                    }
-                  }
-                },
-                "responses": {
-                  "201": {
-                    "description": "Created",
-                    "content": {
-                      "application/json": {
-                        "schema": {
-                          "$ref": "#/components/schemas/Students_item_v1"
-                        }
-                      }
-                    }
-                  }
-                },
-                "x-dcentb": {
-                  "mongodb": {
-                    "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
-                  },
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "admin": {
-                        "requestSchema": {
-                          "properties": {
-                            "request": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/admin/writeItem"
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "responseSchema": {
-                          "response": {
-                            "properties": {
-                              "body": {
-                                "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "stateTransitionSchema": {
-                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
-                  }
-                }
-              },
-              "get": {
-                "parameters": [
-                  {
-                    "in": "query",
-                    "name": "filter.name.eq",
-                    "schema": {
-                      "type": "string"
-                    },
-                    "required": false
-                  },
-                  {
-                    "in": "query",
-                    "name": "filter.teacherId.eq",
-                    "schema": {
-                      "type": "string"
-                    },
-                    "required": false
-                  },
-                  {
-                    "in": "query",
-                    "name": "limit",
-                    "schema": {
-                      "type": "integer"
-                    },
-                    "required": false
-                  },
-                  {
-                    "in": "query",
-                    "name": "offset",
-                    "schema": {
-                      "type": "integer"
-                    },
-                    "required": false
-                  },
-                  {
-                    "in": "query",
-                    "name": "orderBy",
-                    "schema": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "enum": [
-                          "name",
-                          "name desc",
-                          "meta.createdAt",
-                          "meta.createdAt desc"
-                        ]
-                      }
-                    },
-                    "required": false
-                  }
-                ],
-                "x-dcentb": {
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "admin": {
-                        "requestSchema": {},
-                        "responseSchema": {
-                          "properties": {
-                            "response": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/admin/readCollection"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "teacher": {
-                        "requestSchema": {
-                          "properties": {
-                            "request": {
-                              "required": [
-                                "query"
-                              ],
-                              "properties": {
-                                "query": {
-                                  "required": [
-                                    "filter.teacherId.eq"
-                                  ],
-                                  "properties": {
-                                    "filter.teacherId.eq": {
-                                      "items": {
-                                        "const": {
-                                          "$data": "/authenticatedUser/teacherId"
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "responseSchema": {
-                          "properties": {
-                            "response": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "/students/{id}": {
-              "delete": {
-                "parameters": [
-                  {
-                    "in": "path",
-                    "name": "id",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
-                  }
-                ],
-                "responses": {
-                  "204": {
-                    "description": "No content"
-                  }
-                },
-                "x-dcentb": {
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "admin": {
-                        "requestSchema": {
-                          "properties": {
-                            "request": true
-                          }
-                        },
-                        "responseSchema": {
-                        }
-                      },
-                      "student": {
-                        "requestSchema": {
-                          "properties": {
-                            "currentState": {
-                              "properties": {
-                                "studentId": {
-                                  "const": {
-                                    "$data": "/authenticatedUser/studentId"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "responseSchema": {
-                        }
-                      }
-                    }
-                  },
-                  "stateTransitionSchema": {
-                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
-                  }
-                }
-              },
-              "get": {
-                "parameters": [
-                  {
-                    "in": "path",
-                    "name": "id",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
-                  }
-                ],
-                "responses": {
-                  "200": {
-                    "content": {
-                      "application/json": {
-                        "schema": {
-                          "$ref": "#/components/schemas/Students_item_v1"
-                        }
-                      }
-                    }
-                  }
-                },
-                "x-dcentb": {
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "admin": {
-                        "requestSchema": {
-                        },
-                        "responseSchema": {
-                          "properties": {
-                            "response": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "student": {
-                        "requestSchema": {
-                          "properties": {
-                            "request": true
-                          }
-                        },
-                        "responseSchema": {
-                          "properties": {
-                            "response": {
-                              "properties": {
-                                "body": {
-                                  "required": [
-                                    "studentId"
-                                  ],
-                                  "properties": {
-                                    "studentId": {
-                                      "const": {
-                                        "$data": "/authenticatedUser/studentId"
-                                      }
-                                    },
-                                    "name": true,
-                                    "meta": true,
-                                    "grade": true,
-                                    "teacherId": true,
-                                    "email": true,
-                                    "attendancePercent": true
-                                  },
-                                  "additionalProperties": false
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "patch": {
-                "parameters": [
-                  {
-                    "in": "path",
-                    "name": "id",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
-                  }
-                ],
-                "requestBody": {
-                  "content": {
-                    "application/json": {
-                      "schema": {
-                        "$ref": "#/components/schemas/Students_item_v1",
-                        "allOf": [
-                          {
-                            "properties": {
-                              "name": true,
-                              "email": true,
-                              "teacherId": true,
-                              "grade": true,
-                              "attendancePercent": true
-                            },
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
-                    }
-                  }
-                },
-                "x-dcentb": {
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "student": {
-                        "requestSchema": {
-                          "properties": {
-                            "currentState": {
-                              "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem",
-                              "required": [
-                                "studentId"
-                              ]
-                            },
-                            "request": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem"
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "responseSchema": {}
-                      },
-                      "admin": {
-                        "requestSchema": {},
-                        "responseSchema": {}
-                      }
-                    }
-                  },
-                  "stateTransitionSchema": {
-                    "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
-                  }
-                }
-              }
-            },
-            "/students/getCollection": {
-              "post": {
-                "requestBody": {
-                  "content": {
-                    "application/json": {
-                      "schema": {
-                        "type": "object",
-                        "properties": {
-                          "offset": {
-                            "type": "integer"
-                          },
-                          "limit": {
-                            "type": "integer"
-                          },
-                          "filter": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "object",
-                                "properties": {
-                                  "eq": {
-                                    "type": "string"
-                                  }
-                                },
-                                "additionalProperties": false
-                              },
-                              "teacherId": {
-                                "type": "object",
-                                "properties": {
-                                  "eq": {
-                                    "type": "string"
-                                  }
-                                },
-                                "additionalProperties": false
-                              }
-                            },
-                            "additionalProperties": false
-                          }
-                        },
-                        "additionalProperties": false
-                      }
-                    }
-                  }
-                },
-                "responses": {
-                  "200": {
-                    "content": {
-                      "application/json": {
-                        "schema": {}
-                      }
-                    }
-                  }
-                },
-                "x-dcentb": {
-                  "accessControl": {
-                    "permissionSchemas": {
-                      "teacher": {
-                        "requestSchema": {
-                          "properties": {
-                            "request": {
-                              "properties": {
-                                "body": {
-                                  "required": [
-                                    "filter"
-                                  ],
-                                  "properties": {
-                                    "filter": {
-                                      "required": [
-                                        "teacherId"
-                                      ],
-                                      "properties": {
-                                        "teacherId": {
-                                          "properties": {
-                                            "eq": {
-                                              "const": {
-                                                "$data": "#/authenticatedUser/teacherId"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "responseSchema": {
-                          "properties": {
-                            "response": {
-                              "properties": {
-                                "body": {
-                                  "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "components": {
-            "securitySchemes": {
-              "ApiKeyAuth": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "api-key"
-              }
-            },
-            "schemas": {
-              "Meta_item_v1": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "href": {
-                    "type": "string"
-                  },
-                  "createdAt": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "updatedAt": {}
-                }
-              },
-              "Students_item_v1": {
-                "type": "object",
-                "properties": {
-                  "studentId": {
-                    "type": "string"
-                  },
-                  "teacherId": {
-                    "type": "string"
-                  },
-                  "meta": {
-                    "$ref": "#/components/schemas/Meta_item_v1"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string"
-                  },
-                  "grade": {
-                    "enum": [
-                      "A",
-                      "B",
-                      "C",
-                      "D",
-                      "E",
-                      "F"
-                    ]
-                  },
-                  "attendancePercent": {
-                    "type": "integer"
-                  }
-                }
-              }
-            }
-          }
-        }
+        "config": "demo.openapi.json"
       }
     },
     {
@@ -754,12 +108,10 @@
       "then": {
         "body": {
           "name": "Anna",
-          "meta": {
-          }
+          "meta": {}
         },
         "status": 201,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
         "setVariables": {
@@ -794,12 +146,10 @@
       "then": {
         "body": {
           "name": "Peter",
-          "meta": {
-          }
+          "meta": {}
         },
         "status": 201,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
         "setVariables": {
@@ -834,12 +184,10 @@
       "then": {
         "body": {
           "name": "Robert",
-          "meta": {
-          }
+          "meta": {}
         },
         "status": 201,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
         "setVariables": {
@@ -864,15 +212,12 @@
     },
     {
       "then": {
-        "body": {
-        },
+        "body": {},
         "status": 403,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -903,12 +248,10 @@
           ]
         },
         "status": 200,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -932,15 +275,12 @@
     },
     {
       "then": {
-        "body": {
-        },
+        "body": {},
         "status": 403,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -981,12 +321,10 @@
           ]
         },
         "status": 200,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1015,12 +353,10 @@
           ]
         },
         "status": 403,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1044,12 +380,10 @@
           "studentId": "student-anna"
         },
         "status": 200,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1070,12 +404,10 @@
     {
       "then": {
         "status": 404,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1096,12 +428,10 @@
     {
       "then": {
         "status": 200,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1128,16 +458,14 @@
     {
       "then": {
         "status": 200,
-        "headers": {
-        },
+        "headers": {},
         "body": {
           "email": "rob@example.com",
           "studentId": "student-robert"
         }
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1164,14 +492,11 @@
     {
       "then": {
         "status": 404,
-        "headers": {
-        },
-        "body": {
-        }
+        "headers": {},
+        "body": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1198,14 +523,11 @@
     {
       "then": {
         "status": 409,
-        "headers": {
-        },
-        "body": {
-        }
+        "headers": {},
+        "body": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1239,12 +561,10 @@
           ]
         },
         "status": 200,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1265,12 +585,10 @@
     {
       "then": {
         "status": 204,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1291,12 +609,10 @@
     {
       "then": {
         "status": 404,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1317,12 +633,10 @@
     {
       "then": {
         "status": 400,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     },
     {
@@ -1343,12 +657,10 @@
     {
       "then": {
         "status": 404,
-        "headers": {
-        }
+        "headers": {}
       },
       "meta": {
-        "setVariables": {
-        }
+        "setVariables": {}
       }
     }
   ]

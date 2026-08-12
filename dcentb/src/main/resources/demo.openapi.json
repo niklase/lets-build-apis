@@ -3,36 +3,6 @@
     "mongodb": {
       "db": "dcentb-demo"
     },
-    "users": {
-      "user-s1": {
-        "studentId": "student-anna"
-      },
-      "user-s2": {
-        "studentId": "student-peter"
-      },
-      "user-s3": {
-        "studentId": "student-robert"
-      },
-      "user-t1": {
-        "teacherId": "teacher-A"
-      },
-      "user-t2": {
-        "teacherId": "teacher-B"
-      },
-      "user-a1": {
-      }
-    },
-    "accessControl": {
-      "apiKeys": {
-        "<random-secret>_<user-id>_<roles>": {},
-        "ak-demo-87162534_user-s1_student": {},
-        "ak-demo-18783325_user-s2_student": {},
-        "ak-demo-18783325_user-s3_student": {},
-        "ak-demo-84441136_user-t1_teacher": {},
-        "ak-demo-35365462_user-t2_teacher": {},
-        "ak-demo-42288333_user-a1_admin": {}
-      }
-    },
     "collections": {
       "students": {
         "permissions": {
@@ -48,7 +18,9 @@
               }
             },
             "readItem": {
-              "required": ["studentId"],
+              "required": [
+                "studentId"
+              ],
               "properties": {
                 "studentId": {
                   "const": {
@@ -158,7 +130,50 @@
           }
         }
       }
-    }
+    },
+    "apiKeyGeneration": [
+      {
+        "userId": "teacher-A",
+        "teacherId": "teacher-A",
+        "permissions": [
+          "teacher"
+        ]
+      },
+      {
+        "userId": "teacher-B",
+        "teacherId": "teacher-B",
+        "permissions": [
+          "teacher"
+        ]
+      },
+      {
+        "studentId": "student-anna",
+        "userId": "student-anna",
+        "permissions": [
+          "student"
+        ]
+      },
+      {
+        "studentId": "student-peter",
+        "userId": "student-peter",
+        "permissions": [
+          "student"
+        ]
+      },
+      {
+        "studentId": "student-robert",
+        "userId": "student-robert",
+        "permissions": [
+          "student"
+        ]
+      },
+      {
+        "userId": "admin-a1",
+        "permissions": [
+          "admin"
+        ]
+      }
+    ]
   },
   "openapi": "3.1.0",
   "security": [
@@ -199,6 +214,42 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Students_item_v1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error. api-key missing or invalid. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization error",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
                 }
               }
             }
@@ -291,6 +342,45 @@
             "required": false
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Students_collection_v1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error. api-key missing or invalid. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization error",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          }
+        },
         "x-dcentb": {
           "accessControl": {
             "permissionSchemas": {
@@ -546,6 +636,54 @@
           "stateTransitionSchema": {
             "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error. api-key missing or invalid. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization error",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -595,9 +733,39 @@
         },
         "responses": {
           "200": {
+            "description": "Created",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Students_collection_v1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error. api-key missing or invalid. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization error",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
               }
             }
           }
@@ -678,6 +846,18 @@
             "format": "date-time"
           },
           "updatedAt": {}
+        }
+      },
+      "Students_collection_v1": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Students_item_v1"
+            }
+          },
+          "meta": {}
         }
       },
       "Students_item_v1": {

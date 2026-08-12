@@ -90,7 +90,16 @@ A student can only update their own email. An admin sees everything. All of this
 
 dcentb registers itself automatically via Spring Boot auto-configuration. Any route not handled by your own controllers is caught by dcentb and routed to MongoDB based on your OpenAPI spec.
 
-#### 1. Add the dependency
+#### 1. Build the project:
+
+dcentb is still in development and is not yet available on Maven Central. Therefore you need to build the project first:
+
+```
+mvn -f ../pom.xml install -pl dcentb -am
+```
+
+
+#### 2. Add the dependency
 
 ```xml
 <dependency>
@@ -100,11 +109,11 @@ dcentb registers itself automatically via Spring Boot auto-configuration. Any ro
 </dependency>
 ```
 
-#### 2. Add your OpenAPI spec
+#### 3. Add your OpenAPI spec
 
 Place your spec on the classpath (e.g. `src/main/resources/my-api.openapi.json`).
 
-#### 3. Configure `application.properties`
+#### 4. Configure `application.properties`
 
 ```properties
 dcentb.openapi.file=classpath:my-api.openapi.json
@@ -121,6 +130,9 @@ The Swagger UI is available at `http://localhost:8080/swagger`.
 # Standalone Quickstart
 
 #### 1. Build the project:
+
+dcentb is still in development and is not yet available on Maven Central. Therefore you need to build the project first:
+
 
 ```
 mvn -f ../pom.xml install -pl dcentb -am
@@ -142,7 +154,9 @@ docker run --name mongodb \
 java -jar target/dcentb-1.0-SNAPSHOT-exec.jar
 ```
 
-The demo OpenAPI spec (`demo.openapi.json`) is used by default and already configures the MongoDB database name via `x-dcentb.mongodb.db`. To use your own spec:
+The demo OpenAPI spec (`demo.openapi.json`) is used by default. Database is connected via ` mongodb://admin:adminpassword@localhost:27017/?authSource=admin`. 
+
+To use your own spec:
 
 ```
 java -jar target/dcentb-1.0-SNAPSHOT-exec.jar --dcentb.openapi.file=path/to/your.openapi.json
