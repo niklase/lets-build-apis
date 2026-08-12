@@ -1,19 +1,24 @@
 package com.zuunr.dcentb.rest.processor.accesscontrol;
 
 import com.zuunr.dcentb.rest.processor.Processor;
+import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBHandle;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
-import com.zuunr.json.util.StringSplitter;
+import com.zuunr.mongodb.MongoJsonDB;
 
 public class ApiKeyAuthenticator extends Processor {
 
-    JsonObject config;
-
-    JsonObject apiKeys = JsonObject.EMPTY.put("KEY1234", JsonObject.EMPTY.put("userId", "user1234"));
+    private final MongoJsonDB mongoJsonDB;
+    private final String collection;
 
     public ApiKeyAuthenticator(JsonValue config) {
-        this.config = config.getJsonObject();
+        this.mongoJsonDB = config.as(MongoJsonDBHandle.class).getMongoJsonDB();
+        this.collection = config.getJsonObject()
+                .get(X_DCENTB, JsonObject.EMPTY)
+                .get("accessControl", JsonObject.EMPTY)
+                .get("apiKeyCollection", "api-keys")
+                .getString();
     }
 
     @Override
@@ -21,31 +26,25 @@ public class ApiKeyAuthenticator extends Processor {
         JsonObject request = requestContext.get(REQUEST).getJsonObject();
         String apiKey = request.get("headers", JsonObject.EMPTY).get("api-key", JsonArray.of("")).get(0).getString();
 
+        if (apiKey.isEmpty()) {
+            return requestContext.put(RESPONSE, JsonObject.EMPTY.put("status", 401).put("message", "Missing api-key"));
+        }
 
-        boolean valid = config.get("x-dcentb", JsonObject.EMPTY)
-                                .get("accessControl", JsonObject.EMPTY)
-                                .get("apiKeys", JsonObject.EMPTY)
-                                .get(apiKey) != null;
+        JsonObject findCommand = JsonObject.EMPTY.put("find", JsonObject.EMPTY
+                .put("collection", collection)
+                .put("filter", JsonObject.EMPTY
+                        .put("_id", JsonArray.of(JsonObject.EMPTY.put("$eq", apiKey))))
+                .put("limit", 1));
 
-        if (!valid) {
+        JsonObject result = mongoJsonDB.runCommand(findCommand);
+        JsonArray firstBatch = result.get("cursor", JsonObject.EMPTY).get("firstBatch", JsonArray.EMPTY).getJsonArray();
+
+        if (firstBatch.isEmpty()) {
             return requestContext.put(RESPONSE, JsonObject.EMPTY.put("status", 401).put("message", "Invalid api-key"));
         }
 
-        JsonObject apiKeyInfo = parseApiKey(apiKey);
-        JsonValue userId = apiKeyInfo.get("userId");
+        JsonObject authenticatedUser = firstBatch.get(0).getJsonObject().remove("_id");
 
-        //JsonObject authentication = apiKeys.get(apiKey, JsonValue.NULL).getJsonObject();
-        if (userId == null) {
-            return requestContext.put(RESPONSE, JsonObject.EMPTY.put("status", 401).put("message", "Invalid api-key"));
-        }
-
-        return requestContext.put("authenticatedUser", apiKeyInfo);
-    }
-
-    private JsonObject parseApiKey(String apiKey) {
-        JsonArray split = StringSplitter.splitString(apiKey, '_');
-        String userId = split.get(1).getString();
-        JsonArray permissions = StringSplitter.splitString(split.get(2).getString(), '-');
-        return JsonObject.EMPTY.put("userId", userId).put("permissions", permissions);
+        return requestContext.put("authenticatedUser", authenticatedUser);
     }
 }

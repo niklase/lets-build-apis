@@ -16,6 +16,24 @@
               "drop": {
                 "collection": "students"
               }
+            },
+            {
+              "drop": {
+                "collection": "api-keys"
+              }
+            },
+            {
+              "insert": {
+                "collection": "api-keys",
+                "documents": [
+                  { "_id": "teacher-a-apikey", "userId": "teacher-A", "teacherId": "teacher-A", "permissions": ["teacher"] },
+                  { "_id": "teacher-b-apikey", "userId": "teacher-B", "teacherId": "teacher-B", "permissions": ["teacher"] },
+                  { "_id": "student-anna-apikey", "userId": "student-anna", "studentId": "student-anna", "permissions": ["student"] },
+                  { "_id": "student-peter-apikey", "userId": "student-peter", "studentId": "student-peter", "permissions": ["student"] },
+                  { "_id": "student-robert-apikey", "userId": "student-robert", "studentId": "student-robert", "permissions": ["student"] },
+                  { "_id": "admin-a1-apikey", "userId": "admin-a1", "permissions": ["admin"] }
+                ]
+              }
             }
           ]
         },
@@ -23,36 +41,6 @@
           "x-dcentb": {
             "mongodb": {
               "db": "dcentb-demo"
-            },
-            "users": {
-              "user-s1": {
-                "studentId": "student-anna"
-              },
-              "user-s2": {
-                "studentId": "student-peter"
-              },
-              "user-s3": {
-                "studentId": "student-robert"
-              },
-              "user-t1": {
-                "teacherId": "teacher-A"
-              },
-              "user-t2": {
-                "teacherId": "teacher-B"
-              },
-              "user-a1": {
-              }
-            },
-            "accessControl": {
-              "apiKeys": {
-                "<random-secret>_<user-id>_<roles>": {},
-                "ak-demo-87162534_user-s1_student": {},
-                "ak-demo-18783325_user-s2_student": {},
-                "ak-demo-18783325_user-s3_student": {},
-                "ak-demo-84441136_user-t1_teacher": {},
-                "ak-demo-35365462_user-t2_teacher": {},
-                "ak-demo-42288333_user-a1_admin": {}
-              }
             },
             "collections": {
               "students": {
@@ -749,7 +737,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         },
         "body": {
@@ -789,7 +777,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         },
         "body": {
@@ -829,7 +817,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         },
         "body": {
@@ -860,7 +848,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, try to get all students of any teacher",
+      "description": "As teacher-A, try to get all students of any teacher",
       "when": {
         "method": "GET",
         "uri": "/students",
@@ -869,7 +857,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-84441136_user-t1_teacher"
+            "teacher-a-apikey"
           ]
         }
       }
@@ -888,7 +876,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, get all students of other teacher-A (same as user-t1)",
+      "description": "As teacher-A, get all students of teacher-A",
       "when": {
         "method": "GET",
         "uri": "/students?filter.teacherId.eq=teacher-A",
@@ -897,7 +885,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-84441136_user-t1_teacher"
+            "teacher-a-apikey"
           ]
         }
       }
@@ -924,7 +912,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, try to get all students of any teacher with POST getCollection",
+      "description": "As teacher-A, try to get all students of any teacher with POST getCollection",
       "when": {
         "method": "POST",
         "uri": "/students/getCollection",
@@ -936,7 +924,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-84441136_user-t1_teacher"
+            "teacher-a-apikey"
           ]
         },
         "body": {}
@@ -956,7 +944,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, get all students of other teacher-A (same as user-t1) with POST /getCollection",
+      "description": "As teacher-A, get all students of teacher-A with POST /getCollection",
       "when": {
         "method": "POST",
         "uri": "/students/getCollection",
@@ -968,7 +956,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-84441136_user-t1_teacher"
+            "teacher-a-apikey"
           ]
         },
         "body": {
@@ -1002,7 +990,7 @@
       }
     },
     {
-      "description": "As teacher user-t1, get all students of other teacherId",
+      "description": "As teacher-A, try to get all students of teacher-B (unauthorized)",
       "when": {
         "method": "GET",
         "uri": "/students?filter.teacherId.eq=teacher-B",
@@ -1011,7 +999,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-84441136_user-t1_teacher"
+            "teacher-a-apikey"
           ]
         }
       }
@@ -1045,7 +1033,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-87162534_user-s1_student"
+            "student-anna-apikey"
           ]
         }
       }
@@ -1074,7 +1062,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-87162534_user-s1_student"
+            "student-anna-apikey"
           ]
         }
       }
@@ -1100,7 +1088,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-18783325_user-s3_student"
+            "student-robert-apikey"
           ]
         }
       }
@@ -1129,7 +1117,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-18783325_user-s3_student"
+            "student-robert-apikey"
           ]
         },
         "body": {
@@ -1165,7 +1153,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-87162534_user-s1_student"
+            "student-anna-apikey"
           ]
         },
         "body": {
@@ -1199,7 +1187,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         },
         "body": {
@@ -1230,7 +1218,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         }
       }
@@ -1269,7 +1257,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         }
       }
@@ -1295,7 +1283,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         }
       }
@@ -1321,7 +1309,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-42288333_user-a1_admin"
+            "admin-a1-apikey"
           ]
         }
       }
@@ -1347,7 +1335,7 @@
             "application/json"
           ],
           "api-key": [
-            "ak-demo-18783325_user-s2_student"
+            "student-peter-apikey"
           ]
         }
       }
