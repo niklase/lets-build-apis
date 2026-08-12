@@ -173,9 +173,17 @@
       "ApiKeyAuth": []
     }
   ],
+  "tags": [
+    {
+      "name": "Students"
+    }
+  ],
   "paths": {
     "/students": {
       "post": {
+        "tags": [
+          "Students"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -279,6 +287,9 @@
         }
       },
       "get": {
+        "tags": [
+          "Students"
+        ],
         "parameters": [
           {
             "in": "query",
@@ -428,6 +439,9 @@
     },
     "/students/{id}": {
       "delete": {
+        "tags": [
+          "Students"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -518,6 +532,9 @@
         }
       },
       "get": {
+        "tags": [
+          "Students"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -595,6 +612,9 @@
         }
       },
       "patch": {
+        "tags": [
+          "Students"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -751,6 +771,9 @@
     },
     "/students/getCollection": {
       "post": {
+        "tags": [
+          "Students"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
