@@ -531,6 +531,37 @@
       }
     },
     {
+      "description": "As admin, cannot change studentId",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-peter-href}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "studentId": "newId"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {},
+        "body": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
       "description": "As admin , get all students",
       "when": {
         "method": "GET",

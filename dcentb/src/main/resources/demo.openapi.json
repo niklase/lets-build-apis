@@ -82,29 +82,6 @@
           }
         },
         "stateTransitionSchema": {
-          "if": {
-            "required": [
-              "currentState"
-            ],
-            "properties": {
-              "currentState": {
-                "type": "object"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "newState": {
-                "properties": {
-                  "studentId": {
-                    "const": {
-                      "$data": "/currentState/studentId"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "properties": {
             "newState": {
               "anyOf": [
