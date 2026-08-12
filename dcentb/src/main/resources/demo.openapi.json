@@ -17,7 +17,9 @@
                 "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
                 "items": {
                   "type": "array",
-                  "items": {}
+                  "items": {
+                    "$ref": "#/x-dcentb/collections/students/permissions/student/readItem"
+                  }
                 }
               }
             },
@@ -28,7 +30,7 @@
               "properties": {
                 "studentId": {
                   "const": {
-                    "$data": "/authenticatedUser/studentId"
+                    "$data": "/authenticatedUser/userId"
                   }
                 },
                 "meta": {
@@ -42,7 +44,7 @@
               "properties": {
                 "studentId": {
                   "const": {
-                    "$data": "#/authenticatedUser/studentId"
+                    "$data": "#/authenticatedUser/userId"
                   }
                 },
                 "email": true
@@ -73,12 +75,18 @@
               "properties": {
                 "teacherId": {
                   "const": {
-                    "$data": "#/authenticatedUser/teacherId"
+                    "$data": "#/authenticatedUser/userId"
                   }
                 }
               }
             },
-            "writeItem": {}
+            "writeItem": {
+              "teacherId": {
+                "const": {
+                  "$data": "#/authenticatedUser/userId"
+                }
+              }
+            }
           }
         },
         "stateTransitionSchema": {
@@ -122,34 +130,29 @@
     "apiKeyGeneration": [
       {
         "userId": "teacher-A",
-        "teacherId": "teacher-A",
         "permissions": [
           "teacher"
         ]
       },
       {
         "userId": "teacher-B",
-        "teacherId": "teacher-B",
         "permissions": [
           "teacher"
         ]
       },
       {
-        "studentId": "student-anna",
         "userId": "student-anna",
         "permissions": [
           "student"
         ]
       },
       {
-        "studentId": "student-peter",
         "userId": "student-peter",
         "permissions": [
           "student"
         ]
       },
       {
-        "studentId": "student-robert",
         "userId": "student-robert",
         "permissions": [
           "student"
@@ -211,7 +214,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -219,7 +222,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -227,7 +230,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -235,7 +238,7 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           }
@@ -342,7 +345,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -350,7 +353,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -358,7 +361,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           }
@@ -396,7 +399,7 @@
                             "filter.teacherId.eq": {
                               "items": {
                                 "const": {
-                                  "$data": "/authenticatedUser/teacherId"
+                                  "$data": "/authenticatedUser/userId"
                                 }
                               }
                             }
@@ -443,7 +446,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -451,7 +454,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -459,7 +462,15 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {"type": "object"}
               }
             }
           },
@@ -467,7 +478,7 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           }
@@ -647,6 +658,32 @@
               "admin": {
                 "requestSchema": {},
                 "responseSchema": {}
+              },
+              "teacher": {
+                "requestSchema": {
+                  "properties": {
+                    "currentState": {
+                      "required": [
+                        "teacherId"
+                      ],
+                      "properties": {
+                        "teacherId": {
+                          "const": {
+                            "$data": "/authenticatedUser/userId"
+                          }
+                        }
+                      }
+                    },
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/writeItem"
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {}
               }
             }
           },
@@ -669,7 +706,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -677,7 +714,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -685,7 +722,17 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           },
@@ -693,7 +740,9 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           }
@@ -759,7 +808,7 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -767,7 +816,7 @@
             "description": "Authentication error. api-key missing or invalid. ",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           },
@@ -775,7 +824,7 @@
             "description": "Authorization error",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {"type": "object"}
               }
             }
           }
@@ -802,7 +851,7 @@
                                   "properties": {
                                     "eq": {
                                       "const": {
-                                        "$data": "#/authenticatedUser/teacherId"
+                                        "$data": "#/authenticatedUser/userId"
                                       }
                                     }
                                   }
@@ -894,6 +943,7 @@
             "type": "string"
           },
           "grade": {
+            "type": "string",
             "enum": [
               "A",
               "B",

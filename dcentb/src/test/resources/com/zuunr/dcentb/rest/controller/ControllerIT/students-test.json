@@ -360,6 +360,38 @@
       }
     },
     {
+      "description": "As teacher-B, failing to set grade of a student who has teacher-A and gets a 404",
+      "when": {
+        "method": "PATCH",
+        "uri": "{{student-robert-href}}",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "teacher-b-apikey"
+          ]
+        },
+        "body": {
+          "grade" : "F"
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+        },
+        "status": 404,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
       "description": "As student student-s1, get info about myself",
       "when": {
         "method": "GET",
