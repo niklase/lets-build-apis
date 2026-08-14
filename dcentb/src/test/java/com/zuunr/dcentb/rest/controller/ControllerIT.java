@@ -2,6 +2,7 @@ package com.zuunr.dcentb.rest.controller;
 
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.requesthandler.DcentbGivenWhenThenTester;
+import com.zuunr.dcentb.rest.util.BackendTime;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
 import com.zuunr.json.JsonValueFactory;
@@ -17,6 +18,10 @@ import java.util.stream.Stream;
 
 public class ControllerIT extends DcentbGivenWhenThenTester {
 
+
+    static {
+        BackendTime.setNow(1785420000000L); // 2026-07-30 14:00:00
+    }
 
     /*
      * This method implementation may be copied as-is to any other subclass of GivenWhenThenBaseTester
