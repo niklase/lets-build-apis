@@ -17,14 +17,7 @@
         <module>mongodb</module>
         <module>mongoschema</module>
         <module>openapi</module>
-        <!--
-        <module>openapi-design</module>
-        -->
-        <module>json-servlet-example</module>
         <module>java-object-gen</module>
-        <module>zip-download</module>
-        <module>services-app</module>
-        <module>mermaid-schema</module>
         <module>form-builder</module>
         <module>sqlschema</module>
     </modules>
