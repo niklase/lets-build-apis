@@ -34,7 +34,6 @@ public class ResponseAccessController extends Processor {
     private JsonObject filterResponse(JsonObject requestContext) {
 
         JsonObject response = requestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject();
-        //JsonSchema responseFilterSchema = requestContext.get("responseFilterSchema", false).as(JsonSchema.class);
         JsonPointer responseFilterSchemaPointer = requestContext.get("responseFilterSchemaPointer").as(JsonPointer.class);
         JsonObject responseFilterSchema = config.put("$ref", responseFilterSchemaPointer.getJsonPointerString());
 

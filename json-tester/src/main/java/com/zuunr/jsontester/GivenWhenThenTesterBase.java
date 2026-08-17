@@ -95,10 +95,12 @@ public abstract class GivenWhenThenTesterBase {
 
         for (int i = 1; i < tests.size(); i = i + 2) {
 
-            String description = "tests["+i+"]: "+tests.get(i).get("description", JsonValue.EMPTY_STRING).getString();
+            JsonObject whenItem = tests.get(i).getJsonObject();
+            String rawDescription = whenItem.get("description", JsonValue.EMPTY_STRING).getString();
+            String description = "tests["+i+"]: "+rawDescription;
 
             LOGGER.info("{}", description);
-            JsonValue when = tests.get(i).get("when");
+            JsonValue when = whenItem.get("when");
             if (when == null) {
                 throw new RuntimeException("Missing 'when' in test element: " + i);
             }
@@ -155,6 +157,11 @@ public abstract class GivenWhenThenTesterBase {
                 }
 
             }
+
+            JsonObject whenMeta = whenItem.get("meta", JsonObject.EMPTY).getJsonObject();
+            JsonObject thenMeta = testItem.get("meta", JsonObject.EMPTY).getJsonObject();
+            onTestCase(rawDescription, when, whenMeta, then, thenMeta, result);
+
             JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
             variables = variables.putAll(setVariables(setVariables, result));
         }
@@ -181,6 +188,20 @@ public abstract class GivenWhenThenTesterBase {
     public abstract void doGiven(JsonValue given);
 
     public abstract JsonValue doWhen(JsonValue when);
+
+    /**
+     * Optional hook invoked after a when/then pair has been executed and has passed
+     * validation. Default implementation does nothing; override to observe the
+     * description, request, expected result and actual result of each test case.
+     *
+     * whenMeta is the "meta" object sibling of "when" (on the tests[i] element);
+     * thenMeta is the "meta" object sibling of "then" (on the tests[i+1] element,
+     * the same object that already carries "setVariables"). Both default to an
+     * empty object when absent.
+     */
+    protected void onTestCase(String description, JsonValue when, JsonObject whenMeta, JsonValue then, JsonObject thenMeta, JsonValue result) {
+        // no-op by default
+    }
 
 
     private JsonObject setVariables(JsonObject setVariables, JsonValue result) {
