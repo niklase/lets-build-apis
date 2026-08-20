@@ -12,6 +12,7 @@ import com.zuunr.json.JsonValue;
 public class NewStateResponseCreator extends Processor {
 
     public NewStateResponseCreator(JsonValue config) {
+        super(config);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class NewStateResponseCreator extends Processor {
 
         JsonObjectBuilder responseBuilder = JsonObject.EMPTY.builder();
 
-        if (method.equals("POST")) {
+        if (method.equals("POST") || method.equals("PUT")) {
             responseBuilder.put("body", newState);
             responseBuilder.put("headers", JsonObject.EMPTY
                     .put("location", JsonArray.of(newState.get("meta").get("href"))));

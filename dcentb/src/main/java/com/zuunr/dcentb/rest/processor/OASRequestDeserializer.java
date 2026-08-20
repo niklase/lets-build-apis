@@ -12,6 +12,7 @@ public class OASRequestDeserializer extends Processor {
     private JsonValue config;
 
     public OASRequestDeserializer(JsonValue config) {
+        super(config);
         this.config = config;
     }
 

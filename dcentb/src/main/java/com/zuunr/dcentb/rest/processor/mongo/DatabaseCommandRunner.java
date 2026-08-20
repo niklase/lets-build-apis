@@ -10,6 +10,7 @@ public class DatabaseCommandRunner extends Processor {
     private MongoJsonDB mongoDB;
 
     public DatabaseCommandRunner(JsonValue config) {
+        super(config);
         mongoDB = config.as(MongoJsonDBHandle.class).getMongoJsonDB();
     }
 

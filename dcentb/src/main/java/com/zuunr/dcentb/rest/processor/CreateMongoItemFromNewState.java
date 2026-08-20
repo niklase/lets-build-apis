@@ -8,8 +8,8 @@ public class CreateMongoItemFromNewState extends Processor {
     private final String path;
 
     public CreateMongoItemFromNewState(JsonValue config) {
+        super(config);
         path = config.get("path").getString();
-
     }
 
     @Override

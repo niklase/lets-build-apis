@@ -780,6 +780,191 @@
       }
     },
     "/students/{id}" : {
+      "put" : {
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Students_item_v1",
+                "allOf" : [ {
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "attendancePercent" : true,
+                    "email" : true,
+                    "grade" : true,
+                    "name" : true,
+                    "studentId" : true,
+                    "teacherId" : true
+                  }
+                } ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200": {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Students_item_v1"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "create-a-new-student-anna" : {
+                    "summary" : "Create a new student Anna",
+                    "value" : {
+                      "attendancePercent" : 100,
+                      "email" : "anna@example.com",
+                      "grade" : "C",
+                      "meta" : {
+                        "createdAt" : "2026-07-30T14:00:00.749Z",
+                        "etag" : "588bc279634c402ea678779fc29e72ac",
+                        "href" : "/students/c6dcc7630c394665b21254da31526357",
+                        "id" : "c6dcc7630c394665b21254da31526357",
+                        "updatedAt" : "2026-07-30T14:00:00.749Z"
+                      },
+                      "name" : "Anna",
+                      "studentId" : "student-anna",
+                      "teacherId" : "teacher-A"
+                    }
+                  },
+                  "create-a-new-student-peter" : {
+                    "summary" : "Create a new student Peter",
+                    "value" : {
+                      "attendancePercent" : 92,
+                      "email" : "peter@example.com",
+                      "grade" : "D",
+                      "meta" : {
+                        "createdAt" : "2026-07-30T14:00:00.772Z",
+                        "etag" : "b018f3a0382b474d9898629a57e58ba6",
+                        "href" : "/students/99cb7dc385754fbcb7bdde6bbb050b09",
+                        "id" : "99cb7dc385754fbcb7bdde6bbb050b09",
+                        "updatedAt" : "2026-07-30T14:00:00.772Z"
+                      },
+                      "name" : "Peter",
+                      "studentId" : "student-peter",
+                      "teacherId" : "teacher-A"
+                    }
+                  },
+                  "create-a-new-student-robert" : {
+                    "summary" : "Create a new student Robert",
+                    "value" : {
+                      "attendancePercent" : 98,
+                      "email" : "robert@example.com",
+                      "grade" : "A",
+                      "meta" : {
+                        "createdAt" : "2026-07-30T14:00:00.779Z",
+                        "etag" : "25ac048676ee48678035f8ffd7030cea",
+                        "href" : "/students/4d8c51da2fc549f69ccfabd517c400b1",
+                        "id" : "4d8c51da2fc549f69ccfabd517c400b1",
+                        "updatedAt" : "2026-07-30T14:00:00.779Z"
+                      },
+                      "name" : "Robert",
+                      "studentId" : "student-robert",
+                      "teacherId" : "teacher-A"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/Students_item_v1"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Bad request"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Authentication error. api-key missing or invalid. "
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Authorization error"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Conflict"
+          }
+        },
+        "tags" : [ "Students" ],
+        "x-dcentb" : {
+          "accessControl" : {
+            "permissionSchemas" : {
+              "admin" : {
+                "requestSchema" : {
+                  "properties" : {
+                    "request" : {
+                      "properties" : {
+                        "body" : {
+                          "$ref" : "#/x-dcentb/collections/students/permissions/admin/writeItem"
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema" : {
+                  "response" : {
+                    "properties" : {
+                      "body" : {
+                        "$ref" : "#/x-dcentb/collections/students/permissions/admin/readItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mongodb" : {
+            "comment" : "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
+          },
+          "stateTransitionSchema" : {
+            "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema"
+          }
+        }
+      },
       "delete" : {
         "parameters" : [ {
           "in" : "path",

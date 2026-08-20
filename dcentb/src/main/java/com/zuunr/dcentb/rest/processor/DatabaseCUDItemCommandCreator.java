@@ -10,6 +10,7 @@ public class DatabaseCUDItemCommandCreator extends Processor {
     private final JsonValue config;
 
     public DatabaseCUDItemCommandCreator(JsonValue config) {
+        super(config);
         this.config = config;
     }
 

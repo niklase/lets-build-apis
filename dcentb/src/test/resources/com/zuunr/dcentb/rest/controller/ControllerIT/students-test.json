@@ -122,8 +122,8 @@
     {
       "description": "Create a new student Peter",
       "when": {
-        "method": "POST",
-        "uri": "/students",
+        "method": "PUT",
+        "uri": "/students/peter",
         "headers": {
           "content-type": [
             "application/json"
@@ -154,6 +154,78 @@
       "meta": {
         "setVariables": {
           "{{student-peter-href}}": "/headers/location/0"
+        }
+      }
+    },
+    {
+      "description": "As admin, Create a new student Peter after Peter has already been created",
+      "when": {
+        "method": "PUT",
+        "uri": "/students/peter",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Peter",
+          "email": "peter@example.com",
+          "studentId": "student-peter",
+          "teacherId": "teacher-A",
+          "grade": "D",
+          "attendancePercent": 92
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Peter",
+          "meta": {}
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {
+        }
+      }
+    },
+    {
+      "description": "As admin, Create a new student Peter after Peter has already been created but where name is spelled differently",
+      "when": {
+        "method": "PUT",
+        "uri": "/students/peter",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "PETER",
+          "email": "peter@example.com",
+          "studentId": "student-peter",
+          "teacherId": "teacher-A",
+          "grade": "D",
+          "attendancePercent": 92
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+        },
+        "status": 409,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {
         }
       }
     },
@@ -803,6 +875,37 @@
     {
       "then": {
         "status": 403,
+        "headers": {},
+        "body": {
+
+        }
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, fails to update email with PUT",
+      "when": {
+        "method": "PUT",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ],
+          "content-type": ["application/json"]
+        },
+        "body": {
+          "email": "ANNA@example.com"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 409,
         "headers": {},
         "body": {
 

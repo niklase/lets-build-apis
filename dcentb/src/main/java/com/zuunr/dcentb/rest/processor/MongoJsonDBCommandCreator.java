@@ -14,10 +14,10 @@ public class MongoJsonDBCommandCreator extends Processor {
     private String collectionName;
 
 
-    public MongoJsonDBCommandCreator(JsonValue openApiConfig) {
-
-        this.openApiConfig = openApiConfig;
-        this.collectionName = openApiConfig.get(COLLECTION_NAME).asString();
+    public MongoJsonDBCommandCreator(JsonValue config) {
+        super(config);
+        this.openApiConfig = config;
+        this.collectionName = config.get(COLLECTION_NAME).getString();
     }
 
     @Override

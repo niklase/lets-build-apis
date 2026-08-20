@@ -7,6 +7,7 @@ import com.zuunr.json.JsonValue;
 public class DatabaseCommandResponseVerifier extends Processor {
 
     public DatabaseCommandResponseVerifier(JsonValue config) {
+        super(config);
     }
 
     @Override

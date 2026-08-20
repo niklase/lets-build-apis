@@ -13,6 +13,7 @@ public class ApiKeyAuthenticator extends Processor {
     private final String collection;
 
     public ApiKeyAuthenticator(JsonValue config) {
+        super(config);
         this.mongoJsonDB = config.as(MongoJsonDBHandle.class).getMongoJsonDB();
         this.collection = config.getJsonObject()
                 .get(X_DCENTB, JsonObject.EMPTY)

@@ -5,7 +5,9 @@ import com.zuunr.json.JsonValue;
 
 public class CreateNewStateFromRequest extends Processor{
 
-    public CreateNewStateFromRequest(JsonValue config) {}
+    public CreateNewStateFromRequest(JsonValue config) {
+        super(config);
+    }
 
     @Override
     public JsonObject process(JsonObject requestContext) {

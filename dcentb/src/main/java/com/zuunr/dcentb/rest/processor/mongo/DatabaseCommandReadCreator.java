@@ -8,24 +8,21 @@ import com.zuunr.json.JsonValue;
 
 public class DatabaseCommandReadCreator extends Processor {
 
-    RequestHandlerConfig requestHandlerConfig;
 
-    public DatabaseCommandReadCreator(JsonValue jsonValue) {
-        this(jsonValue.as(RequestHandlerConfig.class));
+    public DatabaseCommandReadCreator(JsonValue config) {
+        super(config);
     }
 
     private DatabaseCommandReadCreator(RequestHandlerConfig requestHandlerConfig) {
-        this.requestHandlerConfig = requestHandlerConfig;
+        super(requestHandlerConfig.asJsonValue());
     }
 
     @Override
     public JsonObject process(JsonObject requestContext) {
 
-
         String id = requestContext.get("request", JsonObject.EMPTY).get("pathParameters", JsonObject.EMPTY).get("id", JsonValue.NULL).getString();
 
         if (id != null) {
-
             String collection = requestHandlerConfig.getOperationConfig().getXDcentb().getMongodb().getCollection();
 
             JsonObject mongoCommand = JsonObject.EMPTY
@@ -35,12 +32,8 @@ public class DatabaseCommandReadCreator extends Processor {
                                     .put("_id", JsonArray.of(
                                             JsonObject.EMPTY.put("$eq",
                                                     requestContext.get("request").get("pathParameters").get("id"))))));
-
-
             requestContext = requestContext.put("mongoCommand", mongoCommand);
         }
         return requestContext;
     }
-
-
 }

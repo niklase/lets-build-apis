@@ -12,6 +12,7 @@ public class CurrentStateFromDatabaseApplier extends Processor {
     private MongoToApiItemTranslator mongoToApiItemTranslator;
 
     public CurrentStateFromDatabaseApplier(JsonValue config) {
+        super(config);
         String method = config.get("method").getString();
         _404ForCurrentStateNull = method.equals("patch") || method.equals("delete");
     }

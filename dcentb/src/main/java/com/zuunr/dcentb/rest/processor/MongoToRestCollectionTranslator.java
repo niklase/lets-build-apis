@@ -9,6 +9,7 @@ import com.zuunr.json.JsonValue;
 public class MongoToRestCollectionTranslator extends Processor {
 
     public MongoToRestCollectionTranslator(JsonValue config) {
+        super(config);
     }
 
     @Override

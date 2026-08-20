@@ -10,6 +10,7 @@ public class Authenticator extends Processor {
     private final boolean authRequired;
 
     public Authenticator(JsonValue config) {
+        super(config);
         this.authRequired = !config.get("security", JsonArray.EMPTY).getJsonArray().isEmpty();
     }
 

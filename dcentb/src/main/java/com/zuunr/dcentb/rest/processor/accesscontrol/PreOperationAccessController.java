@@ -26,6 +26,7 @@ public abstract class PreOperationAccessController extends Processor {
     private String collectionName;
 
     public PreOperationAccessController(JsonValue config) {
+        super(config);
         this.config = config.getJsonObject();
         permissionSchemas = config
                 .get("operation")

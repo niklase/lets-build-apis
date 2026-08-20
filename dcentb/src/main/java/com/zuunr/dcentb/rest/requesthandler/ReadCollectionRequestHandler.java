@@ -26,7 +26,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
                 oasRequestDeserializer,
                 userInfoProvider,
                 requestAccessController,
-                new PostGetCollectionBodyToQueryProcessor(),
+                config.as(PostGetCollectionBodyToQueryProcessor.class),
                 mongoJsonDBCommandCreator,
                 databaseCommandRunner,
                 //new RequestContextDebugProcessor()

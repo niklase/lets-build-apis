@@ -12,6 +12,7 @@ public class ResponseAccessController extends Processor {
     private JsonObject config;
 
     public ResponseAccessController(JsonValue config) {
+        super(config);
         this.config = config.getJsonObject();
     }
 

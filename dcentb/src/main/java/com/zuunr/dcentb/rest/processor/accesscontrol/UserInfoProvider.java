@@ -15,6 +15,7 @@ public class UserInfoProvider extends Processor {
             );
 
     public UserInfoProvider(JsonValue config){
+        super(config);
         this.config = config.getJsonObject();
     }
 

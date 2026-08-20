@@ -10,6 +10,8 @@ public class RequestHandlerConfig {
 
     private JsonObject config;
     private RequestHandler requestHandler;
+    private String method;
+
 
     public RequestHandlerConfig(JsonValue config) {
         this.config = config.getJsonObject();
@@ -24,26 +26,28 @@ public class RequestHandlerConfig {
     }
 
     private void initRequestHandler() {
-        String method = config.get("method").getString();
+        method = config.get("method").getString().toUpperCase();
 
         String path = config.get("path").getString();
 
-        if (method.equalsIgnoreCase("get")) {
+        if (isMethod("get")) {
 
             if (path.matches(".*/\\{[^}]+\\}$")) {
                 requestHandler = config.as(ReadItemRequestHandler.class);
             } else {
                 requestHandler = config.as(ReadCollectionRequestHandler.class);
             }
-        } else if (method.equalsIgnoreCase("post")) {
+        } else if (isMethod("post")) {
             if (path.endsWith("/getCollection")) {
                 requestHandler = config.as(ReadCollectionRequestHandler.class);
             } else {
                 requestHandler = config.as(CUDItemRequestHandler.class);
             }
-        } else if (method.equalsIgnoreCase("patch")) {
+        } else if (isMethod("put")) {
             requestHandler = config.as(CUDItemRequestHandler.class);
-        } else if (method.equalsIgnoreCase("delete")) {
+        } else if (isMethod("patch")) {
+            requestHandler = config.as(CUDItemRequestHandler.class);
+        } else if (isMethod("delete")) {
             requestHandler = config.as(CUDItemRequestHandler.class);
         }
     }
@@ -53,4 +57,12 @@ public class RequestHandlerConfig {
         return config.get("operation").as(OperationConfig.class);
     }
 
+
+    public boolean isMethod(String method) {
+        return this.method.equals(method.toUpperCase());
+    }
+
+    public final JsonValue asJsonValue(){
+        return config.jsonValue();
+    }
 }

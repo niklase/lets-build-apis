@@ -97,7 +97,7 @@ public abstract class GivenWhenThenTesterBase {
 
             JsonObject whenItem = tests.get(i).getJsonObject();
             String rawDescription = whenItem.get("description", JsonValue.EMPTY_STRING).getString();
-            String description = "tests["+i+"]: "+rawDescription;
+            String description = "tests[" + i + "]: " + rawDescription;
 
             LOGGER.info("{}", description);
             JsonValue when = whenItem.get("when");
@@ -134,7 +134,7 @@ public abstract class GivenWhenThenTesterBase {
                             // This then-leaf-object should not be validated as a leaf because it may contain more properties.
                         } else {
                             String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
-                            assertEquals(pointer + ": " +last, pointer + ": " +actualValue, description);
+                            assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
                         }
                     }
                     break;
@@ -193,7 +193,7 @@ public abstract class GivenWhenThenTesterBase {
      * Optional hook invoked after a when/then pair has been executed and has passed
      * validation. Default implementation does nothing; override to observe the
      * description, request, expected result and actual result of each test case.
-     *
+     * <p>
      * whenMeta is the "meta" object sibling of "when" (on the tests[i] element);
      * thenMeta is the "meta" object sibling of "then" (on the tests[i+1] element,
      * the same object that already carries "setVariables"). Both default to an
@@ -209,6 +209,11 @@ public abstract class GivenWhenThenTesterBase {
         for (JsonValue key : setVariables.keys()) {
             String keyStr = key.getString();
             JsonPointer pointer = JsonValue.of(setVariables.get(keyStr).getString()).as(JsonPointer.class);
+
+            JsonValue pointerValue = result.get(pointer);
+            if (pointerValue == null) {
+                throw new NullPointerException("No assignable value for " + keyStr + " at: "+ pointer.getJsonPointerString().getString());
+            }
             variables = variables.put(keyStr, result.get(pointer));
         }
         return variables;

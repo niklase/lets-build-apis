@@ -9,6 +9,7 @@ public class NewStateToDatabaseItemCreator extends Processor {
     private final String path;
 
     public NewStateToDatabaseItemCreator(JsonValue config) {
+        super(config);
         path = config.get("path").getString();
     }
 
