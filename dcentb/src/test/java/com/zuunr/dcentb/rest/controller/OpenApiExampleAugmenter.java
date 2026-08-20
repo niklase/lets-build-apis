@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Arrays.asList;
+
 /**
  * Accumulates request/response pairs observed while running given-when-then
  * test files, and folds them into the matching operation of an OpenAPI
@@ -32,14 +34,67 @@ public final class OpenApiExampleAugmenter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenApiExampleAugmenter.class);
     private static final String MEDIA_TYPE = "application/json";
+    private static final Set<String> HTTP_METHODS = new HashSet<>(asList(
+            "get", "put", "post", "delete", "options", "head", "patch", "trace"));
 
     private JsonObject document;
     private final Map<String, Set<String>> usedExampleKeys = new HashMap<>();
 
     public synchronized void initIfAbsent(JsonObject baseOpenApiDocument) {
         if (document == null) {
-            document = baseOpenApiDocument;
+            document = stripExistingExamples(baseOpenApiDocument);
         }
+    }
+
+    /**
+     * Strips any pre-existing "example"/"examples" entries from requestBody and
+     * response content objects, so that the resulting document only contains
+     * examples captured from this test run.
+     */
+    private static JsonObject stripExistingExamples(JsonObject baseOpenApiDocument) {
+        JsonObject result = baseOpenApiDocument;
+        JsonObject paths = result.get("paths", JsonObject.EMPTY).getJsonObject();
+        for (String pathKey : paths.keySet()) {
+            JsonValue pathItemValue = paths.get(pathKey);
+            if (!pathItemValue.isJsonObject()) {
+                continue;
+            }
+            JsonObject pathItem = pathItemValue.getJsonObject();
+            for (String methodKey : pathItem.keySet()) {
+                if (!HTTP_METHODS.contains(methodKey)) {
+                    continue;
+                }
+                JsonValue operationValue = pathItem.get(methodKey);
+                if (!operationValue.isJsonObject()) {
+                    continue;
+                }
+                JsonObject operation = operationValue.getJsonObject();
+
+                JsonObject requestContent = operation.get("requestBody", JsonObject.EMPTY).getJsonObject()
+                        .get("content", JsonObject.EMPTY).getJsonObject();
+                result = stripContentExamples(result, JsonArray.of("paths", pathKey, methodKey, "requestBody", "content"), requestContent);
+
+                JsonObject responses = operation.get("responses", JsonObject.EMPTY).getJsonObject();
+                for (String status : responses.keySet()) {
+                    JsonValue responseValue = responses.get(status);
+                    if (!responseValue.isJsonObject()) {
+                        continue;
+                    }
+                    JsonObject responseContent = responseValue.getJsonObject().get("content", JsonObject.EMPTY).getJsonObject();
+                    result = stripContentExamples(result, JsonArray.of("paths", pathKey, methodKey, "responses", status, "content"), responseContent);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static JsonObject stripContentExamples(JsonObject document, JsonArray contentPath, JsonObject content) {
+        JsonObject result = document;
+        for (String mediaType : content.keySet()) {
+            result = result.remove(contentPath.add(mediaType).add("example"));
+            result = result.remove(contentPath.add(mediaType).add("examples"));
+        }
+        return result;
     }
 
     /**
