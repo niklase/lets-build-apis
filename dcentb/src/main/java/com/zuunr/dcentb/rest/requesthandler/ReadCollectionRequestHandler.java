@@ -12,7 +12,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
 
     public ReadCollectionRequestHandler(JsonValue config) {
         super(config);
-        ApiKeyAuthenticator apiKeyAuthenticator = config.as(ApiKeyAuthenticator.class);
+        AuthenticationProcessor authenticationProcessor = config.as(AuthenticationProcessor.class);
         OASRequestDeserializer oasRequestDeserializer = config.as(OASRequestDeserializer.class);
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);
         UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
@@ -22,7 +22,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
         MongoToRestCollectionTranslator mongoToRestCollectionTranslator = config.as(MongoToRestCollectionTranslator.class);
 
         processors = new Processor[] {
-                apiKeyAuthenticator,
+                authenticationProcessor,
                 oasRequestDeserializer,
                 userInfoProvider,
                 requestAccessController,

@@ -1,359 +1,407 @@
-
 {
-  "components" : {
-    "schemas" : {
-      "Meta_collection_v1" : {
-        "type" : "object"
+  "components": {
+    "schemas": {
+      "Meta_collection_v1": {
+        "type": "object"
       },
-      "Meta_item_v1" : {
-        "properties" : {
-          "createdAt" : {
-            "format" : "date-time",
-            "type" : "string"
+      "Meta_item_v1": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
           },
-          "href" : {
-            "type" : "string"
+          "href": {
+            "type": "string"
           },
-          "id" : {
-            "type" : "string"
+          "id": {
+            "type": "string"
           },
-          "updatedAt" : { }
+          "updatedAt": {}
         },
-        "type" : "object"
+        "type": "object"
       },
-      "Students_collection_v1" : {
-        "properties" : {
-          "items" : {
-            "items" : {
-              "$ref" : "#/components/schemas/Students_item_v1"
+      "Students_collection_v1": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Students_item_v1"
             },
-            "type" : "array"
+            "type": "array"
           },
-          "meta" : {
-            "$ref" : "#/components/schemas/Meta_collection_v1"
+          "meta": {
+            "$ref": "#/components/schemas/Meta_collection_v1"
           }
         },
-        "type" : "object"
+        "type": "object"
       },
-      "Students_item_v1" : {
-        "properties" : {
-          "attendancePercent" : {
-            "type" : "integer"
+      "Students_item_v1": {
+        "properties": {
+          "attendancePercent": {
+            "type": "integer"
           },
-          "email" : {
-            "type" : "string"
+          "email": {
+            "type": "string"
           },
-          "grade" : {
-            "enum" : [ "A", "B", "C", "D", "E", "F" ],
-            "type" : "string"
+          "grade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F"
+            ],
+            "type": "string"
           },
-          "meta" : {
-            "$ref" : "#/components/schemas/Meta_item_v1"
+          "meta": {
+            "$ref": "#/components/schemas/Meta_item_v1"
           },
-          "name" : {
-            "type" : "string"
+          "name": {
+            "type": "string"
           },
-          "studentId" : {
-            "type" : "string"
+          "studentId": {
+            "type": "string"
           },
-          "teacherId" : {
-            "type" : "string"
+          "teacherId": {
+            "type": "string"
           }
         },
-        "type" : "object"
+        "type": "object"
       }
     },
-    "securitySchemes" : {
-      "ApiKeyAuth" : {
-        "in" : "header",
-        "name" : "api-key",
-        "type" : "apiKey"
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "in": "header",
+        "name": "api-key",
+        "type": "apiKey"
+      },
+      "SelfIssuedJwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
-  "info" : {
-    "description" : "<h1>Access control</h1>\n<p>There are three different roles in this API.</p>\n<table>\n<thead>\n<tr>\n<th>Role/Permission name</th>\n<th>Description</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>admin</code></td>\n<td>is allowed to do everything that the API allows</td>\n</tr>\n<tr>\n<td><code>teacher</code></td>\n<td>is allowed to update grade and attendence of his/her students</td>\n</tr>\n<tr>\n<td><code>student</code></td>\n<td>is allowed to update email of himself/herself</td>\n</tr>\n</tbody>\n</table>\n<p>Api keys are used in this demo because it is an easy way to demonstrate authorization. Api keys which defined in <code>apiKeyGeneration</code> are generated if they are not present in database.</p>\n<p>Other authentication mechanisms like OIDC or cookies can be used with the same athorization behavior as in the demo.</p>\n<h1>Update operations</h1>\n<p>Updates are done by applying JSON Merge Patch on the current state of the entity data item with the JSON Object in the API request body of the PATCH operation.</p>\n<h1>Business rules</h1>\n<p>Business rules as constraints for each entity data item type are specified as a JSON Schema. Both the current state (i.e the state before any Update or Delete operation) of an entity and the new state that is to be stored (in the case of Create or Update) is part of the model that is validated by the JSON Schema.</p>\n<p>Current state in the case of a new entity (create with <code>POST</code>) is <code>null</code>. New state in the case of deleting an existing entity (<code>DELETE</code>) is <code>null</code>.</p>\n<p>In this demo API there is one business rule that only allows grade <code>F</code> when <code>attendencePercent</code> is less than <code>50</code>.</p>\n<p>All rules are specified in the OpenAPI document.</p>",
-    "summary" : "API for managing students grades and attendence to demonstrate fine grained access control and business rules in a declarative way with JSON Schema",
-    "title" : "Demo Student API"
+  "info": {
+    "description": "<h1>Access control</h1>\n<p>There are three different roles in this API.</p>\n<table>\n<thead>\n<tr>\n<th>Role/Permission name</th>\n<th>Description</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>admin</code></td>\n<td>is allowed to do everything that the API allows</td>\n</tr>\n<tr>\n<td><code>teacher</code></td>\n<td>is allowed to update grade and attendence of his/her students</td>\n</tr>\n<tr>\n<td><code>student</code></td>\n<td>is allowed to update email of himself/herself</td>\n</tr>\n</tbody>\n</table>\n<p>Api keys are used in this demo because it is an easy way to demonstrate authorization. Api keys which defined in <code>apiKeyGeneration</code> are generated if they are not present in database.</p>\n<p>Other authentication mechanisms like OIDC or cookies can be used with the same athorization behavior as in the demo.</p>\n<h1>Update operations</h1>\n<p>Updates are done by applying JSON Merge Patch on the current state of the entity data item with the JSON Object in the API request body of the PATCH operation.</p>\n<h1>Business rules</h1>\n<p>Business rules as constraints for each entity data item type are specified as a JSON Schema. Both the current state (i.e the state before any Update or Delete operation) of an entity and the new state that is to be stored (in the case of Create or Update) is part of the model that is validated by the JSON Schema.</p>\n<p>Current state in the case of a new entity (create with <code>POST</code>) is <code>null</code>. New state in the case of deleting an existing entity (<code>DELETE</code>) is <code>null</code>.</p>\n<p>In this demo API there is one business rule that only allows grade <code>F</code> when <code>attendencePercent</code> is less than <code>50</code>.</p>\n<p>All rules are specified in the OpenAPI document.</p>",
+    "summary": "API for managing students grades and attendence to demonstrate fine grained access control and business rules in a declarative way with JSON Schema",
+    "title": "Demo Student API"
   },
-  "openapi" : "3.1.0",
-  "paths" : {
-    "/students" : {
-      "get" : {
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "filter.name.eq",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
+  "openapi": "3.1.0",
+  "paths": {
+    "/students": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter.name.eq",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter.teacherId.eq",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "orderBy",
+            "required": false,
+            "schema": {
+              "items": {
+                "enum": [
+                  "name",
+                  "name desc",
+                  "meta.createdAt",
+                  "meta.createdAt desc"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
           }
-        }, {
-          "in" : "query",
-          "name" : "filter.teacherId.eq",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "in" : "query",
-          "name" : "limit",
-          "required" : false,
-          "schema" : {
-            "type" : "integer"
-          }
-        }, {
-          "in" : "query",
-          "name" : "offset",
-          "required" : false,
-          "schema" : {
-            "type" : "integer"
-          }
-        }, {
-          "in" : "query",
-          "name" : "orderBy",
-          "required" : false,
-          "schema" : {
-            "items" : {
-              "enum" : [ "name", "name desc", "meta.createdAt", "meta.createdAt desc" ],
-              "type" : "string"
-            },
-            "type" : "array"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-get-all-students" : {
-                    "summary" : "As admin , get all students",
-                    "value" : {
-                      "items" : [ {
-                        "attendancePercent" : 100,
-                        "email" : "anna@example.com",
-                        "grade" : "C",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.757Z",
-                          "etag" : "1a818debd2f343acb443a298e0b14102",
-                          "href" : "/students/493574853b564925b391c800015129c8",
-                          "id" : "493574853b564925b391c800015129c8",
-                          "updatedAt" : "2026-07-30T14:00:00.757Z"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-get-all-students": {
+                    "summary": "As admin , get all students",
+                    "value": {
+                      "items": [
+                        {
+                          "attendancePercent": 100,
+                          "email": "anna@example.com",
+                          "grade": "C",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.757Z",
+                            "etag": "1a818debd2f343acb443a298e0b14102",
+                            "href": "/students/493574853b564925b391c800015129c8",
+                            "id": "493574853b564925b391c800015129c8",
+                            "updatedAt": "2026-07-30T14:00:00.757Z"
+                          },
+                          "name": "Anna",
+                          "studentId": "student-anna",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Anna",
-                        "studentId" : "student-anna",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 92,
-                        "email" : "peter@example.com",
-                        "grade" : "D",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.792Z",
-                          "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                          "href" : "/students/peter",
-                          "id" : "peter",
-                          "updatedAt" : "2026-07-30T14:00:00.792Z"
+                        {
+                          "attendancePercent": 92,
+                          "email": "peter@example.com",
+                          "grade": "D",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.792Z",
+                            "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                            "href": "/students/peter",
+                            "id": "peter",
+                            "updatedAt": "2026-07-30T14:00:00.792Z"
+                          },
+                          "name": "Peter",
+                          "studentId": "student-peter",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Peter",
-                        "studentId" : "student-peter",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 98,
-                        "email" : "rob@example.com",
-                        "grade" : "A",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.813Z",
-                          "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                          "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "updatedAt" : "2026-07-30T14:00:00.876Z"
-                        },
-                        "name" : "Robert",
-                        "studentId" : "student-robert",
-                        "teacherId" : "teacher-A"
-                      } ]
+                        {
+                          "attendancePercent": 98,
+                          "email": "rob@example.com",
+                          "grade": "A",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.813Z",
+                            "etag": "906efa318be84695b9ffc60ac4840ce8",
+                            "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "updatedAt": "2026-07-30T14:00:00.876Z"
+                          },
+                          "name": "Robert",
+                          "studentId": "student-robert",
+                          "teacherId": "teacher-A"
+                        }
+                      ]
                     }
                   },
-                  "as-teacher-a-get-all-students-of-teacher-a" : {
-                    "summary" : "As teacher-A, get all students of teacher-A",
-                    "value" : {
-                      "items" : [ {
-                        "attendancePercent" : 100,
-                        "email" : "anna@example.com",
-                        "grade" : "C",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.757Z",
-                          "etag" : "1a818debd2f343acb443a298e0b14102",
-                          "href" : "/students/493574853b564925b391c800015129c8",
-                          "id" : "493574853b564925b391c800015129c8",
-                          "updatedAt" : "2026-07-30T14:00:00.757Z"
+                  "as-teacher-a-get-all-students-of-teacher-a": {
+                    "summary": "As teacher-A, get all students of teacher-A",
+                    "value": {
+                      "items": [
+                        {
+                          "attendancePercent": 100,
+                          "email": "anna@example.com",
+                          "grade": "C",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.757Z",
+                            "etag": "1a818debd2f343acb443a298e0b14102",
+                            "href": "/students/493574853b564925b391c800015129c8",
+                            "id": "493574853b564925b391c800015129c8",
+                            "updatedAt": "2026-07-30T14:00:00.757Z"
+                          },
+                          "name": "Anna",
+                          "studentId": "student-anna",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Anna",
-                        "studentId" : "student-anna",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 92,
-                        "email" : "peter@example.com",
-                        "grade" : "D",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.792Z",
-                          "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                          "href" : "/students/peter",
-                          "id" : "peter",
-                          "updatedAt" : "2026-07-30T14:00:00.792Z"
+                        {
+                          "attendancePercent": 92,
+                          "email": "peter@example.com",
+                          "grade": "D",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.792Z",
+                            "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                            "href": "/students/peter",
+                            "id": "peter",
+                            "updatedAt": "2026-07-30T14:00:00.792Z"
+                          },
+                          "name": "Peter",
+                          "studentId": "student-peter",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Peter",
-                        "studentId" : "student-peter",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 98,
-                        "email" : "robert@example.com",
-                        "grade" : "A",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.813Z",
-                          "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                          "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "updatedAt" : "2026-07-30T14:00:00.813Z"
-                        },
-                        "name" : "Robert",
-                        "studentId" : "student-robert",
-                        "teacherId" : "teacher-A"
-                      } ]
+                        {
+                          "attendancePercent": 98,
+                          "email": "robert@example.com",
+                          "grade": "A",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.813Z",
+                            "etag": "906efa318be84695b9ffc60ac4840ce8",
+                            "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "updatedAt": "2026-07-30T14:00:00.813Z"
+                          },
+                          "name": "Robert",
+                          "studentId": "student-robert",
+                          "teacherId": "teacher-A"
+                        }
+                      ]
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_collection_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_collection_v1"
                 }
               }
             },
-            "description" : "Created"
+            "description": "Created"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-get-all-with-special-ids-in-abc123-def456-failing" : {
-                    "summary" : "As admin, get all with special ids (in=abc123,def456) failing",
-                    "value" : {
-                      "errors" : {
-                        "/request/query/filter.meta.id.in" : {
-                          "rejectedValue" : [ "abc123,def456" ],
-                          "violations" : {
-                            "/properties/request/properties/query/additionalProperties" : false,
-                            "description" : "Property 'filter.meta.id.in' has not been defined and schema does not allow additional properties"
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-get-all-with-special-ids-in-abc123-def456-failing": {
+                    "summary": "As admin, get all with special ids (in=abc123,def456) failing",
+                    "value": {
+                      "errors": {
+                        "/request/query/filter.meta.id.in": {
+                          "rejectedValue": [
+                            "abc123,def456"
+                          ],
+                          "violations": {
+                            "/properties/request/properties/query/additionalProperties": false,
+                            "description": "Property 'filter.meta.id.in' has not been defined and schema does not allow additional properties"
                           }
                         }
                       }
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-teacher-a-try-to-get-all-students-of-any-teacher" : {
-                    "summary" : "As teacher-A, try to get all students of any teacher",
-                    "value" : {
-                      "errors" : [ {
-                        "field" : "/request/query",
-                        "rejectedValue" : { },
-                        "violations" : [ {
-                          "keyword" : "/$ref/properties/request/properties/query/required",
-                          "value" : [ "filter.teacherId.eq" ]
-                        } ]
-                      } ],
-                      "message" : "Invalid request"
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-teacher-a-try-to-get-all-students-of-any-teacher": {
+                    "summary": "As teacher-A, try to get all students of any teacher",
+                    "value": {
+                      "errors": [
+                        {
+                          "field": "/request/query",
+                          "rejectedValue": {},
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/request/properties/query/required",
+                              "value": [
+                                "filter.teacherId.eq"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "message": "Invalid request"
                     }
                   },
-                  "as-teacher-a-try-to-get-all-students-of-teacher-b-unauthoriz" : {
-                    "summary" : "As teacher-A, try to get all students of teacher-B (unauthorized)",
-                    "value" : {
-                      "errors" : [ {
-                        "field" : "/request/query/filter.teacherId.eq/0",
-                        "rejectedValue" : "teacher-B",
-                        "violations" : [ {
-                          "keyword" : "/$ref/properties/request/properties/query/properties/filter.teacherId.eq/items/const",
-                          "value" : {
-                            "$data" : "/authenticatedUser/userId"
-                          }
-                        } ]
-                      } ],
-                      "message" : "Invalid request"
+                  "as-teacher-a-try-to-get-all-students-of-teacher-b-unauthoriz": {
+                    "summary": "As teacher-A, try to get all students of teacher-B (unauthorized)",
+                    "value": {
+                      "errors": [
+                        {
+                          "field": "/request/query/filter.teacherId.eq/0",
+                          "rejectedValue": "teacher-B",
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/request/properties/query/properties/filter.teacherId.eq/items/const",
+                              "value": {
+                                "$data": "/authenticatedUser/userId"
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "message": "Invalid request"
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : { },
-                "responseSchema" : {
-                  "properties" : {
-                    "response" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/admin/readCollection"
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {},
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/readCollection"
                         }
                       }
                     }
                   }
                 }
               },
-              "teacher" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : {
-                      "properties" : {
-                        "query" : {
-                          "properties" : {
-                            "filter.teacherId.eq" : {
-                              "items" : {
-                                "const" : {
-                                  "$data" : "/authenticatedUser/userId"
+              "teacher": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "query": {
+                          "properties": {
+                            "filter.teacherId.eq": {
+                              "items": {
+                                "const": {
+                                  "$data": "/authenticatedUser/userId"
                                 }
                               }
                             }
                           },
-                          "required" : [ "filter.teacherId.eq" ]
+                          "required": [
+                            "filter.teacherId.eq"
+                          ]
                         }
                       },
-                      "required" : [ "query" ]
+                      "required": [
+                        "query"
+                      ]
                     }
                   }
                 },
-                "responseSchema" : {
-                  "properties" : {
-                    "response" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/teacher/readCollection"
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
                         }
                       }
                     }
@@ -364,163 +412,167 @@
           }
         }
       },
-      "post" : {
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "examples" : {
-                "create-a-new-student-anna" : {
-                  "summary" : "Create a new student Anna",
-                  "value" : {
-                    "attendancePercent" : 100,
-                    "email" : "anna@example.com",
-                    "grade" : "C",
-                    "name" : "Anna",
-                    "studentId" : "student-anna",
-                    "teacherId" : "teacher-A"
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "create-a-new-student-anna": {
+                  "summary": "Create a new student Anna",
+                  "value": {
+                    "attendancePercent": 100,
+                    "email": "anna@example.com",
+                    "grade": "C",
+                    "name": "Anna",
+                    "studentId": "student-anna",
+                    "teacherId": "teacher-A"
                   }
                 },
-                "create-a-new-student-robert" : {
-                  "summary" : "Create a new student Robert",
-                  "value" : {
-                    "attendancePercent" : 98,
-                    "email" : "robert@example.com",
-                    "grade" : "A",
-                    "name" : "Robert",
-                    "studentId" : "student-robert",
-                    "teacherId" : "teacher-A"
+                "create-a-new-student-robert": {
+                  "summary": "Create a new student Robert",
+                  "value": {
+                    "attendancePercent": 98,
+                    "email": "robert@example.com",
+                    "grade": "A",
+                    "name": "Robert",
+                    "studentId": "student-robert",
+                    "teacherId": "teacher-A"
                   }
                 }
               },
-              "schema" : {
-                "$ref" : "#/components/schemas/Students_item_v1",
-                "allOf" : [ {
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "attendancePercent" : true,
-                    "email" : true,
-                    "grade" : true,
-                    "name" : true,
-                    "studentId" : true,
-                    "teacherId" : true
+              "schema": {
+                "$ref": "#/components/schemas/Students_item_v1",
+                "allOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "attendancePercent": true,
+                      "email": true,
+                      "grade": true,
+                      "name": true,
+                      "studentId": true,
+                      "teacherId": true
+                    }
                   }
-                } ]
+                ]
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "create-a-new-student-anna" : {
-                    "summary" : "Create a new student Anna",
-                    "value" : {
-                      "attendancePercent" : 100,
-                      "email" : "anna@example.com",
-                      "grade" : "C",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.757Z",
-                        "etag" : "1a818debd2f343acb443a298e0b14102",
-                        "href" : "/students/493574853b564925b391c800015129c8",
-                        "id" : "493574853b564925b391c800015129c8",
-                        "updatedAt" : "2026-07-30T14:00:00.757Z"
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "create-a-new-student-anna": {
+                    "summary": "Create a new student Anna",
+                    "value": {
+                      "attendancePercent": 100,
+                      "email": "anna@example.com",
+                      "grade": "C",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.757Z",
+                        "etag": "1a818debd2f343acb443a298e0b14102",
+                        "href": "/students/493574853b564925b391c800015129c8",
+                        "id": "493574853b564925b391c800015129c8",
+                        "updatedAt": "2026-07-30T14:00:00.757Z"
                       },
-                      "name" : "Anna",
-                      "studentId" : "student-anna",
-                      "teacherId" : "teacher-A"
+                      "name": "Anna",
+                      "studentId": "student-anna",
+                      "teacherId": "teacher-A"
                     }
                   },
-                  "create-a-new-student-robert" : {
-                    "summary" : "Create a new student Robert",
-                    "value" : {
-                      "attendancePercent" : 98,
-                      "email" : "robert@example.com",
-                      "grade" : "A",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.813Z",
-                        "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                        "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "updatedAt" : "2026-07-30T14:00:00.813Z"
+                  "create-a-new-student-robert": {
+                    "summary": "Create a new student Robert",
+                    "value": {
+                      "attendancePercent": 98,
+                      "email": "robert@example.com",
+                      "grade": "A",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.813Z",
+                        "etag": "906efa318be84695b9ffc60ac4840ce8",
+                        "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "updatedAt": "2026-07-30T14:00:00.813Z"
                       },
-                      "name" : "Robert",
-                      "studentId" : "student-robert",
-                      "teacherId" : "teacher-A"
+                      "name": "Robert",
+                      "studentId": "student-robert",
+                      "teacherId": "teacher-A"
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_item_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
                 }
               }
             },
-            "description" : "Created"
+            "description": "Created"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Conflict"
+            "description": "Conflict"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/admin/writeItem"
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/writeItem"
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : {
-                  "response" : {
-                    "properties" : {
-                      "body" : {
-                        "$ref" : "#/x-dcentb/collections/students/permissions/admin/readItem"
+                "responseSchema": {
+                  "response": {
+                    "properties": {
+                      "body": {
+                        "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
                       }
                     }
                   }
@@ -528,217 +580,233 @@
               }
             }
           },
-          "mongodb" : {
-            "comment" : "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
+          "mongodb": {
+            "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
           },
-          "stateTransitionSchema" : {
-            "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema"
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       }
     },
-    "/students/getCollection" : {
-      "post" : {
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "examples" : {
-                "as-teacher-a-get-all-students-of-teacher-a-with-post-getcoll" : {
-                  "summary" : "As teacher-A, get all students of teacher-A with POST /getCollection",
-                  "value" : {
-                    "filter" : {
-                      "teacherId" : {
-                        "eq" : "teacher-A"
+    "/students/getCollection": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "as-teacher-a-get-all-students-of-teacher-a-with-post-getcoll": {
+                  "summary": "As teacher-A, get all students of teacher-A with POST /getCollection",
+                  "value": {
+                    "filter": {
+                      "teacherId": {
+                        "eq": "teacher-A"
                       }
                     }
                   }
                 }
               },
-              "schema" : {
-                "additionalProperties" : false,
-                "properties" : {
-                  "filter" : {
-                    "additionalProperties" : false,
-                    "properties" : {
-                      "name" : {
-                        "additionalProperties" : false,
-                        "properties" : {
-                          "eq" : {
-                            "type" : "string"
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "filter": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "eq": {
+                            "type": "string"
                           }
                         },
-                        "type" : "object"
+                        "type": "object"
                       },
-                      "teacherId" : {
-                        "additionalProperties" : false,
-                        "properties" : {
-                          "eq" : {
-                            "type" : "string"
+                      "teacherId": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "eq": {
+                            "type": "string"
                           }
                         },
-                        "type" : "object"
+                        "type": "object"
                       }
                     },
-                    "type" : "object"
+                    "type": "object"
                   },
-                  "limit" : {
-                    "type" : "integer"
+                  "limit": {
+                    "type": "integer"
                   },
-                  "offset" : {
-                    "type" : "integer"
+                  "offset": {
+                    "type": "integer"
                   }
                 },
-                "type" : "object"
+                "type": "object"
               }
             }
           }
         },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-teacher-a-get-all-students-of-teacher-a-with-post-getcoll" : {
-                    "summary" : "As teacher-A, get all students of teacher-A with POST /getCollection",
-                    "value" : {
-                      "items" : [ {
-                        "attendancePercent" : 100,
-                        "email" : "anna@example.com",
-                        "grade" : "C",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.757Z",
-                          "etag" : "1a818debd2f343acb443a298e0b14102",
-                          "href" : "/students/493574853b564925b391c800015129c8",
-                          "id" : "493574853b564925b391c800015129c8",
-                          "updatedAt" : "2026-07-30T14:00:00.757Z"
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-teacher-a-get-all-students-of-teacher-a-with-post-getcoll": {
+                    "summary": "As teacher-A, get all students of teacher-A with POST /getCollection",
+                    "value": {
+                      "items": [
+                        {
+                          "attendancePercent": 100,
+                          "email": "anna@example.com",
+                          "grade": "C",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.757Z",
+                            "etag": "1a818debd2f343acb443a298e0b14102",
+                            "href": "/students/493574853b564925b391c800015129c8",
+                            "id": "493574853b564925b391c800015129c8",
+                            "updatedAt": "2026-07-30T14:00:00.757Z"
+                          },
+                          "name": "Anna",
+                          "studentId": "student-anna",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Anna",
-                        "studentId" : "student-anna",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 92,
-                        "email" : "peter@example.com",
-                        "grade" : "D",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.792Z",
-                          "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                          "href" : "/students/peter",
-                          "id" : "peter",
-                          "updatedAt" : "2026-07-30T14:00:00.792Z"
+                        {
+                          "attendancePercent": 92,
+                          "email": "peter@example.com",
+                          "grade": "D",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.792Z",
+                            "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                            "href": "/students/peter",
+                            "id": "peter",
+                            "updatedAt": "2026-07-30T14:00:00.792Z"
+                          },
+                          "name": "Peter",
+                          "studentId": "student-peter",
+                          "teacherId": "teacher-A"
                         },
-                        "name" : "Peter",
-                        "studentId" : "student-peter",
-                        "teacherId" : "teacher-A"
-                      }, {
-                        "attendancePercent" : 98,
-                        "email" : "robert@example.com",
-                        "grade" : "A",
-                        "meta" : {
-                          "createdAt" : "2026-07-30T14:00:00.813Z",
-                          "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                          "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                          "updatedAt" : "2026-07-30T14:00:00.813Z"
-                        },
-                        "name" : "Robert",
-                        "studentId" : "student-robert",
-                        "teacherId" : "teacher-A"
-                      } ]
+                        {
+                          "attendancePercent": 98,
+                          "email": "robert@example.com",
+                          "grade": "A",
+                          "meta": {
+                            "createdAt": "2026-07-30T14:00:00.813Z",
+                            "etag": "906efa318be84695b9ffc60ac4840ce8",
+                            "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                            "updatedAt": "2026-07-30T14:00:00.813Z"
+                          },
+                          "name": "Robert",
+                          "studentId": "student-robert",
+                          "teacherId": "teacher-A"
+                        }
+                      ]
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_collection_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_collection_v1"
                 }
               }
             },
-            "description" : "Created"
+            "description": "Created"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-teacher-a-try-to-get-all-students-of-any-teacher-with-pos" : {
-                    "summary" : "As teacher-A, try to get all students of any teacher with POST getCollection",
-                    "value" : {
-                      "errors" : [ {
-                        "field" : "/request/body",
-                        "rejectedValue" : { },
-                        "violations" : [ {
-                          "keyword" : "/$ref/properties/request/properties/body/required",
-                          "value" : [ "filter" ]
-                        } ]
-                      } ],
-                      "message" : "Invalid request"
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-teacher-a-try-to-get-all-students-of-any-teacher-with-pos": {
+                    "summary": "As teacher-A, try to get all students of any teacher with POST getCollection",
+                    "value": {
+                      "errors": [
+                        {
+                          "field": "/request/body",
+                          "rejectedValue": {},
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/request/properties/body/required",
+                              "value": [
+                                "filter"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "message": "Invalid request"
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "teacher" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : {
-                      "properties" : {
-                        "body" : {
-                          "properties" : {
-                            "filter" : {
-                              "properties" : {
-                                "teacherId" : {
-                                  "properties" : {
-                                    "eq" : {
-                                      "const" : {
-                                        "$data" : "#/authenticatedUser/userId"
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "teacher": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "filter": {
+                              "properties": {
+                                "teacherId": {
+                                  "properties": {
+                                    "eq": {
+                                      "const": {
+                                        "$data": "#/authenticatedUser/userId"
                                       }
                                     }
                                   }
                                 }
                               },
-                              "required" : [ "teacherId" ]
+                              "required": [
+                                "teacherId"
+                              ]
                             }
                           },
-                          "required" : [ "filter" ]
+                          "required": [
+                            "filter"
+                          ]
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : {
-                  "properties" : {
-                    "response" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/teacher/readCollection"
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/readCollection"
                         }
                       }
                     }
@@ -750,222 +818,232 @@
         }
       }
     },
-    "/students/{id}" : {
-      "delete" : {
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+    "/students/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "No content"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-delete-non-existing-student" : {
-                    "summary" : "As Admin, delete non-existing student",
-                    "value" : { }
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-delete-non-existing-student": {
+                    "summary": "As Admin, delete non-existing student",
+                    "value": {}
                   },
-                  "as-peter-delete-student-anna" : {
-                    "summary" : "As Peter, delete student Anna",
-                    "value" : {
-                      "errors" : [ ],
-                      "message" : "Invalid request"
+                  "as-peter-delete-student-anna": {
+                    "summary": "As Peter, delete student Anna",
+                    "value": {
+                      "errors": [],
+                      "message": "Invalid request"
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Not found"
+            "description": "Not found"
           },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Conflict"
+            "description": "Conflict"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : true
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {
+                  "properties": {
+                    "request": true
                   }
                 },
-                "responseSchema" : { }
+                "responseSchema": {}
               },
-              "student" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "currentState" : {
-                      "properties" : {
-                        "studentId" : {
-                          "const" : {
-                            "$data" : "/authenticatedUser/studentId"
+              "student": {
+                "requestSchema": {
+                  "properties": {
+                    "currentState": {
+                      "properties": {
+                        "studentId": {
+                          "const": {
+                            "$data": "/authenticatedUser/studentId"
                           }
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : { }
+                "responseSchema": {}
               }
             }
           },
-          "stateTransitionSchema" : {
-            "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema"
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       },
-      "get" : {
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-student-student-s1-get-info-about-myself" : {
-                    "summary" : "As student student-s1, get info about myself",
-                    "value" : {
-                      "attendancePercent" : 100,
-                      "email" : "anna@example.com",
-                      "grade" : "C",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.757Z",
-                        "etag" : "1a818debd2f343acb443a298e0b14102",
-                        "href" : "/students/493574853b564925b391c800015129c8",
-                        "id" : "493574853b564925b391c800015129c8",
-                        "updatedAt" : "2026-07-30T14:00:00.757Z"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-student-student-s1-get-info-about-myself": {
+                    "summary": "As student student-s1, get info about myself",
+                    "value": {
+                      "attendancePercent": 100,
+                      "email": "anna@example.com",
+                      "grade": "C",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.757Z",
+                        "etag": "1a818debd2f343acb443a298e0b14102",
+                        "href": "/students/493574853b564925b391c800015129c8",
+                        "id": "493574853b564925b391c800015129c8",
+                        "updatedAt": "2026-07-30T14:00:00.757Z"
                       },
-                      "name" : "Anna",
-                      "studentId" : "student-anna",
-                      "teacherId" : "teacher-A"
+                      "name": "Anna",
+                      "studentId": "student-anna",
+                      "teacherId": "teacher-A"
                     }
                   },
-                  "as-student-student-s2-and-get-info-about-robert" : {
-                    "summary" : "As student student-s2 and get info about robert",
-                    "value" : {
-                      "attendancePercent" : 98,
-                      "email" : "robert@example.com",
-                      "grade" : "A",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.813Z",
-                        "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                        "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "updatedAt" : "2026-07-30T14:00:00.813Z"
+                  "as-student-student-s2-and-get-info-about-robert": {
+                    "summary": "As student student-s2 and get info about robert",
+                    "value": {
+                      "attendancePercent": 98,
+                      "email": "robert@example.com",
+                      "grade": "A",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.813Z",
+                        "etag": "906efa318be84695b9ffc60ac4840ce8",
+                        "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "updatedAt": "2026-07-30T14:00:00.813Z"
                       },
-                      "name" : "Robert",
-                      "studentId" : "student-robert",
-                      "teacherId" : "teacher-A"
+                      "name": "Robert",
+                      "studentId": "student-robert",
+                      "teacherId": "teacher-A"
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_item_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
                 }
               }
             },
-            "description" : "Observed during ControllerIT test run"
+            "description": "Observed during ControllerIT test run"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : { },
-                "responseSchema" : {
-                  "properties" : {
-                    "response" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/admin/readItem"
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {},
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
                         }
                       }
                     }
                   }
                 }
               },
-              "student" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : true
+              "student": {
+                "requestSchema": {
+                  "properties": {
+                    "request": true
                   }
                 },
-                "responseSchema" : {
-                  "properties" : {
-                    "response" : {
-                      "properties" : {
-                        "body" : {
-                          "additionalProperties" : false,
-                          "properties" : {
-                            "attendancePercent" : true,
-                            "email" : true,
-                            "grade" : true,
-                            "meta" : true,
-                            "name" : true,
-                            "studentId" : {
-                              "const" : {
-                                "$data" : "/authenticatedUser/studentId"
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "attendancePercent": true,
+                            "email": true,
+                            "grade": true,
+                            "meta": true,
+                            "name": true,
+                            "studentId": {
+                              "const": {
+                                "$data": "/authenticatedUser/studentId"
                               }
                             },
-                            "teacherId" : true
+                            "teacherId": true
                           },
-                          "required" : [ "studentId" ]
+                          "required": [
+                            "studentId"
+                          ]
                         }
                       }
                     }
@@ -976,313 +1054,343 @@
           }
         }
       },
-      "patch" : {
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "examples" : {
-                "as-student-anna-update-email" : {
-                  "summary" : "As student Anna, update email",
-                  "value" : {
-                    "email" : "ANNA@example.com"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "as-student-anna-update-email": {
+                  "summary": "As student Anna, update email",
+                  "value": {
+                    "email": "ANNA@example.com"
                   }
                 },
-                "as-student-student-s3-robert-update-email-of-robert" : {
-                  "summary" : "As student student-s3 (robert), update email of  robert",
-                  "value" : {
-                    "email" : "rob@example.com"
+                "as-student-student-s3-robert-update-email-of-robert": {
+                  "summary": "As student student-s3 (robert), update email of  robert",
+                  "value": {
+                    "email": "rob@example.com"
                   }
                 }
               },
-              "schema" : {
-                "$ref" : "#/components/schemas/Students_item_v1",
-                "allOf" : [ {
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "attendancePercent" : true,
-                    "email" : true,
-                    "grade" : true,
-                    "name" : true,
-                    "teacherId" : true
+              "schema": {
+                "$ref": "#/components/schemas/Students_item_v1",
+                "allOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "attendancePercent": true,
+                      "email": true,
+                      "grade": true,
+                      "name": true,
+                      "teacherId": true
+                    }
                   }
-                } ]
+                ]
               }
             }
           }
         },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-student-anna-update-email" : {
-                    "summary" : "As student Anna, update email",
-                    "value" : {
-                      "attendancePercent" : 100,
-                      "email" : "ANNA@example.com",
-                      "grade" : "C",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.757Z",
-                        "etag" : "1a818debd2f343acb443a298e0b14102",
-                        "href" : "/students/493574853b564925b391c800015129c8",
-                        "id" : "493574853b564925b391c800015129c8",
-                        "updatedAt" : "2026-07-30T14:00:00.942Z"
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-student-anna-update-email": {
+                    "summary": "As student Anna, update email",
+                    "value": {
+                      "attendancePercent": 100,
+                      "email": "ANNA@example.com",
+                      "grade": "C",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.757Z",
+                        "etag": "1a818debd2f343acb443a298e0b14102",
+                        "href": "/students/493574853b564925b391c800015129c8",
+                        "id": "493574853b564925b391c800015129c8",
+                        "updatedAt": "2026-07-30T14:00:00.942Z"
                       },
-                      "name" : "Anna",
-                      "studentId" : "student-anna",
-                      "teacherId" : "teacher-A"
+                      "name": "Anna",
+                      "studentId": "student-anna",
+                      "teacherId": "teacher-A"
                     }
                   },
-                  "as-student-student-s3-robert-update-email-of-robert" : {
-                    "summary" : "As student student-s3 (robert), update email of  robert",
-                    "value" : {
-                      "attendancePercent" : 98,
-                      "email" : "rob@example.com",
-                      "grade" : "A",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.813Z",
-                        "etag" : "906efa318be84695b9ffc60ac4840ce8",
-                        "href" : "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "id" : "0b6d8a422a4b4cda89ba48e22f71fe30",
-                        "updatedAt" : "2026-07-30T14:00:00.876Z"
+                  "as-student-student-s3-robert-update-email-of-robert": {
+                    "summary": "As student student-s3 (robert), update email of  robert",
+                    "value": {
+                      "attendancePercent": 98,
+                      "email": "rob@example.com",
+                      "grade": "A",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.813Z",
+                        "etag": "906efa318be84695b9ffc60ac4840ce8",
+                        "href": "/students/0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "id": "0b6d8a422a4b4cda89ba48e22f71fe30",
+                        "updatedAt": "2026-07-30T14:00:00.876Z"
                       },
-                      "name" : "Robert",
-                      "studentId" : "student-robert",
-                      "teacherId" : "teacher-A"
+                      "name": "Robert",
+                      "studentId": "student-robert",
+                      "teacherId": "teacher-A"
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_item_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
                 }
               }
             },
-            "description" : "OK"
+            "description": "OK"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-cannot-change-studentid" : {
-                    "summary" : "As admin, cannot change studentId",
-                    "value" : {
-                      "errors" : {
-                        "/request/body/studentId" : {
-                          "rejectedValue" : "newId",
-                          "violations" : {
-                            "/properties/request/properties/body/allOf/0/additionalProperties" : false,
-                            "description" : "Property 'studentId' has not been defined and schema does not allow additional properties"
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-cannot-change-studentid": {
+                    "summary": "As admin, cannot change studentId",
+                    "value": {
+                      "errors": {
+                        "/request/body/studentId": {
+                          "rejectedValue": "newId",
+                          "violations": {
+                            "/properties/request/properties/body/allOf/0/additionalProperties": false,
+                            "description": "Property 'studentId' has not been defined and schema does not allow additional properties"
                           }
                         }
                       }
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-student-anna-fails-to-update-email-and-grade" : {
-                    "summary" : "As student Anna, fails to update email and grade",
-                    "value" : {
-                      "errors" : [ {
-                        "field" : "/request/body/grade",
-                        "rejectedValue" : "A",
-                        "violations" : [ {
-                          "keyword" : "/$ref/properties/request/properties/body/$ref/additionalProperties",
-                          "value" : false
-                        }, {
-                          "keyword" : "description",
-                          "value" : "Property 'grade' has not been defined and schema does not allow additional properties"
-                        } ]
-                      } ],
-                      "message" : "Invalid request"
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-student-anna-fails-to-update-email-and-grade": {
+                    "summary": "As student Anna, fails to update email and grade",
+                    "value": {
+                      "errors": [
+                        {
+                          "field": "/request/body/grade",
+                          "rejectedValue": "A",
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/request/properties/body/$ref/additionalProperties",
+                              "value": false
+                            },
+                            {
+                              "keyword": "description",
+                              "value": "Property 'grade' has not been defined and schema does not allow additional properties"
+                            }
+                          ]
+                        }
+                      ],
+                      "message": "Invalid request"
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-student-student-s1-anna-failing-to-update-email-of-robert" : {
-                    "summary" : "As student student-s1 (anna), failing to update email of  robert",
-                    "value" : {
-                      "errors" : [ ],
-                      "message" : "Invalid request"
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-student-student-s1-anna-failing-to-update-email-of-robert": {
+                    "summary": "As student student-s1 (anna), failing to update email of  robert",
+                    "value": {
+                      "errors": [],
+                      "message": "Invalid request"
                     }
                   },
-                  "as-teacher-b-failing-to-set-grade-of-a-student-who-has-teach" : {
-                    "summary" : "As teacher-B, failing to set grade of a student who has teacher-A and gets a 404",
-                    "value" : {
-                      "errors" : [ ],
-                      "message" : "Invalid request"
+                  "as-teacher-b-failing-to-set-grade-of-a-student-who-has-teach": {
+                    "summary": "As teacher-B, failing to set grade of a student who has teacher-A and gets a 404",
+                    "value": {
+                      "errors": [],
+                      "message": "Invalid request"
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Not found"
+            "description": "Not found"
           },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-cannot-set-grade-to-other-than-f-when-attendanceper" : {
-                    "summary" : "As admin, cannot set grade to other than F when attendancePercent is less than 50",
-                    "value" : {
-                      "errors" : {
-                        "/newState/attendancePercent" : {
-                          "rejectedValue" : 30,
-                          "violations" : [ {
-                            "keyword" : "/$ref/properties/newState/anyOf/0/properties/attendancePercent/minimum",
-                            "value" : 50
-                          } ]
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-cannot-set-grade-to-other-than-f-when-attendanceper": {
+                    "summary": "As admin, cannot set grade to other than F when attendancePercent is less than 50",
+                    "value": {
+                      "errors": {
+                        "/newState/attendancePercent": {
+                          "rejectedValue": 30,
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/newState/anyOf/0/properties/attendancePercent/minimum",
+                              "value": 50
+                            }
+                          ]
                         },
-                        "/newState/grade" : {
-                          "rejectedValue" : "D",
-                          "violations" : [ {
-                            "keyword" : "/$ref/properties/newState/anyOf/1/properties/grade/enum",
-                            "value" : [ "F" ]
-                          } ]
+                        "/newState/grade": {
+                          "rejectedValue": "D",
+                          "violations": [
+                            {
+                              "keyword": "/$ref/properties/newState/anyOf/1/properties/grade/enum",
+                              "value": [
+                                "F"
+                              ]
+                            }
+                          ]
                         }
                       },
-                      "schema" : {
-                        "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema",
-                        "x-dcentb" : {
-                          "collections" : {
-                            "students" : {
-                              "permissions" : {
-                                "admin" : {
-                                  "readCollection" : { },
-                                  "readItem" : { },
-                                  "writeItem" : { }
+                      "schema": {
+                        "$ref": "#/x-dcentb/collections/students/stateTransitionSchema",
+                        "x-dcentb": {
+                          "collections": {
+                            "students": {
+                              "permissions": {
+                                "admin": {
+                                  "readCollection": {},
+                                  "readItem": {},
+                                  "writeItem": {}
                                 },
-                                "student" : {
-                                  "readCollection" : {
-                                    "properties" : {
-                                      "description" : "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
-                                      "items" : {
-                                        "items" : {
-                                          "$ref" : "#/x-dcentb/collections/students/permissions/student/readItem"
+                                "student": {
+                                  "readCollection": {
+                                    "properties": {
+                                      "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
+                                      "items": {
+                                        "items": {
+                                          "$ref": "#/x-dcentb/collections/students/permissions/student/readItem"
                                         },
-                                        "type" : "array"
+                                        "type": "array"
                                       }
                                     }
                                   },
-                                  "readItem" : {
-                                    "properties" : {
-                                      "meta" : {
-                                        "properties" : {
-                                          "etag" : false
+                                  "readItem": {
+                                    "properties": {
+                                      "meta": {
+                                        "properties": {
+                                          "etag": false
                                         }
                                       },
-                                      "studentId" : {
-                                        "const" : {
-                                          "$data" : "/authenticatedUser/userId"
+                                      "studentId": {
+                                        "const": {
+                                          "$data": "/authenticatedUser/userId"
                                         }
                                       }
                                     },
-                                    "required" : [ "studentId" ]
+                                    "required": [
+                                      "studentId"
+                                    ]
                                   },
-                                  "writeItem" : {
-                                    "additionalProperties" : false,
-                                    "properties" : {
-                                      "email" : true,
-                                      "studentId" : {
-                                        "const" : {
-                                          "$data" : "#/authenticatedUser/userId"
+                                  "writeItem": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "email": true,
+                                      "studentId": {
+                                        "const": {
+                                          "$data": "#/authenticatedUser/userId"
                                         }
                                       }
                                     }
                                   }
                                 },
-                                "teacher" : {
-                                  "readCollection" : {
-                                    "properties" : {
-                                      "items" : {
-                                        "items" : {
-                                          "$ref" : "#/x-dcentb/collections/students/permissions/teacher/readItem"
+                                "teacher": {
+                                  "readCollection": {
+                                    "properties": {
+                                      "items": {
+                                        "items": {
+                                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/readItem"
                                         },
-                                        "type" : "array"
+                                        "type": "array"
                                       }
                                     }
                                   },
-                                  "readItem" : {
-                                    "properties" : {
-                                      "teacherId" : {
-                                        "const" : {
-                                          "$data" : "#/authenticatedUser/userId"
+                                  "readItem": {
+                                    "properties": {
+                                      "teacherId": {
+                                        "const": {
+                                          "$data": "#/authenticatedUser/userId"
                                         }
                                       }
                                     },
-                                    "required" : [ "teacherId" ]
+                                    "required": [
+                                      "teacherId"
+                                    ]
                                   },
-                                  "writeItem" : {
-                                    "teacherId" : {
-                                      "const" : {
-                                        "$data" : "#/authenticatedUser/userId"
+                                  "writeItem": {
+                                    "teacherId": {
+                                      "const": {
+                                        "$data": "#/authenticatedUser/userId"
                                       }
                                     }
                                   }
                                 }
                               },
-                              "stateTransitionSchema" : {
-                                "properties" : {
-                                  "newState" : {
-                                    "anyOf" : [ {
-                                      "properties" : {
-                                        "attendancePercent" : {
-                                          "minimum" : 50
-                                        },
-                                        "grade" : {
-                                          "enum" : [ "A", "B", "C", "D", "E" ]
+                              "stateTransitionSchema": {
+                                "properties": {
+                                  "newState": {
+                                    "anyOf": [
+                                      {
+                                        "properties": {
+                                          "attendancePercent": {
+                                            "minimum": 50
+                                          },
+                                          "grade": {
+                                            "enum": [
+                                              "A",
+                                              "B",
+                                              "C",
+                                              "D",
+                                              "E"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "properties": {
+                                          "attendancePercent": {
+                                            "minimum": 0
+                                          },
+                                          "grade": {
+                                            "enum": [
+                                              "F"
+                                            ]
+                                          }
                                         }
                                       }
-                                    }, {
-                                      "properties" : {
-                                        "attendancePercent" : {
-                                          "minimum" : 0
-                                        },
-                                        "grade" : {
-                                          "enum" : [ "F" ]
-                                        }
-                                      }
-                                    } ]
+                                    ]
                                   }
                                 }
                               }
@@ -1293,326 +1401,342 @@
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Conflict"
+            "description": "Conflict"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : { },
-                "responseSchema" : { }
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {},
+                "responseSchema": {}
               },
-              "student" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "currentState" : {
-                      "properties" : {
-                        "studentId" : {
-                          "const" : {
-                            "$data" : "/authenticatedUser/studentId"
+              "student": {
+                "requestSchema": {
+                  "properties": {
+                    "currentState": {
+                      "properties": {
+                        "studentId": {
+                          "const": {
+                            "$data": "/authenticatedUser/studentId"
                           }
                         }
                       },
-                      "required" : [ "studentId" ]
+                      "required": [
+                        "studentId"
+                      ]
                     },
-                    "request" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/student/writeItem"
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/student/writeItem"
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : { }
+                "responseSchema": {}
               },
-              "teacher" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "currentState" : {
-                      "properties" : {
-                        "teacherId" : {
-                          "const" : {
-                            "$data" : "/authenticatedUser/userId"
+              "teacher": {
+                "requestSchema": {
+                  "properties": {
+                    "currentState": {
+                      "properties": {
+                        "teacherId": {
+                          "const": {
+                            "$data": "/authenticatedUser/userId"
                           }
                         }
                       },
-                      "required" : [ "teacherId" ]
+                      "required": [
+                        "teacherId"
+                      ]
                     },
-                    "request" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/teacher/writeItem"
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/teacher/writeItem"
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : { }
+                "responseSchema": {}
               }
             }
           },
-          "stateTransitionSchema" : {
-            "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema"
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       },
-      "put" : {
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "examples" : {
-                "as-admin-create-a-new-student-peter-after-peter-has-already" : {
-                  "summary" : "As admin, Create a new student Peter after Peter has already been created",
-                  "value" : {
-                    "attendancePercent" : 92,
-                    "email" : "peter@example.com",
-                    "grade" : "D",
-                    "name" : "Peter",
-                    "studentId" : "student-peter",
-                    "teacherId" : "teacher-A"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "as-admin-create-a-new-student-peter-after-peter-has-already": {
+                  "summary": "As admin, Create a new student Peter after Peter has already been created",
+                  "value": {
+                    "attendancePercent": 92,
+                    "email": "peter@example.com",
+                    "grade": "D",
+                    "name": "Peter",
+                    "studentId": "student-peter",
+                    "teacherId": "teacher-A"
                   }
                 },
-                "create-a-new-student-peter" : {
-                  "summary" : "Create a new student Peter",
-                  "value" : {
-                    "attendancePercent" : 92,
-                    "email" : "peter@example.com",
-                    "grade" : "D",
-                    "name" : "Peter",
-                    "studentId" : "student-peter",
-                    "teacherId" : "teacher-A"
+                "create-a-new-student-peter": {
+                  "summary": "Create a new student Peter",
+                  "value": {
+                    "attendancePercent": 92,
+                    "email": "peter@example.com",
+                    "grade": "D",
+                    "name": "Peter",
+                    "studentId": "student-peter",
+                    "teacherId": "teacher-A"
                   }
                 }
               },
-              "schema" : {
-                "$ref" : "#/components/schemas/Students_item_v1",
-                "allOf" : [ {
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "attendancePercent" : true,
-                    "email" : true,
-                    "grade" : true,
-                    "name" : true,
-                    "studentId" : true,
-                    "teacherId" : true
+              "schema": {
+                "$ref": "#/components/schemas/Students_item_v1",
+                "allOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "attendancePercent": true,
+                      "email": true,
+                      "grade": true,
+                      "name": true,
+                      "studentId": true,
+                      "teacherId": true
+                    }
                   }
-                } ]
+                ]
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-create-a-new-student-peter-after-peter-has-already" : {
-                    "summary" : "As admin, Create a new student Peter after Peter has already been created",
-                    "value" : {
-                      "attendancePercent" : 92,
-                      "email" : "peter@example.com",
-                      "grade" : "D",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.792Z",
-                        "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                        "href" : "/students/peter",
-                        "id" : "peter",
-                        "updatedAt" : "2026-07-30T14:00:00.792Z"
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-create-a-new-student-peter-after-peter-has-already": {
+                    "summary": "As admin, Create a new student Peter after Peter has already been created",
+                    "value": {
+                      "attendancePercent": 92,
+                      "email": "peter@example.com",
+                      "grade": "D",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.792Z",
+                        "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                        "href": "/students/peter",
+                        "id": "peter",
+                        "updatedAt": "2026-07-30T14:00:00.792Z"
                       },
-                      "name" : "Peter",
-                      "studentId" : "student-peter",
-                      "teacherId" : "teacher-A"
+                      "name": "Peter",
+                      "studentId": "student-peter",
+                      "teacherId": "teacher-A"
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_item_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
                 }
               }
             },
-            "description" : "OK"
+            "description": "OK"
           },
-          "201" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "create-a-new-student-peter" : {
-                    "summary" : "Create a new student Peter",
-                    "value" : {
-                      "attendancePercent" : 92,
-                      "email" : "peter@example.com",
-                      "grade" : "D",
-                      "meta" : {
-                        "createdAt" : "2026-07-30T14:00:00.792Z",
-                        "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                        "href" : "/students/peter",
-                        "id" : "peter",
-                        "updatedAt" : "2026-07-30T14:00:00.792Z"
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "create-a-new-student-peter": {
+                    "summary": "Create a new student Peter",
+                    "value": {
+                      "attendancePercent": 92,
+                      "email": "peter@example.com",
+                      "grade": "D",
+                      "meta": {
+                        "createdAt": "2026-07-30T14:00:00.792Z",
+                        "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                        "href": "/students/peter",
+                        "id": "peter",
+                        "updatedAt": "2026-07-30T14:00:00.792Z"
                       },
-                      "name" : "Peter",
-                      "studentId" : "student-peter",
-                      "teacherId" : "teacher-A"
+                      "name": "Peter",
+                      "studentId": "student-peter",
+                      "teacherId": "teacher-A"
                     }
                   }
                 },
-                "schema" : {
-                  "$ref" : "#/components/schemas/Students_item_v1"
+                "schema": {
+                  "$ref": "#/components/schemas/Students_item_v1"
                 }
               }
             },
-            "description" : "Created"
+            "description": "Created"
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Bad request"
+            "description": "Bad request"
           },
-          "401" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authentication error. api-key missing or invalid. "
+            "description": "Authentication error. api-key missing or invalid. "
           },
-          "403" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Authorization error"
+            "description": "Authorization error"
           },
-          "409" : {
-            "content" : {
-              "application/json" : {
-                "examples" : {
-                  "as-admin-create-a-new-student-peter-after-peter-has-already" : {
-                    "summary" : "As admin, Create a new student Peter after Peter has already been created but where name is spelled differently",
-                    "value" : {
-                      "errors" : {
-                        "/currentState" : {
-                          "rejectedValue" : {
-                            "attendancePercent" : 92,
-                            "email" : "peter@example.com",
-                            "grade" : "D",
-                            "meta" : {
-                              "createdAt" : "2026-07-30T14:00:00.792Z",
-                              "etag" : "07601bad0a5d4c4aade9f86d36ca8d12",
-                              "href" : "/students/peter",
-                              "id" : "peter",
-                              "updatedAt" : "2026-07-30T14:00:00.792Z"
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "as-admin-create-a-new-student-peter-after-peter-has-already": {
+                    "summary": "As admin, Create a new student Peter after Peter has already been created but where name is spelled differently",
+                    "value": {
+                      "errors": {
+                        "/currentState": {
+                          "rejectedValue": {
+                            "attendancePercent": 92,
+                            "email": "peter@example.com",
+                            "grade": "D",
+                            "meta": {
+                              "createdAt": "2026-07-30T14:00:00.792Z",
+                              "etag": "07601bad0a5d4c4aade9f86d36ca8d12",
+                              "href": "/students/peter",
+                              "id": "peter",
+                              "updatedAt": "2026-07-30T14:00:00.792Z"
                             },
-                            "name" : "Peter",
-                            "studentId" : "student-peter",
-                            "teacherId" : "teacher-A"
+                            "name": "Peter",
+                            "studentId": "student-peter",
+                            "teacherId": "teacher-A"
                           },
-                          "violations" : [ {
-                            "keyword" : "/properties/currentState/const",
-                            "value" : null
-                          } ]
+                          "violations": [
+                            {
+                              "keyword": "/properties/currentState/const",
+                              "value": null
+                            }
+                          ]
                         }
                       },
-                      "schema" : {
-                        "properties" : {
-                          "currentState" : {
-                            "const" : null
+                      "schema": {
+                        "properties": {
+                          "currentState": {
+                            "const": null
                           }
                         }
                       }
                     }
                   },
-                  "as-admin-fails-to-update-email-with-put" : {
-                    "summary" : "As admin, fails to update email with PUT",
-                    "value" : {
-                      "errors" : {
-                        "/currentState" : {
-                          "rejectedValue" : {
-                            "attendancePercent" : 100,
-                            "email" : "ANNA@example.com",
-                            "grade" : "C",
-                            "meta" : {
-                              "createdAt" : "2026-07-30T14:00:00.757Z",
-                              "etag" : "1a818debd2f343acb443a298e0b14102",
-                              "href" : "/students/493574853b564925b391c800015129c8",
-                              "id" : "493574853b564925b391c800015129c8",
-                              "updatedAt" : "2026-07-30T14:00:00.942Z"
+                  "as-admin-fails-to-update-email-with-put": {
+                    "summary": "As admin, fails to update email with PUT",
+                    "value": {
+                      "errors": {
+                        "/currentState": {
+                          "rejectedValue": {
+                            "attendancePercent": 100,
+                            "email": "ANNA@example.com",
+                            "grade": "C",
+                            "meta": {
+                              "createdAt": "2026-07-30T14:00:00.757Z",
+                              "etag": "1a818debd2f343acb443a298e0b14102",
+                              "href": "/students/493574853b564925b391c800015129c8",
+                              "id": "493574853b564925b391c800015129c8",
+                              "updatedAt": "2026-07-30T14:00:00.942Z"
                             },
-                            "name" : "Anna",
-                            "studentId" : "student-anna",
-                            "teacherId" : "teacher-A"
+                            "name": "Anna",
+                            "studentId": "student-anna",
+                            "teacherId": "teacher-A"
                           },
-                          "violations" : [ {
-                            "keyword" : "/properties/currentState/const",
-                            "value" : null
-                          } ]
+                          "violations": [
+                            {
+                              "keyword": "/properties/currentState/const",
+                              "value": null
+                            }
+                          ]
                         }
                       },
-                      "schema" : {
-                        "properties" : {
-                          "currentState" : {
-                            "const" : null
+                      "schema": {
+                        "properties": {
+                          "currentState": {
+                            "const": null
                           }
                         }
                       }
                     }
                   }
                 },
-                "schema" : {
-                  "type" : "object"
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "Conflict"
+            "description": "Conflict"
           }
         },
-        "tags" : [ "Students" ],
-        "x-dcentb" : {
-          "accessControl" : {
-            "permissionSchemas" : {
-              "admin" : {
-                "requestSchema" : {
-                  "properties" : {
-                    "request" : {
-                      "properties" : {
-                        "body" : {
-                          "$ref" : "#/x-dcentb/collections/students/permissions/admin/writeItem"
+        "tags": [
+          "Students"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/students/permissions/admin/writeItem"
                         }
                       }
                     }
                   }
                 },
-                "responseSchema" : {
-                  "response" : {
-                    "properties" : {
-                      "body" : {
-                        "$ref" : "#/x-dcentb/collections/students/permissions/admin/readItem"
+                "responseSchema": {
+                  "response": {
+                    "properties": {
+                      "body": {
+                        "$ref": "#/x-dcentb/collections/students/permissions/admin/readItem"
                       }
                     }
                   }
@@ -1620,149 +1744,228 @@
               }
             }
           },
-          "mongodb" : {
-            "comment" : "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
+          "mongodb": {
+            "comment": "The 'collection' is omitted to test that the default behavior of finding collection name based on path is working"
           },
-          "stateTransitionSchema" : {
-            "$ref" : "#/x-dcentb/collections/students/stateTransitionSchema"
+          "stateTransitionSchema": {
+            "$ref": "#/x-dcentb/collections/students/stateTransitionSchema"
           }
         }
       }
     }
   },
-  "security" : [ {
-    "ApiKeyAuth" : [ ]
-  } ],
-  "tags" : [ {
-    "name" : "Students"
-  } ],
-  "version" : "v1",
-  "x-dcentb" : {
-    "apiKeyGeneration" : [ {
-      "permissions" : [ "teacher" ],
-      "userId" : "teacher-A"
-    }, {
-      "permissions" : [ "teacher" ],
-      "userId" : "teacher-B"
-    }, {
-      "permissions" : [ "student" ],
-      "userId" : "student-anna"
-    }, {
-      "permissions" : [ "student" ],
-      "userId" : "student-peter"
-    }, {
-      "permissions" : [ "student" ],
-      "userId" : "student-robert"
-    }, {
-      "permissions" : [ "admin" ],
-      "userId" : "admin-a1"
-    } ],
-    "collections" : {
-      "students" : {
-        "permissions" : {
-          "admin" : {
-            "readCollection" : { },
-            "readItem" : { },
-            "writeItem" : { }
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "SelfIssuedJwt": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Students"
+    }
+  ],
+  "version": "v1",
+  "x-dcentb": {
+    "apiKeyGeneration": [
+      {
+        "permissions": [
+          "teacher"
+        ],
+        "userId": "teacher-A"
+      },
+      {
+        "permissions": [
+          "teacher"
+        ],
+        "userId": "teacher-B"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-anna"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-peter"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-robert"
+      },
+      {
+        "permissions": [
+          "admin"
+        ],
+        "userId": "admin-a1"
+      }
+    ],
+    "collections": {
+      "students": {
+        "permissions": {
+          "admin": {
+            "readCollection": {},
+            "readItem": {},
+            "writeItem": {}
           },
-          "student" : {
-            "readCollection" : {
-              "properties" : {
-                "description" : "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
-                "items" : {
-                  "items" : {
-                    "$ref" : "#/x-dcentb/collections/students/permissions/student/readItem"
+          "student": {
+            "readCollection": {
+              "properties": {
+                "description": "This is the 'items' property of the collection that is of type array (which is described by a keyword that is also called 'items' which contains the schema for every item in the array)",
+                "items": {
+                  "items": {
+                    "$ref": "#/x-dcentb/collections/students/permissions/student/readItem"
                   },
-                  "type" : "array"
+                  "type": "array"
                 }
               }
             },
-            "readItem" : {
-              "properties" : {
-                "meta" : {
-                  "properties" : {
-                    "etag" : false
+            "readItem": {
+              "properties": {
+                "meta": {
+                  "properties": {
+                    "etag": false
                   }
                 },
-                "studentId" : {
-                  "const" : {
-                    "$data" : "/authenticatedUser/userId"
+                "studentId": {
+                  "const": {
+                    "$data": "/authenticatedUser/userId"
                   }
                 }
               },
-              "required" : [ "studentId" ]
+              "required": [
+                "studentId"
+              ]
             },
-            "writeItem" : {
-              "additionalProperties" : false,
-              "properties" : {
-                "email" : true,
-                "studentId" : {
-                  "const" : {
-                    "$data" : "#/authenticatedUser/userId"
+            "writeItem": {
+              "additionalProperties": false,
+              "properties": {
+                "email": true,
+                "studentId": {
+                  "const": {
+                    "$data": "#/authenticatedUser/userId"
                   }
                 }
               }
             }
           },
-          "teacher" : {
-            "readCollection" : {
-              "properties" : {
-                "items" : {
-                  "items" : {
-                    "$ref" : "#/x-dcentb/collections/students/permissions/teacher/readItem"
+          "teacher": {
+            "readCollection": {
+              "properties": {
+                "items": {
+                  "items": {
+                    "$ref": "#/x-dcentb/collections/students/permissions/teacher/readItem"
                   },
-                  "type" : "array"
+                  "type": "array"
                 }
               }
             },
-            "readItem" : {
-              "properties" : {
-                "teacherId" : {
-                  "const" : {
-                    "$data" : "#/authenticatedUser/userId"
+            "readItem": {
+              "properties": {
+                "teacherId": {
+                  "const": {
+                    "$data": "#/authenticatedUser/userId"
                   }
                 }
               },
-              "required" : [ "teacherId" ]
+              "required": [
+                "teacherId"
+              ]
             },
-            "writeItem" : {
-              "teacherId" : {
-                "const" : {
-                  "$data" : "#/authenticatedUser/userId"
+            "writeItem": {
+              "teacherId": {
+                "const": {
+                  "$data": "#/authenticatedUser/userId"
                 }
               }
             }
           }
         },
-        "stateTransitionSchema" : {
-          "properties" : {
-            "newState" : {
-              "anyOf" : [ {
-                "properties" : {
-                  "attendancePercent" : {
-                    "minimum" : 50
-                  },
-                  "grade" : {
-                    "enum" : [ "A", "B", "C", "D", "E" ]
+        "stateTransitionSchema": {
+          "properties": {
+            "newState": {
+              "anyOf": [
+                {
+                  "properties": {
+                    "attendancePercent": {
+                      "minimum": 50
+                    },
+                    "grade": {
+                      "enum": [
+                        "A",
+                        "B",
+                        "C",
+                        "D",
+                        "E"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "attendancePercent": {
+                      "minimum": 0
+                    },
+                    "grade": {
+                      "enum": [
+                        "F"
+                      ]
+                    }
                   }
                 }
-              }, {
-                "properties" : {
-                  "attendancePercent" : {
-                    "minimum" : 0
-                  },
-                  "grade" : {
-                    "enum" : [ "F" ]
-                  }
-                }
-              } ]
+              ]
             }
           }
         }
       }
     },
-    "mongodb" : {
-      "db" : "dcentb-demo"
-    }
+    "mongodb": {
+      "db": "dcentb-demo"
+    },
+    "jwtGeneration": [
+      {
+        "permissions": [
+          "teacher"
+        ],
+        "userId": "teacher-A"
+      },
+      {
+        "permissions": [
+          "teacher"
+        ],
+        "userId": "teacher-B"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-anna"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-peter"
+      },
+      {
+        "permissions": [
+          "student"
+        ],
+        "userId": "student-robert"
+      },
+      {
+        "permissions": [
+          "admin"
+        ],
+        "userId": "admin-a1"
+      }
+    ]
   }
 }

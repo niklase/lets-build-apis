@@ -17,7 +17,7 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
         super(config);
 
         processors = new Processor[] {
-                config.as(ApiKeyAuthenticator.class),
+                config.as(AuthenticationProcessor.class),
                 config.as(OASRequestDeserializer.class),
                 config.as(UserInfoProvider.class),
                 config.as(RequestAccessController.class),

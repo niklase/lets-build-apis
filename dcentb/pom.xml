@@ -39,6 +39,14 @@
 			<artifactId>mongodb</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>java-jwt</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>jwks-rsa</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.zuunr</groupId>
 			<artifactId>json-tester</artifactId>
 			<scope>test</scope>

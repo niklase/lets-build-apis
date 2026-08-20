@@ -3,6 +3,7 @@ package com.zuunr.dcentb.rest.controller;
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.processor.accesscontrol.ApiKeyProvisioner;
+import com.zuunr.dcentb.rest.processor.accesscontrol.JwtSecretProvisioner;
 import com.zuunr.dcentb.rest.requesthandler.basic.MethodNotAllowedRequestHandler;
 import com.zuunr.dcentb.rest.requesthandler.basic.NotFoundRequestHandler;
 import com.zuunr.json.JsonArray;
@@ -46,6 +47,7 @@ public class RequestHandlerProvider {
     public RequestHandlerProvider(JsonObject openApiDocument, JsonObject mongoDbConfig) {
         openApiDocument = applyMongodbConfig(openApiDocument, mongoDbConfig);
         new ApiKeyProvisioner().provision(openApiDocument);
+        new JwtSecretProvisioner().provision(openApiDocument);
         pathConfigMapper = setupPathConfigMapper(openApiDocument);
     }
 
