@@ -9,6 +9,8 @@ import com.zuunr.mongodb.MongoJsonDB;
 
 public class ApiKeyAuthenticator extends Processor {
 
+    static final String DEFAULT_COLLECTION = "api-keys";
+
     private final MongoJsonDB mongoJsonDB;
     private final String collection;
 
@@ -18,7 +20,7 @@ public class ApiKeyAuthenticator extends Processor {
         this.collection = config.getJsonObject()
                 .get(X_DCENTB, JsonObject.EMPTY)
                 .get("accessControl", JsonObject.EMPTY)
-                .get("apiKeyCollection", "api-keys")
+                .get("apiKeyCollection", DEFAULT_COLLECTION)
                 .getString();
     }
 

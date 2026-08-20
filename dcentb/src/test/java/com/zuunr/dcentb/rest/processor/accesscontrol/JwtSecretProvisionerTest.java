@@ -39,12 +39,18 @@ class JwtSecretProvisionerTest {
 
     private JsonObject openApiDocument(JsonArray jwtGeneration) {
         JsonObject xDcentb = JsonObject.EMPTY
-                .put("mongodb", JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB))
-                .put("accessControl", JsonObject.EMPTY.put("jwtSecretCollection", collection));
+                .put("mongodb", JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB));
         if (jwtGeneration != null) {
             xDcentb = xDcentb.put("jwtGeneration", jwtGeneration);
         }
-        return JsonObject.EMPTY.put("x-dcentb", xDcentb);
+        JsonObject securityScheme = JsonObject.EMPTY
+                .put("type", "http")
+                .put("scheme", "bearer")
+                .put("bearerFormat", "JWT")
+                .put("x-dcentb", JsonObject.EMPTY.put("jwtSecretCollection", collection));
+        return JsonObject.EMPTY
+                .put("x-dcentb", xDcentb)
+                .put("components", JsonObject.EMPTY.put("securitySchemes", JsonObject.EMPTY.put("SelfIssuedJwt", securityScheme)));
     }
 
     private String storedSecret() {

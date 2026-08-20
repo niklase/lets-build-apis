@@ -32,7 +32,7 @@ class JwtAuthenticatorTest {
         JsonValue scheme = JsonObject.EMPTY
                 .put("type", "openIdConnect")
                 .put("openIdConnectUrl", issuer.discoveryUrl())
-                .put("x-dcentb-audience", AUDIENCE)
+                .put("x-dcentb", JsonObject.EMPTY.put("audience", AUDIENCE))
                 .jsonValue();
 
         authenticator = new JwtAuthenticator(scheme);

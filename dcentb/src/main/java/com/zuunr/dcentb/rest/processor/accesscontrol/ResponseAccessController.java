@@ -55,7 +55,9 @@ public class ResponseAccessController extends Processor {
         JsonValue filteredResponseBody = filteredResponse.get("body");
 
         if (filteredResponseBody == null) {
-            int statusOfNoBody = status.getInteger() == 200 ? 404 : status.getInteger();
+            int statusOfNoBody = status.getInteger() == 200
+                    ? 404
+                    : status.getInteger();
             requestContext = requestContext
                     .put(RESPONSE, filteredResponse
                             .remove("body")

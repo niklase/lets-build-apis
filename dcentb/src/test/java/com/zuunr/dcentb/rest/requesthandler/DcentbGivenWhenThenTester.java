@@ -1,12 +1,16 @@
 package com.zuunr.dcentb.rest.requesthandler;
 
 import com.zuunr.dcentb.rest.processor.Processor;
+import com.zuunr.dcentb.rest.processor.accesscontrol.JwtSecretProvisioner;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
+import com.zuunr.json.JsonValueFactory;
 import com.zuunr.jsontester.GivenWhenThenTesterBase;
 import com.zuunr.mongodb.MongoJsonDB;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -33,10 +37,21 @@ import java.util.Map;
  *   "paths": { ... }
  * }
  * </pre>
+ *
+ * "given.config" (either an inline OpenAPI document or a classpath resource name, e.g.
+ * "demo.openapi.json") is resolved here too. If that document has an "x-dcentb.jwtGeneration"
+ * array, one self-issued JWT per entry is signed (using the same shared secret
+ * JwtSecretProvisioner/SharedSecretJwtAuthenticator use) and exposed as a variable
+ * named "{{bearer-jwt-" + entry.userId + "}}" with value "Bearer <token>" - available to every
+ * when/then block in the test file exactly like any other "meta.variables" entry, so
+ * a test can authenticate as e.g. "{{bearer-jwt-admin-a1}}" without hand-crafting a JWT.
  */
 public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase {
 
     protected JsonObject dbSetup;
+    protected JsonObject rawConfig;
+    protected JsonObject config;
+    private JsonObject jwtVariables = JsonObject.EMPTY;
 
     @Override
     public void doGiven(JsonValue given) {
@@ -51,6 +66,40 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
                 mongoDB.runCommand(commands.get(i).getJsonObject());
             }
         }
+
+        JsonValue configValue = given.get("config");
+        rawConfig = configValue == null ? null : resolveConfig(configValue);
+        config = rawConfig == null ? null : injectDbSetupIntoConfig(rawConfig);
+        jwtVariables = config == null ? JsonObject.EMPTY : buildJwtVariables(config);
+    }
+
+    @Override
+    protected JsonObject additionalVariables() {
+        return jwtVariables;
+    }
+
+    protected JsonObject resolveConfig(JsonValue configValue) {
+        String resourceName = configValue.getString();
+        if (resourceName == null) {
+            return configValue.getJsonObject();
+        }
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new RuntimeException("Config resource not found on classpath: " + resourceName);
+            }
+            return JsonValueFactory.create(new String(is.readAllBytes())).getJsonObject();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config resource: " + resourceName, e);
+        }
+    }
+
+    private JsonObject buildJwtVariables(JsonObject config) {
+        JsonObject tokensByUserId = new JwtSecretProvisioner().generateTokensByUserId(config);
+        JsonObject variables = JsonObject.EMPTY;
+        for (String userId : tokensByUserId.keySet()) {
+            variables = variables.put("{{bearer-jwt-"+ userId + "}}", "Bearer " + tokensByUserId.get(userId).getString());
+        }
+        return variables;
     }
 
     protected JsonObject injectDbSetupIntoConfig(JsonObject config) {

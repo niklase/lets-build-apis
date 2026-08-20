@@ -92,6 +92,7 @@ public abstract class GivenWhenThenTesterBase {
         given = updateWithVariableValues(given, variables);
 
         doGiven(given);
+        variables = variables.putAll(additionalVariables());
 
         for (int i = 1; i < tests.size(); i = i + 2) {
 
@@ -186,6 +187,16 @@ public abstract class GivenWhenThenTesterBase {
 
 
     public abstract void doGiven(JsonValue given);
+
+    /**
+     * Optional hook allowing a subclass to contribute extra variables - e.g. computed
+     * during doGiven - merged into (and taking precedence over) "meta.variables" from
+     * the test file for the remainder of the test file's when/then blocks. Default
+     * implementation contributes nothing.
+     */
+    protected JsonObject additionalVariables() {
+        return JsonObject.EMPTY;
+    }
 
     public abstract JsonValue doWhen(JsonValue when);
 

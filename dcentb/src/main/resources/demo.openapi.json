@@ -919,7 +919,7 @@
                       "properties": {
                         "studentId": {
                           "const": {
-                            "$data": "/authenticatedUser/studentId"
+                            "$data": "/authenticatedUser/userId"
                           }
                         }
                       }
@@ -1036,7 +1036,7 @@
                             "name": true,
                             "studentId": {
                               "const": {
-                                "$data": "/authenticatedUser/studentId"
+                                "$data": "/authenticatedUser/userId"
                               }
                             },
                             "teacherId": true
@@ -1426,7 +1426,7 @@
                       "properties": {
                         "studentId": {
                           "const": {
-                            "$data": "/authenticatedUser/studentId"
+                            "$data": "/authenticatedUser/userId"
                           }
                         }
                       },
@@ -1754,14 +1754,6 @@
       }
     }
   },
-  "security": [
-    {
-      "ApiKeyAuth": []
-    },
-    {
-      "SelfIssuedJwt": []
-    }
-  ],
   "tags": [
     {
       "name": "Students"

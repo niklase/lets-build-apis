@@ -17,7 +17,6 @@ public class ReadItemRequestHandler extends RequestHandlerBase {
 
     public ReadItemRequestHandler(JsonValue config) {
         super(config);
-        Authenticator authenticator = config.as(Authenticator.class);
         AuthenticationProcessor authenticationProcessor = config.as(AuthenticationProcessor.class);
         OASRequestDeserializer oasRequestDeserializer = config.as(OASRequestDeserializer.class);
         RequestAccessController requestAccessController = config.as(RequestAccessController.class);

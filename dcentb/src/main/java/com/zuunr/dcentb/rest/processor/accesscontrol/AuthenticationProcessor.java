@@ -9,17 +9,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Authenticates a request against the OAS "security" requirement in effect for the
- * operation, delegating the actual credential verification to one sub-processor per
- * security scheme referenced: ApiKeyAuthenticator for "apiKey", JwtAuthenticator for
- * "openIdConnect", SharedSecretJwtAuthenticator for a "http"/"bearer" scheme that isn't
- * an OIDC issuer (i.e. a self-issued JWT verified with a shared secret).
+ * Authenticates a request by trying, in order, the security schemes that apply to the
+ * operation - delegating the actual credential verification to one sub-processor per
+ * scheme type: ApiKeyAuthenticator for "apiKey", JwtAuthenticator for "openIdConnect",
+ * SharedSecretJwtAuthenticator for a "http"/"bearer" scheme that isn't an OIDC issuer
+ * (i.e. a self-issued JWT verified with a shared secret). The first scheme that
+ * verifies the request wins.
  *
- * Scheme selection follows standard OpenAPI semantics: an operation-level "security"
- * (even an empty array, meaning "no auth required") completely replaces the document's
- * root-level "security" default rather than merging with it. Each element of the
- * resulting "security" array is an alternative (tried in order, first fully-satisfied
- * one wins); scheme names within a single element must all succeed together (AND).
+ * Only "components.securitySchemes" (standard OAS) is configured; there is no root or
+ * per-operation "security" field, since dcentb never needs more than one scheme to
+ * succeed (no AND-groups) and OAS's Security Requirement Object array exists mainly to
+ * express those. Instead, an operation may list which of the declared schemes apply via
+ * "x-dcentb.accessControl.securitySchemes" (an array of scheme-name strings, each a key
+ * into "components.securitySchemes"); if omitted, every declared scheme is tried. Any
+ * extra parameter a scheme's Authenticator needs beyond the standard OAS fields (e.g.
+ * "audience", "apiKeyCollection") lives under that scheme's own "x-dcentb" object.
  *
  * Adding a new built-in scheme type is a matter of adding a case in buildAuthenticator();
  * letting dcentb users plug in their own scheme types/implementations is a separate,
@@ -27,7 +31,7 @@ import java.util.List;
  */
 public class AuthenticationProcessor extends Processor {
 
-    private final List<List<Processor>> alternatives;
+    private final List<Processor> alternatives;
 
     public AuthenticationProcessor(JsonValue config) {
         super(config);
@@ -37,31 +41,47 @@ public class AuthenticationProcessor extends Processor {
                 .get("securitySchemes", JsonObject.EMPTY).getJsonObject();
 
         JsonObject operation = fullConfig.get("operation", JsonObject.EMPTY).getJsonObject();
-        JsonValue operationSecurity = operation.get("security");
-        JsonArray security = (operationSecurity != null ? operationSecurity : fullConfig.get("security", JsonArray.EMPTY)).getJsonArray();
+        JsonValue schemeNamesOverride = operation.get(X_DCENTB, JsonObject.EMPTY).getJsonObject()
+                .get("accessControl", JsonObject.EMPTY).getJsonObject()
+                .get("securitySchemes");
+
+        Iterable<String> schemeNames = schemeNamesOverride != null
+                ? asStrings(schemeNamesOverride.getJsonArray())
+                : securitySchemes.keySet();
 
         this.alternatives = new ArrayList<>();
-        for (JsonValue requirementValue : security) {
-            JsonObject requirement = requirementValue.getJsonObject();
-            List<Processor> andGroup = new ArrayList<>();
-            for (String schemeName : requirement.keySet()) {
-                JsonObject scheme = securitySchemes.get(schemeName, JsonObject.EMPTY).getJsonObject();
-                andGroup.add(buildAuthenticator(schemeName, scheme, config));
-            }
-            if (!andGroup.isEmpty()) {
-                alternatives.add(andGroup);
-            }
+        for (String schemeName : schemeNames) {
+            JsonObject scheme = securitySchemes.get(schemeName, JsonObject.EMPTY).getJsonObject();
+            alternatives.add(buildAuthenticator(schemeName, scheme, config));
         }
+    }
+
+    private static List<String> asStrings(JsonArray array) {
+        List<String> result = new ArrayList<>();
+        for (JsonValue value : array) {
+            result.add(value.getString());
+        }
+        return result;
     }
 
     private static Processor buildAuthenticator(String schemeName, JsonObject scheme, JsonValue config) {
         String type = scheme.get("type", JsonValue.NULL).getString();
+        JsonObject schemeExtras = scheme.get(X_DCENTB, JsonObject.EMPTY).getJsonObject();
+
         if ("apiKey".equals(type)) {
-            return config.as(ApiKeyAuthenticator.class);
+            JsonValue apiKeyCollection = schemeExtras.get("apiKeyCollection", ApiKeyAuthenticator.DEFAULT_COLLECTION);
+            return config.getJsonObject()
+                    .put(JsonArray.of(X_DCENTB, "accessControl", "apiKeyCollection"), apiKeyCollection)
+                    .jsonValue()
+                    .as(ApiKeyAuthenticator.class);
         } else if ("openIdConnect".equals(type)) {
             return scheme.jsonValue().as(JwtAuthenticator.class);
         } else if ("http".equals(type) && "bearer".equalsIgnoreCase(scheme.get("scheme", JsonValue.NULL).getString())) {
-            return config.as(SharedSecretJwtAuthenticator.class);
+            JsonValue jwtSecretCollection = schemeExtras.get("jwtSecretCollection", SharedSecretJwtAuthenticator.DEFAULT_COLLECTION);
+            return config.getJsonObject()
+                    .put(JsonArray.of(X_DCENTB, "accessControl", "jwtSecretCollection"), jwtSecretCollection)
+                    .jsonValue()
+                    .as(SharedSecretJwtAuthenticator.class);
         }
         throw new IllegalStateException("Unsupported or missing 'type' for security scheme '" + schemeName + "': " + type);
     }
@@ -73,36 +93,15 @@ public class AuthenticationProcessor extends Processor {
         }
 
         JsonObject lastFailureResponse = null;
-        for (List<Processor> andGroup : alternatives) {
-            JsonObject authenticatedUser = JsonObject.EMPTY;
-            boolean allSucceeded = true;
-
-            for (Processor authenticator : andGroup) {
-                JsonObject result = authenticator.process(requestContext);
-                JsonValue response = result.get(RESPONSE);
-                if (response != null) {
-                    lastFailureResponse = response.getJsonObject();
-                    allSucceeded = false;
-                    break;
-                }
-                authenticatedUser = mergeInto(authenticatedUser, result.get("authenticatedUser", JsonObject.EMPTY).getJsonObject());
+        for (Processor authenticator : alternatives) {
+            JsonObject result = authenticator.process(requestContext);
+            JsonValue response = result.get(RESPONSE);
+            if (response == null) {
+                return result;
             }
-
-            if (allSucceeded) {
-                return requestContext.put("authenticatedUser", authenticatedUser);
-            }
+            lastFailureResponse = response.getJsonObject();
         }
 
-        return requestContext.put(RESPONSE, lastFailureResponse != null
-                ? lastFailureResponse
-                : JsonObject.EMPTY.put("status", 401).put("message", "Authentication required"));
-    }
-
-    private static JsonObject mergeInto(JsonObject accumulator, JsonObject addition) {
-        JsonObject merged = accumulator;
-        for (String key : addition.keySet()) {
-            merged = merged.put(key, addition.get(key));
-        }
-        return merged;
+        return requestContext.put(RESPONSE, lastFailureResponse);
     }
 }

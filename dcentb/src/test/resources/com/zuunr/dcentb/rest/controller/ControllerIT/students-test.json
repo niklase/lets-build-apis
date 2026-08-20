@@ -472,8 +472,35 @@
           "accept": [
             "application/json"
           ],
-          "api-key": [
-            "student-anna-apikey"
+          "authorization": [
+            "{{bearer-jwt-student-anna}}"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "studentId": "student-anna"
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin-a1 (authenticated via self-issued JWT instead of api-key), get student anna",
+      "when": {
+        "method": "GET",
+        "uri": "{{student-anna-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "authorization": [
+            "{{bearer-jwt-admin-a1}}"
           ]
         }
       }

@@ -41,7 +41,8 @@ import java.util.concurrent.TimeUnit;
  *       Auth0:
  *         type: openIdConnect
  *         openIdConnectUrl: "https://{tenant}.auth0.com/.well-known/openid-configuration"
- *         x-dcentb-audience: "{expected-aud-claim}"   # optional; validated if present
+ *         x-dcentb:
+ *           audience: "{expected-aud-claim}"   # optional; validated if present
  */
 public class JwtAuthenticator extends Processor {
 
@@ -70,7 +71,7 @@ public class JwtAuthenticator extends Processor {
             throw new IllegalStateException("OIDC discovery document at " + discoveryUrl + " is missing 'issuer' or 'jwks_uri'");
         }
 
-        this.audience = scheme.get("x-dcentb-audience", JsonValue.NULL).getString();
+        this.audience = scheme.get(X_DCENTB, JsonObject.EMPTY).getJsonObject().get("audience", JsonValue.NULL).getString();
         this.jwkProvider = buildJwkProvider(jwksUri);
     }
 

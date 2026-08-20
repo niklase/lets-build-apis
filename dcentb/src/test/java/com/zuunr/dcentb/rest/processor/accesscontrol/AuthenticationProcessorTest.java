@@ -15,9 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Covers AuthenticationProcessor's dispatch/override logic (not scheme-specific
- * verification, which JwtAuthenticatorTest already covers): operation-level
- * "security" replacing the global default entirely, an empty override meaning "no
- * auth required", and multiple alternatives being tried in order.
+ * verification, which JwtAuthenticatorTest already covers): defaulting to every
+ * declared securityScheme when an operation doesn't restrict them, an operation
+ * narrowing that down via "x-dcentb.accessControl.securitySchemes", an empty override
+ * meaning "no auth required", and multiple schemes being tried in order.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthenticationProcessorTest {
@@ -43,12 +44,17 @@ class AuthenticationProcessorTest {
                 .put("Secondary", JsonObject.EMPTY.put("type", "openIdConnect").put("openIdConnectUrl", secondaryIssuer.discoveryUrl()));
     }
 
-    private JsonValue configWith(JsonArray globalSecurity, JsonObject operation) {
+    private JsonValue configWith(JsonObject operation) {
         return JsonObject.EMPTY
                 .put("components", JsonObject.EMPTY.put("securitySchemes", securitySchemes()))
-                .put("security", globalSecurity)
                 .put("operation", operation)
                 .jsonValue();
+    }
+
+    private static JsonObject operationRestrictedTo(String... schemeNames) {
+        return JsonObject.EMPTY.put("x-dcentb", JsonObject.EMPTY
+                .put("accessControl", JsonObject.EMPTY
+                        .put("securitySchemes", JsonArray.of((Object[]) schemeNames))));
     }
 
     private JsonObject requestContextWithBearer(String token) {
@@ -59,9 +65,8 @@ class AuthenticationProcessorTest {
     }
 
     @Test
-    void usesGlobalSecurityWhenOperationHasNone() {
-        JsonArray globalSecurity = JsonArray.of(JsonObject.EMPTY.put("Primary", JsonArray.EMPTY));
-        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(globalSecurity, JsonObject.EMPTY));
+    void triesEveryDeclaredSchemeWhenOperationDoesNotRestrict() {
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(JsonObject.EMPTY));
 
         String token = primaryIssuer.token("user-1", null, Instant.now().plusSeconds(60));
         JsonObject result = processor.process(requestContextWithBearer(token));
@@ -71,12 +76,11 @@ class AuthenticationProcessorTest {
     }
 
     @Test
-    void operationLevelSecurityCompletelyReplacesGlobal() {
-        JsonArray globalSecurity = JsonArray.of(JsonObject.EMPTY.put("Primary", JsonArray.EMPTY));
-        JsonObject operation = JsonObject.EMPTY.put("security", JsonArray.of(JsonObject.EMPTY.put("Secondary", JsonArray.EMPTY)));
-        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(globalSecurity, operation));
+    void operationCanRestrictToASubsetOfSchemes() {
+        JsonObject operation = operationRestrictedTo("Secondary");
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(operation));
 
-        // A token from the *global* (Primary) issuer must be rejected: the operation only accepts Secondary.
+        // A token from Primary must be rejected: this operation only accepts Secondary.
         String primaryToken = primaryIssuer.token("user-1", null, Instant.now().plusSeconds(60));
         JsonObject rejected = processor.process(requestContextWithBearer(primaryToken));
         assertEquals(401, rejected.get("response").getJsonObject().get("status").getInteger());
@@ -89,10 +93,9 @@ class AuthenticationProcessorTest {
     }
 
     @Test
-    void emptyOperationLevelSecurityMeansNoAuthRequired() {
-        JsonArray globalSecurity = JsonArray.of(JsonObject.EMPTY.put("Primary", JsonArray.EMPTY));
-        JsonObject operation = JsonObject.EMPTY.put("security", JsonArray.EMPTY);
-        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(globalSecurity, operation));
+    void emptySchemeListMeansNoAuthRequired() {
+        JsonObject operation = operationRestrictedTo();
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(operation));
 
         JsonObject result = processor.process(requestContextWithBearer(null));
 
@@ -101,14 +104,11 @@ class AuthenticationProcessorTest {
     }
 
     @Test
-    void triesAlternativesInOrderUntilOneSucceeds() {
-        JsonArray globalSecurity = JsonArray.of(
-                JsonObject.EMPTY.put("Primary", JsonArray.EMPTY),
-                JsonObject.EMPTY.put("Secondary", JsonArray.EMPTY)
-        );
-        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(globalSecurity, JsonObject.EMPTY));
+    void triesSchemesInOrderUntilOneSucceeds() {
+        JsonObject operation = operationRestrictedTo("Primary", "Secondary");
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(operation));
 
-        // Token only valid for Secondary: the Primary alternative is tried first and fails, then Secondary succeeds.
+        // Token only valid for Secondary: Primary is tried first and fails, then Secondary succeeds.
         String secondaryToken = secondaryIssuer.token("user-3", null, Instant.now().plusSeconds(60));
         JsonObject result = processor.process(requestContextWithBearer(secondaryToken));
 
