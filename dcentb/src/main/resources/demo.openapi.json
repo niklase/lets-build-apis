@@ -73,6 +73,13 @@
         "bearerFormat" : "JWT",
         "scheme" : "bearer",
         "type" : "http"
+      },
+      "Auth0" : {
+        "type" : "openIdConnect",
+        "openIdConnectUrl" : "https://2xx.eu.auth0.com/.well-known/openid-configuration",
+        "x-dcentb" : {
+          "audience" : "https://api201.com"
+        }
       }
     }
   },
