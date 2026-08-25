@@ -19,6 +19,14 @@ public abstract class Processor {
         requestHandlerConfig = config.as(RequestHandlerConfig.class);
     }
 
+    /**
+     * For Processor subclasses built as Spring beans instead of reflectively via
+     * config.as(...) (see ItemDecoratorProcessor) - no per-operation config is available
+     * at construction time in that case, so requestHandlerConfig stays null.
+     */
+    protected Processor() {
+    }
+
     @Override
     public String toString(){
         return getClass().getSimpleName();

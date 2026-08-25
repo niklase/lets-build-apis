@@ -2,8 +2,10 @@ package com.zuunr.dcentb.rest.processor.apimodel;
 
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.util.CollectionNameProvider;
+import com.zuunr.dcentb.spring.DcentbApplicationContextHolder;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
+import org.springframework.context.ApplicationContext;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -32,6 +34,13 @@ import java.util.stream.Collectors;
  *
  * An ItemDecorator is a plain Processor: it reads/writes only "itemState" on the
  * requestContext it's handed - it never touches "currentState"/"newState" directly.
+ *
+ * The resolved class may optionally be a Spring bean (e.g. annotated @Component) instead
+ * of relying on the (JsonValue) constructor convention - see resolveDelegate(), which
+ * checks DcentbApplicationContextHolder first. That lets a decorator use normal
+ * @Autowired/constructor injection (a RestTemplate, a cache bean, a custom service,
+ * etc.) when it needs to; if it isn't a Spring bean, nothing changes from the plain
+ * reflective path.
  */
 public abstract class ItemDecoratorProcessor extends Processor {
 
@@ -80,7 +89,17 @@ public abstract class ItemDecoratorProcessor extends Processor {
 
         try {
             Class<?> decoratorClass = Class.forName(fullyQualifiedClassName);
-            return config.as(decoratorClass.asSubclass(Processor.class));
+            Class<? extends Processor> processorClass = decoratorClass.asSubclass(Processor.class);
+
+            ApplicationContext applicationContext = DcentbApplicationContextHolder.get();
+            if (applicationContext != null) {
+                Processor springManagedBean = applicationContext.getBeanProvider(processorClass).getIfAvailable();
+                if (springManagedBean != null) {
+                    return springManagedBean;
+                }
+            }
+
+            return config.as(processorClass);
         } catch (ClassNotFoundException e) {
             return null;
         }

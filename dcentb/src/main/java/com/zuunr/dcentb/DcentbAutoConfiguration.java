@@ -4,6 +4,7 @@ import com.zuunr.dcentb.http.HttpController;
 import com.zuunr.dcentb.http.SwaggerController;
 import com.zuunr.dcentb.rest.controller.Controller;
 import com.zuunr.dcentb.rest.controller.RequestHandlerProvider;
+import com.zuunr.dcentb.spring.DcentbApplicationContextHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -14,6 +15,12 @@ import java.io.IOException;
 
 @AutoConfiguration
 public class DcentbAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DcentbApplicationContextHolder dcentbApplicationContextHolder() {
+        return new DcentbApplicationContextHolder();
+    }
 
     @Bean
     @ConditionalOnMissingBean
