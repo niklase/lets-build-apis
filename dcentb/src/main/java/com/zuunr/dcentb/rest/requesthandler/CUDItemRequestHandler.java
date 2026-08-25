@@ -3,7 +3,9 @@ package com.zuunr.dcentb.rest.requesthandler;
 import com.zuunr.dcentb.rest.controller.RequestHandlerBase;
 import com.zuunr.dcentb.rest.processor.*;
 import com.zuunr.dcentb.rest.processor.accesscontrol.*;
+import com.zuunr.dcentb.rest.processor.apimodel.CurrentStateItemDecorator;
 import com.zuunr.dcentb.rest.processor.apimodel.NewStateCreator;
+import com.zuunr.dcentb.rest.processor.apimodel.NewStateItemDecorator;
 import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandRunner;
 import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandReadCreator;
 import com.zuunr.dcentb.rest.processor.mongo.NewStateToDatabaseItemCreator;
@@ -25,8 +27,10 @@ public class CUDItemRequestHandler extends RequestHandlerBase {
                 config.as(DatabaseCommandRunner.class),                 // create new state (get current state)
                 config.as(DatabaseCommandResponseVerifier.class),       // create new state (get current state -> item)
                 config.as(CurrentStateFromDatabaseApplier.class),       // state from mongo
+                config.as(CurrentStateItemDecorator.class),             // decorates currentState
                 config.as(CurrentStateAccessController.class),          // verify if operation is authorized with current state
                 config.as(NewStateCreator.class),                       // current state + new state (from mongo or from apiModel)
+                config.as(NewStateItemDecorator.class),                 // decorates newState
                 config.as(StateTransitionValidator.class),
                 config.as(IdempotentPutResponseCreator.class),          // Returns 200 of repeated put
                 config.as(NewStateToDatabaseItemCreator.class),         // new state -> mongo item

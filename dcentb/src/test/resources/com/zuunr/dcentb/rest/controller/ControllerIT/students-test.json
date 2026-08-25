@@ -655,7 +655,9 @@
       "then": {
         "status": 409,
         "headers": {},
-        "body": {}
+        "body": {
+
+        }
       },
       "meta": {
         "setVariables": {}
@@ -872,7 +874,8 @@
         "status": 200,
         "headers": {},
         "body": {
-          "email": "ANNA@example.com"
+          "email": "anna@example.com",
+          "attendanceStatus": "OK"
         }
       },
       "meta": {
@@ -880,7 +883,7 @@
       }
     },
     {
-      "description": "As student Anna, fails to update email and grade",
+      "description": "As student Anna, fails to update email and grade (because not allowed to write grade)",
       "when": {
         "method": "PATCH",
         "uri": "{{student-anna-href}}",
