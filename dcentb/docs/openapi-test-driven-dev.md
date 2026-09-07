@@ -19,7 +19,7 @@ structures and validation rules. Declarative configuration adds business
 rules and authorization.
 
 ![OpenAPI, JSON Schema and rules form the API
-definition](./pics/openapi-test-driven-dev/oas-driven-dev-1.png)
+definition](../pics/openapi-test-driven-dev/oas-driven-dev-1.png)
 
 The result is a declarative definition of the API that can be used by
 the backend at runtime.
@@ -33,7 +33,7 @@ The resulting component exposes a real HTTP API connected to a real
 database.
 
 ![Declarative API definition used by the running API and
-database](./pics/openapi-test-driven-dev/oas-driven-dev-2.png)
+database](../pics/openapi-test-driven-dev/oas-driven-dev-2.png)
 
 This reduces the amount of API behavior that has to be implemented
 separately in controllers and other application code.
@@ -76,7 +76,7 @@ unsuccessful responses.
 ```
 
 ![GIVEN, WHEN and THEN component test
-scenario](./pics/openapi-test-driven-dev/oas-driven-dev-3.png)
+scenario](../pics/openapi-test-driven-dev/oas-driven-dev-3.png)
 
 Successful modifying operations change the database state.
 
@@ -101,7 +101,7 @@ The scenario is executed through the same HTTP interface that an API
 consumer uses.
 
 ![Component scenario exercising the running API and real
-database](./pics/openapi-test-driven-dev/oas-driven-dev-4.png)
+database](../pics/openapi-test-driven-dev/oas-driven-dev-4.png)
 
 The test therefore covers more than a controller method or an isolated
 piece of application code.
@@ -136,7 +136,7 @@ A failure scenario contains the request together with the expected error
 response.
 
 ![Executed API scenarios become OpenAPI request and response
-examples](./pics/openapi-test-driven-dev/oas-driven-dev-5.png)
+examples](../pics/openapi-test-driven-dev/oas-driven-dev-5.png)
 
 These interactions can be added to the OpenAPI specification as examples
 for:
@@ -172,7 +172,7 @@ $ mvn verify
 ```
 
 ![Run the component scenarios locally and in
-CI/CD](./pics/openapi-test-driven-dev/oas-driven-dev-6.png)
+CI/CD](../pics/openapi-test-driven-dev/oas-driven-dev-6.png)
 
 The same command can be executed by the CI/CD pipeline.
 
