@@ -4,7 +4,9 @@ import com.zuunr.dcentb.http.HttpController;
 import com.zuunr.dcentb.http.SwaggerController;
 import com.zuunr.dcentb.rest.controller.Controller;
 import com.zuunr.dcentb.rest.controller.RequestHandlerProvider;
+import com.zuunr.dcentb.rest.controller.SelfApiClient;
 import com.zuunr.dcentb.spring.DcentbApplicationContextHolder;
+import com.zuunr.dcentb.spring.DcentbSelfUrlProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,6 +38,19 @@ public class DcentbAutoConfiguration {
     @ConditionalOnMissingBean
     public Controller dcentbController(RequestHandlerProvider requestHandlerProvider) {
         return new Controller(requestHandlerProvider);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SelfApiClient selfApiClient(Controller controller) {
+        return new SelfApiClient(controller);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DcentbSelfUrlProvider dcentbSelfUrlProvider(
+            @Value("${dcentb.selfBaseUrl:http://localhost:8080}") String selfBaseUrl) {
+        return new DcentbSelfUrlProvider(selfBaseUrl);
     }
 
     @Bean
