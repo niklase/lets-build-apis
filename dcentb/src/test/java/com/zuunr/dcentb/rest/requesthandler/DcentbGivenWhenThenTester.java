@@ -11,17 +11,16 @@ import com.zuunr.mongodb.MongoJsonDB;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Base class for dcentb request-handler integration tests.
- *
+ * <p>
  * If the "given" object contains a "dbSetup" key, the specified MongoDB
  * commands (drop, insert, …) are executed against the configured database
  * before the HTTP request under test is processed.  This mirrors the pattern
  * used by MongoGivenWhenThenTester and allows test files to be fully
  * self-contained.
- *
+ * <p>
  * "given" structure when database setup is needed:
  * <pre>
  * {
@@ -37,7 +36,7 @@ import java.util.Map;
  *   "paths": { ... }
  * }
  * </pre>
- *
+ * <p>
  * "given.config" (either an inline OpenAPI document or a classpath resource name, e.g.
  * "demo.openapi.json") is resolved here too. If that document has an "x-dcentb.jwtGeneration"
  * array, one self-issued JWT per entry is signed (using the same shared secret
@@ -97,7 +96,7 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
         JsonObject tokensByUserId = new JwtSecretProvisioner().generateTokensByUserId(config);
         JsonObject variables = JsonObject.EMPTY;
         for (String userId : tokensByUserId.keySet()) {
-            variables = variables.put("{{bearer-jwt-"+ userId + "}}", "Bearer " + tokensByUserId.get(userId).getString());
+            variables = variables.put("{{bearer-jwt-" + userId + "}}", "Bearer " + tokensByUserId.get(userId).getString());
         }
         return variables;
     }
@@ -110,29 +109,5 @@ public abstract class DcentbGivenWhenThenTester extends GivenWhenThenTesterBase 
         return config
                 .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "connection"), connection)
                 .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "db"), db);
-
-        /*
-        JsonObject paths = config.get("paths", JsonObject.EMPTY).getJsonObject();
-        JsonObject patchedPaths = paths;
-        for (Map.Entry<String, JsonValue> pathEntry : paths.entrySet()) {
-            JsonObject pathItem = pathEntry.getValue().getJsonObject();
-            JsonObject patchedPathItem = pathItem;
-            for (Map.Entry<String, JsonValue> methodEntry : pathItem.entrySet()) {
-                JsonObject operation = methodEntry.getValue().getJsonObject();
-                if (operation == null) continue;
-                JsonValue xDcentb = operation.get("x-dcentb");
-                if (xDcentb != null && xDcentb.get("mongodb") != null) {
-                    JsonObject mongodb = xDcentb.get("mongodb").getJsonObject()
-                            .put("connection", connection)
-                            .put("db", db);
-                    operation = operation.put("x-dcentb", xDcentb.getJsonObject().put("mongodb", mongodb));
-                    patchedPathItem = patchedPathItem.put(methodEntry.getKey(), operation);
-                }
-            }
-            patchedPaths = patchedPaths.put(pathEntry.getKey(), patchedPathItem);
-        }
-        return config.put("paths", patchedPaths);
-
-         */
     }
 }

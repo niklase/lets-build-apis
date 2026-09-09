@@ -2,14 +2,13 @@
 
 This repo contains different projects
 
+## Declarative Data Centric Backend
+
+[**DcentB** - a consistent, declarative REST API for any type of data entity](/dcentb/README.md) 
+
 ## JSON Tester
 
-[**json-tester** - make JUnit tests in JSON files based in format of given, when, then](/dcentb/README.md)
-
-
-## Data Centric Backend
-
-[**dcentb** - a consistent, declarative REST API for any data entities](/dcentb/README.md) 
+[**json-tester** - make JUnit tests in JSON files based in format of given, when, then](/json-tester/README.md)
 
 ## OpenAPI
 

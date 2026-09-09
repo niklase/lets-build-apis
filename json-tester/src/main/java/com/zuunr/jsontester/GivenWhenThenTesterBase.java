@@ -24,9 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class GivenWhenThenTesterBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GivenWhenThenTesterBase.class);
-    private static final String MERGE_ME = "mergeMe";
+    private static final JsonSchemaValidator SCHEMA_VALIDATOR = new JsonSchemaValidator();
 
-    private static final JsonObjectMerger JSON_OBJECT_MERGER = new JsonObjectMerger();
     private static URI testFolderUri;
 
     protected static URI getTestFolder() {
@@ -127,15 +126,30 @@ public abstract class GivenWhenThenTesterBase {
 
                     for (JsonValue pathJsonValue : then.getPaths(true)) {
                         JsonArray pathAndValue = pathJsonValue.getJsonArray();
-                        JsonArray path = pathAndValue.allButLast();
-                        JsonValue last = pathAndValue.last();
 
-                        JsonValue actualValue = result.get(path);
-                        if (last.isJsonObject() && actualValue != null && actualValue.isJsonObject()) {
-                            // This then-leaf-object should not be validated as a leaf because it may contain more properties.
+                        int schemaIndex = pathAndValue.getIndexOfFirstMatch(jsonValue -> jsonValue.isString() && "$schema".equals(jsonValue.getString()));
+                        if (schemaIndex != -1) {
+                            JsonArray pathToValue = pathAndValue.subArray(0, schemaIndex);
+                            JsonSchema schema = then.get(pathToValue.add("$schema")).as(JsonSchema.class);
+                            JsonValue value = result.get(pathToValue);
+                            JsonObject validationResult = SCHEMA_VALIDATOR.validate(value, schema, OutputStructure.DETAILED);
+                            if (!validationResult.get("valid", false).getBoolean()) {
+                                JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, value, schema);
+                                LOGGER.error("JSON Schema error at {}: {}", pathToValue.addFirst("then").as(JsonPointer.class).getJsonPointerString().toString(), JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
+                                assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
+                            }
                         } else {
-                            String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
-                            assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
+
+                            JsonArray path = pathAndValue.allButLast();
+                            JsonValue last = pathAndValue.last();
+
+                            JsonValue actualValue = result.get(path);
+                            if (last.isJsonObject() && actualValue != null && actualValue.isJsonObject()) {
+                                // This then-leaf-object should not be validated as a leaf because it may contain more properties.
+                            } else {
+                                String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
+                                assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
+                            }
                         }
                     }
                     break;
@@ -223,7 +237,7 @@ public abstract class GivenWhenThenTesterBase {
 
             JsonValue pointerValue = result.get(pointer);
             if (pointerValue == null) {
-                throw new NullPointerException("No assignable value for " + keyStr + " at: "+ pointer.getJsonPointerString().getString());
+                throw new NullPointerException("No assignable value for " + keyStr + " at: " + pointer.getJsonPointerString().getString());
             }
             variables = variables.put(keyStr, result.get(pointer));
         }

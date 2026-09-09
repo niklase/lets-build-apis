@@ -111,7 +111,9 @@
           "meta": {}
         },
         "status": 201,
-        "headers": {}
+        "headers": {
+          "location": [{"$schema": {"pattern": "^/students/[^/]+$"}}]
+        }
       },
       "meta": {
         "setVariables": {
@@ -448,7 +450,7 @@
           ]
         },
         "body": {
-          "grade" : "F"
+          "grade": "F"
         }
       }
     },
@@ -656,7 +658,6 @@
         "status": 409,
         "headers": {},
         "body": {
-
         }
       },
       "meta": {
@@ -841,7 +842,8 @@
           ]
         }
       }
-    },{
+    },
+    {
       "then": {
         "status": 404,
         "headers": {}
@@ -862,7 +864,9 @@
           "api-key": [
             "student-anna-apikey"
           ],
-          "content-type": ["application/json"]
+          "content-type": [
+            "application/json"
+          ]
         },
         "body": {
           "email": "ANNA@example.com"
@@ -894,7 +898,9 @@
           "api-key": [
             "student-anna-apikey"
           ],
-          "content-type": ["application/json"]
+          "content-type": [
+            "application/json"
+          ]
         },
         "body": {
           "email": "aNnA@example.com",
@@ -907,7 +913,6 @@
         "status": 403,
         "headers": {},
         "body": {
-
         }
       },
       "meta": {
@@ -926,7 +931,9 @@
           "api-key": [
             "admin-a1-apikey"
           ],
-          "content-type": ["application/json"]
+          "content-type": [
+            "application/json"
+          ]
         },
         "body": {
           "email": "ANNA@example.com"
@@ -938,7 +945,6 @@
         "status": 409,
         "headers": {},
         "body": {
-
         }
       },
       "meta": {
