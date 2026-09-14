@@ -17,9 +17,6 @@ public class IdempotentPutResponseCreator extends Processor {
     @Override
     public JsonObject process(JsonObject requestContext) {
 
-        JsonObject request = requestContext.get("request", JsonObject.EMPTY).getJsonObject();
-        //String method = request.get("method").getString().toUpperCase();
-
         JsonValue currentState = requestContext.get("currentState");
 
         JsonObjectBuilder responseBuilder = JsonObject.EMPTY.builder();

@@ -20,7 +20,11 @@ public class DatabaseCommandReadCreator extends Processor {
     @Override
     public JsonObject process(JsonObject requestContext) {
 
-        String id = requestContext.get("request", JsonObject.EMPTY).get("pathParameters", JsonObject.EMPTY).get("id", JsonValue.NULL).getString();
+        String id = requestContext
+                .get("request", JsonObject.EMPTY)
+                .get("pathParameters", JsonObject.EMPTY)
+                .get("id", JsonValue.NULL)
+                .getString();
 
         if (id != null) {
             String collection = requestHandlerConfig.getOperationConfig().getXDcentb().getMongodb().getCollection();

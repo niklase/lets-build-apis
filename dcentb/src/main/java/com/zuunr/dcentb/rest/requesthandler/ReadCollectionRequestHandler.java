@@ -3,6 +3,8 @@ package com.zuunr.dcentb.rest.requesthandler;
 import com.zuunr.dcentb.rest.controller.RequestHandlerBase;
 import com.zuunr.dcentb.rest.processor.*;
 import com.zuunr.dcentb.rest.processor.accesscontrol.*;
+import com.zuunr.dcentb.rest.processor.apimodel.CurrentStateItemDecorator;
+import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandReadCreator;
 import com.zuunr.dcentb.rest.processor.mongo.DatabaseCommandRunner;
 import com.zuunr.json.JsonValue;
 
@@ -12,25 +14,17 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
 
     public ReadCollectionRequestHandler(JsonValue config) {
         super(config);
-        AuthenticationProcessor authenticationProcessor = config.as(AuthenticationProcessor.class);
-        OASRequestDeserializer oasRequestDeserializer = config.as(OASRequestDeserializer.class);
-        RequestAccessController requestAccessController = config.as(RequestAccessController.class);
-        UserInfoProvider userInfoProvider = config.as(UserInfoProvider.class);
-
-        MongoJsonDBCommandCreator mongoJsonDBCommandCreator = config.as(MongoJsonDBCommandCreator.class);
-        DatabaseCommandRunner databaseCommandRunner = config.as(DatabaseCommandRunner.class);
-        MongoToRestCollectionTranslator mongoToRestCollectionTranslator = config.as(MongoToRestCollectionTranslator.class);
-
+        
         processors = new Processor[] {
-                authenticationProcessor,
-                oasRequestDeserializer,
-                userInfoProvider,
-                requestAccessController,
+                config.as(AuthenticationProcessor.class),
+                config.as(OASRequestDeserializer.class),
+                config.as(UserInfoProvider.class),
+                config.as(RequestAccessController.class),
                 config.as(PostGetCollectionBodyToQueryProcessor.class),
-                mongoJsonDBCommandCreator,
-                databaseCommandRunner,
-                //new RequestContextDebugProcessor()
-                mongoToRestCollectionTranslator
+                config.as(MongoJsonDBCommandCreator.class),             // This one could be part of the DatabaseCommandCreator
+                config.as(DatabaseCommandRunner.class),                 // create new state (get current state)
+                config.as(DatabaseCommandResponseVerifier.class),       // create new state (get current state -> item)
+                config.as(MongoToRestCollectionTranslator.class)
         };
     }
 
