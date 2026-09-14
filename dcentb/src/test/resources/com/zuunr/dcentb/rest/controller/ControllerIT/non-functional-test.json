@@ -1,0 +1,240 @@
+{
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+  },
+  "tests": [
+    {
+      "given": {
+        "dbSetup": {
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "db": "dcentb-demo",
+          "commands": [
+            {
+              "drop": {
+                "collection": "students"
+              }
+            },
+            {
+              "drop": {
+                "collection": "api-keys"
+              }
+            },
+            {
+              "insert": {
+                "collection": "api-keys",
+                "documents": [
+                  {
+                    "_id": "admin-a1-apikey",
+                    "userId": "admin-a1",
+                    "permissions": [
+                      "admin"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "config": "demo.openapi.json"
+      }
+    },
+    {
+      "description": "As admin, create a student with a large but schema-valid payload (business-layer boundary; the HTTP-layer byte cap itself is exercised by HttpControllerRequestSizeTest, since this test harness calls the request handler directly and never reads raw HTTP bytes)",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Annaxxxxxxxxxxxxxxxxxxxxxx",
+          "email": "large-payload@example.com",
+          "studentId": "student-large-payload",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 100
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "studentId": "student-large-payload",
+          "meta": {}
+        },
+        "status": 201,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, fails to create a student with an unexpected additional property",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Extra",
+          "email": "extra@example.com",
+          "studentId": "student-extra",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 100,
+          "isVip": true
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {},
+        "body": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, fails to create a student with the wrong type for attendancePercent (string instead of integer)",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "WrongType",
+          "email": "wrongtype@example.com",
+          "studentId": "student-wrongtype",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": "100"
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {},
+        "body": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, fails to create a student with an invalid grade enum value",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "InvalidGrade",
+          "email": "invalidgrade@example.com",
+          "studentId": "student-invalidgrade",
+          "teacherId": "teacher-A",
+          "grade": "Z",
+          "attendancePercent": 100
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {},
+        "body": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, create a student with unicode characters in the name (character-encoding edge case)",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "José 日本語 🎓",
+          "email": "unicode@example.com",
+          "studentId": "student-unicode",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 100
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "José 日本語 🎓",
+          "studentId": "student-unicode",
+          "meta": {}
+        },
+        "status": 201,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "As admin, fails to create a student when the request body is a JSON array instead of an object",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": []
+      }
+    },
+    {
+      "then": {
+        "status": 400,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    }
+  ]
+}

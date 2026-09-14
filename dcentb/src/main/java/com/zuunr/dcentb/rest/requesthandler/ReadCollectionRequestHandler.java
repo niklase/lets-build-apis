@@ -14,7 +14,7 @@ public class ReadCollectionRequestHandler extends RequestHandlerBase {
 
     public ReadCollectionRequestHandler(JsonValue config) {
         super(config);
-        
+
         processors = new Processor[] {
                 config.as(AuthenticationProcessor.class),
                 config.as(OASRequestDeserializer.class),

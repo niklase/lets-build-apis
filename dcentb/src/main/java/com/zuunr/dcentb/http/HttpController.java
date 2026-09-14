@@ -20,11 +20,17 @@ import java.io.IOException;
 @RestController
 public class HttpController {
 
-    private final RequestUtil requestUtil = new RequestUtil();
+    private final RequestUtil requestUtil;
     private final Controller restController;
 
-    public HttpController(@Autowired Controller restController) {
+    @Autowired
+    public HttpController(Controller restController) {
+        this(restController, new RequestUtil());
+    }
+
+    HttpController(Controller restController, RequestUtil requestUtil) {
         this.restController = restController;
+        this.requestUtil = requestUtil;
     }
 
     @PutMapping(value = "**")
@@ -56,6 +62,8 @@ public class HttpController {
         Request request;
         try {
             request = requestUtil.createRequest(httpRequest);
+        } catch (RequestBodyTooLargeException tooLargeException) {
+            return ResponseEntity.status(413).body(JsonObject.EMPTY.put("error", tooLargeException.getMessage()).jsonValue().asJson());
         } catch (IOException ioException) {
             return ResponseEntity.status(400).body(JsonObject.EMPTY.put("error", "Invalid request").jsonValue().asJson());
         }

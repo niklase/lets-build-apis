@@ -16,6 +16,17 @@ import java.util.List;
 
 public class RequestUtil {
 
+    private static final int DEFAULT_MAX_BODY_SIZE = 2 * 1024 * 1024; // matches Spring Boot's default max HTTP request size
+
+    private final int maxBodySize;
+
+    public RequestUtil() {
+        this(DEFAULT_MAX_BODY_SIZE);
+    }
+
+    public RequestUtil(int maxBodySize) {
+        this.maxBodySize = maxBodySize;
+    }
 
     public Request createRequest(HttpServletRequest serverHttpRequest) throws IOException {
 
@@ -106,11 +117,20 @@ public class RequestUtil {
 
     public String createStringBody(HttpServletRequest request) throws IOException {
 
+        String contentLengthHeader = request.getHeader("Content-Length");
+        if (contentLengthHeader != null && Long.parseLong(contentLengthHeader) > maxBodySize) {
+            throw new RequestBodyTooLargeException("Request body exceeds max allowed size of " + maxBodySize + " bytes");
+        }
+
         StringBuilder body = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
             String line;
+            // Content-Length can be absent (chunked transfer) or spoofed, so the cap is re-checked while reading.
             while ((line = reader.readLine()) != null) {
                 body.append(line);
+                if (body.length() > maxBodySize) {
+                    throw new RequestBodyTooLargeException("Request body exceeds max allowed size of " + maxBodySize + " bytes");
+                }
             }
         }
         return body.toString();
