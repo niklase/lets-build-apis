@@ -227,6 +227,14 @@ java -jar target/dcentb-1.0-SNAPSHOT-exec.jar \
 
 The API is now available at `http://localhost:8080` and the Swagger UI at `http://localhost:8080/swagger`.
 
+The demo also has async task processing enabled (`x-dcentb.asyncProcessing`/`topics` in
+`demo.openapi.json`) — every write to `/students` is picked up via a MongoDB change stream and
+logged by `StudentsAuditTaskProcessor` (look for `[students-audit]` in the console output a moment
+after a `POST`/`PUT`/`PATCH`/`DELETE`). This is a working reference example, not just documentation —
+see `docs/async-tasks-processing.md` for the full design and `docs/leader-election.md` /
+`docs/change-stream-listener.md` for how it's built. Async processing only activates when
+`x-dcentb.asyncProcessing` is present in the loaded OpenAPI document, so it's opt-in per deployment.
+
 # Supported API operations
 
 Supported operations are:

@@ -70,6 +70,16 @@ public class MongoJsonDB implements AutoCloseable{
         this.mongoDatabase = mongoDatabase;
     }
 
+    /**
+     * Converts a raw BSON {@link Document} obtained outside the {@link #runCommand} request/response
+     * flow — e.g. from a change stream event, which is a long-lived tailable cursor with no
+     * command/response shape a JSON command could represent — into a {@link JsonObject}, using the
+     * same deserialization this class already applies to every {@code runCommand} result.
+     */
+    public JsonObject toJsonObject(Document document) {
+        return resourceDeserializer.deserialize(document, JsonObjectWrapper.class).asJsonObject();
+    }
+
     public JsonObject runCommand(JsonObject command) {
 
         MONGODB_JSON_SCHEMA.validate();

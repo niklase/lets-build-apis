@@ -1984,6 +1984,21 @@
     "mongodb": {
       "db": "dcentb-demo"
     },
-    "decoratorBasePackage": "com.zuunr.dcentb.demo"
+    "decoratorBasePackage": "com.zuunr.dcentb.demo",
+    "asyncProcessing": {
+      "streamId": "default"
+    },
+    "topics": [
+      {
+        "name": "students",
+        "sourceCollection": "students",
+        "subscribers": [
+          {
+            "name": "audit",
+            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.StudentsAuditTaskProcessor"
+          }
+        ]
+      }
+    ]
   }
 }
