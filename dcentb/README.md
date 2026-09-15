@@ -140,12 +140,67 @@ mvn -f ../pom.xml install -pl dcentb -am
 
 #### 2. Start MongoDB:
 
+MongoDB is run as a **single-node replica set** (`--replSet rs0`), not standalone. This is required for [MongoDB change streams](https://www.mongodb.com/docs/manual/changeStreams/), which dcentb's async task processing (see `docs/async-tasks-processing.md`) is built on — a standalone `mongod` cannot open a change stream at all. A single-node replica set behaves identically to standalone MongoDB for everything else (all existing CRUD/REST behavior is unaffected), so this is safe to use even if you don't need change streams yet.
+
+Because authorization is enabled (`MONGO_INITDB_ROOT_USERNAME`/`PASSWORD`), `mongod` also requires an internal cluster authentication **keyFile** as soon as `--replSet` is used — even for a single node. Without it, the container exits immediately with `security.keyFile is required when authorization is enabled with replica sets`. Generate one once, in a small named volume owned by the image's `mongodb` user (uid `1000`):
+
+```
+docker volume create mongodb_keyfile
+docker run --rm -v mongodb_keyfile:/keyfile alpine sh -c '
+  apk add --no-cache openssl >/dev/null 2>&1
+  openssl rand -base64 756 > /keyfile/mongo-keyfile
+  chown 1000:1000 /keyfile/mongo-keyfile
+  chmod 400 /keyfile/mongo-keyfile
+'
+```
+
 ```
 docker run --name mongodb \
   -p 27017:27017 \
   -e MONGO_INITDB_ROOT_USERNAME=admin \
   -e MONGO_INITDB_ROOT_PASSWORD=adminpassword \
-  -d mongodb/mongodb-community-server:latest
+  -v mongodb_keyfile:/data/keyfile \
+  -d mongodb/mongodb-community-server:latest \
+  --replSet rs0 --keyFile /data/keyfile/mongo-keyfile
+```
+
+The container starts as an *uninitialized* replica set member. Initiate it once (only needed the first time a given data volume is created):
+
+```
+docker exec mongodb mongosh --quiet -u admin -p adminpassword --authenticationDatabase admin \
+  --eval 'rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]})'
+```
+
+Check status any time with:
+
+```
+docker exec mongodb mongosh --quiet -u admin -p adminpassword --authenticationDatabase admin --eval 'rs.status().ok'
+```
+
+**If you already have an existing `mongodb` container running standalone** (started without `--replSet`), convert it in place without losing data — `--replSet` (and, as above, `--keyFile`) are `mongod` startup flags, so the container has to be recreated, but its data volumes (named or anonymous) carry across untouched as long as you don't pass `-v` to `docker rm`:
+
+```
+# capture the exact existing volume mounts (works whether they're named or anonymous)
+DATA_VOL=$(docker inspect mongodb --format '{{range .Mounts}}{{if eq .Destination "/data/db"}}{{.Name}}{{end}}{{end}}')
+CONFIG_VOL=$(docker inspect mongodb --format '{{range .Mounts}}{{if eq .Destination "/data/configdb"}}{{.Name}}{{end}}{{end}}')
+
+docker stop mongodb
+docker rm mongodb   # container only — no -v flag, so $DATA_VOL / $CONFIG_VOL and their data are kept
+
+# generate the keyFile as shown above first if you haven't already (docker volume create mongodb_keyfile ...)
+
+docker run --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=adminpassword \
+  -v "$DATA_VOL":/data/db \
+  -v "$CONFIG_VOL":/data/configdb \
+  -v mongodb_keyfile:/data/keyfile \
+  -d mongodb/mongodb-community-server:latest \
+  --replSet rs0 --keyFile /data/keyfile/mongo-keyfile
+
+docker exec mongodb mongosh --quiet -u admin -p adminpassword --authenticationDatabase admin \
+  --eval 'rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]})'
 ```
 
 #### 3. Run the demo backend:

@@ -20,7 +20,14 @@ public class FindAndModifyCommandTranslator extends AbstractCommandTranslator {
 
         JsonValue update = findAndModifyCommand.get("update");
         if (update != null) {
-            translated.put("update", translateDocuments(update));
+            // A single modifier document (e.g. {"$set": {...}, "$inc": {...}}), not a list — findAndModify's
+            // "update" field takes one document, unlike the bulk "update" command's per-statement "u".
+            translated.put("update", Json2BsonTranslator.translate(update.getJsonObject()));
+        }
+
+        JsonValue upsert = findAndModifyCommand.get("upsert");
+        if (upsert != null) {
+            translated.put("upsert", upsert.getBoolean());
         }
 
         JsonValue remove = findAndModifyCommand.get("remove");
@@ -31,6 +38,16 @@ public class FindAndModifyCommandTranslator extends AbstractCommandTranslator {
         JsonValue _new = findAndModifyCommand.get("new");
         if (_new != null) {
             translated.put("new", _new.getBoolean());
+        }
+
+        JsonObject writeConcern = findAndModifyCommand.get("writeConcern", JsonValue.NULL).getJsonObject();
+        if (writeConcern != null) {
+            translated.put("writeConcern", Json2BsonTranslator.translate(writeConcern));
+        }
+
+        JsonObject readConcern = findAndModifyCommand.get("readConcern", JsonValue.NULL).getJsonObject();
+        if (readConcern != null) {
+            translated.put("readConcern", Json2BsonTranslator.translate(readConcern));
         }
         return translated;
     }

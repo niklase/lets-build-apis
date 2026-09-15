@@ -40,5 +40,7 @@
     "ok": 1,
     "n": 2
   },
-  "exactMatch": false
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+  }
 }

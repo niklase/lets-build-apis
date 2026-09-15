@@ -39,6 +39,9 @@
     "find": {
       "$ref": "#/$defs/Find"
     },
+    "findAndModify": {
+      "$ref": "#/$defs/FindAndModify"
+    },
     "insert": {
       "$ref": "#/$defs/Insert"
     },
@@ -116,6 +119,55 @@
         },
         "skip": {
           "$ref": "#/$defs/Limit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FindAndModify": {
+      "type": "object",
+      "required": [
+        "collection"
+      ],
+      "properties": {
+        "collection": {
+          "$ref": "#/$defs/CollectionName"
+        },
+        "query": {
+          "$ref": "#/$defs/Query"
+        },
+        "update": {
+          "$ref": "#/$defs/UpdateStatementModification"
+        },
+        "upsert": {
+          "type": "boolean"
+        },
+        "remove": {
+          "type": "boolean"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "writeConcern": {
+          "$ref": "#/$defs/WriteConcern"
+        },
+        "readConcern": {
+          "$ref": "#/$defs/ReadConcern"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WriteConcern": {
+      "type": "object",
+      "properties": {
+        "w": true
+      },
+      "additionalProperties": false
+    },
+    "ReadConcern": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string"
         }
       },
       "additionalProperties": false
