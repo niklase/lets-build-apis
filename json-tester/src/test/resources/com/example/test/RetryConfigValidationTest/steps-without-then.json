@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "validateTestFileFormat": false
+  },
+  "tests": [
+    { "given": {} },
+    {
+      "steps": [
+        { "when": {} }
+      ]
+    }
+  ]
+}

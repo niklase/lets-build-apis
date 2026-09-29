@@ -1,0 +1,13 @@
+{
+  "tests": [
+    { "given": {} },
+    {
+      "description": "This condition can never be met - proves retry fails loudly instead of hanging",
+      "retry": { "intervalMillis": 5, "timeoutMillis": 50 },
+      "steps": [
+        { "when": {} },
+        { "then": { "attempts": 999999 } }
+      ]
+    }
+  ]
+}

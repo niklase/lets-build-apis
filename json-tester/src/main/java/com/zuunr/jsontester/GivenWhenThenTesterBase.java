@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -27,6 +28,22 @@ public abstract class GivenWhenThenTesterBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GivenWhenThenTesterBase.class);
     private static final JsonSchemaValidator SCHEMA_VALIDATOR = new JsonSchemaValidator();
+    private static final String TEST_FILE_SCHEMA_RESOURCE = "given-when-then-test-file.schema.json";
+    private static final JsonSchema TEST_FILE_SCHEMA = loadTestFileSchema();
+
+    private static final long DEFAULT_INTERVAL_MILLIS = 200L;
+    private static final long DEFAULT_TIMEOUT_MILLIS = 5000L;
+
+    private static JsonSchema loadTestFileSchema() {
+        try (InputStream is = GivenWhenThenTesterBase.class.getClassLoader().getResourceAsStream(TEST_FILE_SCHEMA_RESOURCE)) {
+            if (is == null) {
+                throw new IllegalStateException(TEST_FILE_SCHEMA_RESOURCE + " not found on classpath");
+            }
+            return JsonValueFactory.create(new String(is.readAllBytes())).as(JsonSchema.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load " + TEST_FILE_SCHEMA_RESOURCE, e);
+        }
+    }
 
     private static URI testFolderUri;
 
@@ -70,7 +87,14 @@ public abstract class GivenWhenThenTesterBase {
         JsonArray tests = testCase.get("tests", JsonValue.NULL)
                 .getJsonArray();
 
-        if (tests == null) {
+        if (tests != null) {
+            // Schema validation only targets this ("tests"-array) shape - the older
+            // single given/when/then fallback below predates it and isn't validated.
+            boolean validateFormat = testJson.get(JsonArray.of("meta", "validateTestFileFormat"), JsonValue.TRUE).getBoolean();
+            if (validateFormat) {
+                validateTestFileFormat(testJson, jsonFileName);
+            }
+        } else {
             // adding backwards compatibility
             tests = JsonArray.of(
                     testCase,
@@ -95,124 +119,264 @@ public abstract class GivenWhenThenTesterBase {
         doGiven(given);
         variables = variables.putAll(additionalVariables());
 
-        JsonObject globalDefaultAwait = testJson.get(JsonArray.of("meta", "defaultAwait"), JsonObject.EMPTY.jsonValue()).getJsonObject();
+        JsonObject globalDefaultRetry = testJson.get(JsonArray.of("meta", "defaultRetry"), JsonObject.EMPTY.jsonValue()).getJsonObject();
 
         for (int i = 1; i < tests.size(); ) {
 
-            JsonObject whenItem = tests.get(i).getJsonObject();
-            String rawDescription = whenItem.get("description", JsonValue.EMPTY_STRING).getString();
-            String description = "tests[" + i + "]: " + rawDescription;
+            JsonObject item = tests.get(i).getJsonObject();
 
-            LOGGER.info("{}", description);
-            JsonValue when = whenItem.get("when");
-            if (when == null) {
-                throw new RuntimeException("Missing 'when' in test element: " + i);
-            }
+            if (item.containsKey("steps")) {
 
-            when = updateWithVariableValues(when, variables);
-
-            // A "when" block is followed by one or more "then" blocks - every element up
-            // to (not including) the next element that itself carries a "when" key.
-            int groupEnd = i + 1;
-            while (groupEnd < tests.size() && tests.get(groupEnd).getJsonObject().get("when") == null) {
-                groupEnd++;
-            }
-
-            if (groupEnd == i + 1) {
-                throw new RuntimeException("Missing 'then' in test element: " + (i + 1));
-            }
-
-            JsonObject whenMeta = whenItem.get("meta", JsonObject.EMPTY).getJsonObject();
-
-            // "then" bodies and the validation strategy chosen for each don't depend on
-            // how many times "when" ends up being retried, so they're resolved once, up front.
-            List<JsonObject> testItems = new ArrayList<>();
-            List<JsonValue> resolvedThens = new ArrayList<>();
-            List<String> validationStrategies = new ArrayList<>();
-            JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
-
-            for (int k = i + 1; k < groupEnd; k++) {
-
-                JsonObject testItem = tests.get(k).getJsonObject();
-                JsonValue then = testItem.get("then");
-
-                if (then == null) {
-                    throw new RuntimeException("Missing 'then' in test element: " + k);
+                // The explicit, self-contained group shape: exactly one "when", always
+                // steps[0], followed by one or more "then"s - order guaranteed by array
+                // position rather than inferred from adjacency. "description"/"meta"/"retry"
+                // are siblings of "steps", not nested inside it.
+                JsonArray steps = item.get("steps", JsonValue.NULL).getJsonArray();
+                if (steps == null || steps.isEmpty()) {
+                    throw new RuntimeException("Empty or missing 'steps' in test element: " + i);
                 }
 
-                testItems.add(testItem);
-                resolvedThens.add(updateWithVariableValues(then, variables));
-                validationStrategies.add(testItem.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString());
-            }
+                JsonObject firstStep = steps.get(0).getJsonObject();
+                JsonValue when = firstStep.get("when");
+                if (when == null) {
+                    throw new RuntimeException("'steps' must start with a 'when' in test element: " + i);
+                }
 
-            JsonValue result;
-            JsonObject await = whenItem.get("await", JsonValue.NULL).getJsonObject();
-            if (await != null) {
-                result = awaitGroup(when, resolvedThens, validationStrategies, description, await, globalDefaultAwait);
+                List<JsonObject> thenItems = new ArrayList<>();
+                for (int s = 1; s < steps.size(); s++) {
+                    JsonObject step = steps.get(s).getJsonObject();
+                    if (step.get("when") != null) {
+                        throw new RuntimeException("'when' may only appear once, as steps[0] - found again at steps[" + s + "] in test element: " + i);
+                    }
+                    if (step.get("then") == null) {
+                        throw new RuntimeException("Every 'steps' element after the first must be a 'then' - steps[" + s + "] in test element: " + i + " is neither");
+                    }
+                    thenItems.add(step);
+                }
+                if (thenItems.isEmpty()) {
+                    throw new RuntimeException("'steps' must contain at least one 'then' after the 'when' in test element: " + i);
+                }
+
+                String rawDescription = item.get("description", JsonValue.EMPTY_STRING).getString();
+                JsonObject groupMeta = item.get("meta", JsonObject.EMPTY).getJsonObject();
+                JsonObject retry = item.get("retry", JsonValue.NULL).getJsonObject();
+
+                variables = runGroup(i, rawDescription, when, groupMeta, thenItems, retry, globalDefaultRetry, variables, testJson);
+                i = i + 1;
+
             } else {
-                result = doWhen(when);
-                validateGroup(result, resolvedThens, validationStrategies, description);
+
+                // Legacy flat form, kept for backward compatibility: a "when" element
+                // followed by one or more "then" blocks - every element up to (not
+                // including) the next element that itself carries a "when" key.
+                JsonValue when = item.get("when");
+                if (when == null) {
+                    throw new RuntimeException("Missing 'when' in test element: " + i);
+                }
+                if (item.get("retry") != null) {
+                    throw new RuntimeException("'retry' is only valid inside a 'steps' group (wrap this in "
+                            + "{\"description\": ..., \"retry\": ..., \"steps\": [...]}) - found directly on "
+                            + "'when' in test element: " + i);
+                }
+
+                int groupEnd = i + 1;
+                while (groupEnd < tests.size()
+                        && tests.get(groupEnd).getJsonObject().get("when") == null
+                        && !tests.get(groupEnd).getJsonObject().containsKey("steps")) {
+                    groupEnd++;
+                }
+                if (groupEnd == i + 1) {
+                    throw new RuntimeException("Missing 'then' in test element: " + (i + 1));
+                }
+
+                List<JsonObject> thenItems = new ArrayList<>();
+                for (int k = i + 1; k < groupEnd; k++) {
+                    JsonObject testItem = tests.get(k).getJsonObject();
+                    if (testItem.get("then") == null) {
+                        throw new RuntimeException("Missing 'then' in test element: " + k);
+                    }
+                    thenItems.add(testItem);
+                }
+
+                String rawDescription = item.get("description", JsonValue.EMPTY_STRING).getString();
+                JsonObject whenMeta = item.get("meta", JsonObject.EMPTY).getJsonObject();
+
+                variables = runGroup(i, rawDescription, when, whenMeta, thenItems, null, globalDefaultRetry, variables, testJson);
+                i = groupEnd;
             }
-
-            for (int idx = 0; idx < testItems.size(); idx++) {
-                JsonObject testItem = testItems.get(idx);
-                JsonValue then = resolvedThens.get(idx);
-
-                JsonObject thenMeta = testItem.get("meta", JsonObject.EMPTY).getJsonObject();
-                onTestCase(rawDescription, when, whenMeta, then, thenMeta, result);
-
-                JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
-                variables = variables.putAll(setVariables(setVariables, result));
-            }
-
-            i = groupEnd;
         }
         LOGGER.info("Test ended: {}", jsonFileName);
     }
 
     /**
-     * Repeats {@code doWhen(when)} on an interval until every "then" in the group matches
-     * (an idempotent "when" is required - it is re-executed on every attempt) or
-     * {@code timeoutMillis} elapses. Retries are silent (logged at DEBUG); the attempt that
-     * either finally matches or exhausts the time budget goes through the normal, throwing
-     * validation path, so a real timeout still produces an ordinary assertion failure/diff
-     * rather than a separate "timed out" error shape.
-     * <p>
-     * "await.intervalMillis"/"await.timeoutMillis" fall back to "meta.defaultAwait" on the
-     * test file, then to 200ms/5000ms.
+     * Validates the whole file against {@code given-when-then-test-file.schema.json} before a
+     * single "when" runs - a malformed file (e.g. "retry" on a legacy flat "when", or "steps"
+     * missing a "then") is rejected loudly up front rather than failing confusingly partway
+     * through, or worse, being silently misinterpreted. Set {@code "meta": {"validateTestFileFormat":
+     * false}} on a file to skip this - the one legitimate reason to is a fixture that
+     * intentionally exercises a malformed shape to prove the harness itself rejects it (see
+     * RetryConfigValidationTest), where schema validation would otherwise reject the file for an
+     * unrelated reason and mask the specific runtime check actually being tested.
      */
-    private JsonValue awaitGroup(JsonValue when, List<JsonValue> resolvedThens, List<String> validationStrategies, String description, JsonObject await, JsonObject globalDefaultAwait) {
+    private void validateTestFileFormat(JsonValue testJson, Path jsonFileName) {
+        JsonObject validationResult = SCHEMA_VALIDATOR.validate(testJson, TEST_FILE_SCHEMA, OutputStructure.DETAILED);
+        if (!validationResult.get("valid", false).getBoolean()) {
+            JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, testJson, TEST_FILE_SCHEMA);
+            String errorReport = JsonObject.EMPTY.put("errors", apiError).asPrettyJson();
+            LOGGER.error("{} does not match {}: {}", jsonFileName, TEST_FILE_SCHEMA_RESOURCE, errorReport);
+            throw new RuntimeException(jsonFileName + " does not match " + TEST_FILE_SCHEMA_RESOURCE
+                    + " (set \"meta\": {\"validateTestFileFormat\": false} to skip this check): " + errorReport);
+        }
+    }
 
-        long intervalMillis = await.get("intervalMillis", globalDefaultAwait.get("intervalMillis", JsonValue.of(200))).getLong();
-        long timeoutMillis = await.get("timeoutMillis", globalDefaultAwait.get("timeoutMillis", JsonValue.of(5000))).getLong();
+    /**
+     * Runs one "when" plus its "then"s - either shape (the legacy flat form or the explicit
+     * "steps" form) funnels through here once it's been reduced to the same pieces: the
+     * request, its group-level meta, and the ordered list of "then" items (each an object
+     * carrying "then" and optionally "meta"). Retried via {@link #retryGroup} when {@code retry}
+     * is non-null, executed once otherwise. Returns the variables map updated with anything
+     * captured via "meta.setVariables" on any of this group's "then"s.
+     */
+    private JsonObject runGroup(int groupIndex, String rawDescription, JsonValue when, JsonObject groupMeta,
+                                 List<JsonObject> thenItems, JsonObject retry, JsonObject globalDefaultRetry,
+                                 JsonObject variables, JsonValue testJson) {
+
+        String description = "tests[" + groupIndex + "]: " + rawDescription;
+        LOGGER.info("{}", description);
+
+        JsonValue resolvedWhen = updateWithVariableValues(when, variables);
+
+        // "then" bodies and the validation strategy chosen for each don't depend on how many
+        // times "when" ends up being retried, so they're resolved once, up front.
+        List<JsonValue> resolvedThens = new ArrayList<>();
+        List<String> validationStrategies = new ArrayList<>();
+        JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
+
+        for (JsonObject thenItem : thenItems) {
+            JsonValue then = thenItem.get("then");
+            resolvedThens.add(updateWithVariableValues(then, variables));
+            validationStrategies.add(thenItem.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString());
+        }
+
+        JsonValue result = retry != null
+                ? retryGroup(resolvedWhen, resolvedThens, validationStrategies, description, retry, globalDefaultRetry)
+                : runOnce(resolvedWhen, resolvedThens, validationStrategies, description);
+
+        for (int idx = 0; idx < thenItems.size(); idx++) {
+            JsonObject thenItem = thenItems.get(idx);
+            JsonValue then = resolvedThens.get(idx);
+
+            JsonObject thenMeta = thenItem.get("meta", JsonObject.EMPTY).getJsonObject();
+            onTestCase(rawDescription, resolvedWhen, groupMeta, then, thenMeta, result);
+
+            JsonObject setVariablesConfig = thenMeta.get("setVariables", JsonObject.EMPTY).getJsonObject();
+            variables = variables.putAll(setVariables(setVariablesConfig, result));
+        }
+
+        return variables;
+    }
+
+    private JsonValue runOnce(JsonValue when, List<JsonValue> resolvedThens, List<String> validationStrategies, String description) {
+        JsonValue result = doWhen(when);
+        validateGroup(result, resolvedThens, validationStrategies, description);
+        return result;
+    }
+
+    /**
+     * Repeats {@code doWhen(when)} - always immediately on the first attempt, no initial delay -
+     * until every "then" in the group matches (an idempotent "when" is required - it is
+     * re-executed on every attempt), or until "timeoutMillis" or "maxAttempts" - whichever is
+     * reached FIRST - stops the loop. The attempt in flight at that point still goes through the
+     * normal, throwing validation path, so exhausting the budget still produces an ordinary
+     * assertion failure/diff rather than a separate "timed out" error shape. "maxAttempts" is an
+     * independent safety cap, not scheduled to land near the timeout deadline - whichever limit
+     * trips first wins, and which one is reported in the log line.
+     * <p>
+     * "retry.intervalMillis"/"timeoutMillis"/"maxAttempts" each independently fall back to
+     * "meta.defaultRetry" on the test file, then to a hardcoded default (200ms interval, 5000ms
+     * timeout, unlimited attempts).
+     * <p>
+     * "intervalMillis" may be a single number (the same wait before every retry) or an array -
+     * an explicit backoff schedule: intervalMillis[0] is the wait before attempt 2,
+     * intervalMillis[1] before attempt 3, and so on; once exhausted, its last value is reused
+     * for every further wait until the loop stops - it never falls back to a formula.
+     */
+    private JsonValue retryGroup(JsonValue when, List<JsonValue> resolvedThens, List<String> validationStrategies, String description, JsonObject retry, JsonObject globalDefaultRetry) {
+
+        List<Long> intervalSchedule = resolveIntervalSchedule(retry, globalDefaultRetry);
+        long timeoutMillis = resolveTimeoutMillis(retry, globalDefaultRetry);
+        Integer maxAttempts = resolveMaxAttempts(retry, globalDefaultRetry);
         long deadline = System.currentTimeMillis() + timeoutMillis;
 
         int attempt = 0;
         while (true) {
             attempt++;
             JsonValue result = doWhen(when);
-            boolean budgetExhausted = System.currentTimeMillis() >= deadline;
 
-            if (budgetExhausted) {
-                LOGGER.info("{}: await timed out after {} attempt(s) ({} ms budget) - asserting final result", description, attempt, timeoutMillis);
-                validateGroup(result, resolvedThens, validationStrategies, description);
-                return result;
-            }
+            boolean timedOut = System.currentTimeMillis() >= deadline;
+            boolean attemptsExhausted = maxAttempts != null && attempt >= maxAttempts;
+            boolean isLastAttempt = timedOut || attemptsExhausted;
 
             try {
                 validateGroup(result, resolvedThens, validationStrategies, description);
-                LOGGER.info("{}: await condition met after {} attempt(s)", description, attempt);
+                LOGGER.info("{}: retry condition met after {} attempt(s)", description, attempt);
                 return result;
             } catch (AssertionError notYetMatching) {
-                LOGGER.debug("{}: await attempt {} not yet matching, retrying in {} ms", description, attempt, intervalMillis);
+                if (isLastAttempt) {
+                    String reason = attemptsExhausted && !timedOut
+                            ? "maxAttempts (" + maxAttempts + ") reached"
+                            : "timeoutMillis (" + timeoutMillis + " ms) elapsed";
+                    LOGGER.info("{}: retry gave up after {} attempt(s) - {}", description, attempt, reason);
+                    throw notYetMatching;
+                }
+                long sleepMillis = intervalSchedule.get(Math.min(attempt - 1, intervalSchedule.size() - 1));
+                LOGGER.debug("{}: retry attempt {} not yet matching, retrying in {} ms", description, attempt, sleepMillis);
                 try {
-                    Thread.sleep(intervalMillis);
+                    Thread.sleep(sleepMillis);
                 } catch (InterruptedException interrupted) {
                     Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted while awaiting condition: " + description, interrupted);
+                    throw new RuntimeException("Interrupted while retrying: " + description, interrupted);
                 }
             }
         }
+    }
+
+    private static List<Long> resolveIntervalSchedule(JsonObject retry, JsonObject globalDefaultRetry) {
+        JsonValue interval = retry.get("intervalMillis");
+        if (interval == null) {
+            interval = globalDefaultRetry.get("intervalMillis");
+        }
+        if (interval == null) {
+            return List.of(DEFAULT_INTERVAL_MILLIS);
+        }
+        if (interval.isJsonArray()) {
+            JsonArray schedule = interval.getJsonArray();
+            if (schedule.isEmpty()) {
+                return List.of(DEFAULT_INTERVAL_MILLIS);
+            }
+            List<Long> millis = new ArrayList<>(schedule.size());
+            for (int i = 0; i < schedule.size(); i++) {
+                millis.add(schedule.get(i).getLong());
+            }
+            return millis;
+        }
+        return List.of(interval.getLong());
+    }
+
+    private static long resolveTimeoutMillis(JsonObject retry, JsonObject globalDefaultRetry) {
+        JsonValue timeout = retry.get("timeoutMillis");
+        if (timeout == null) {
+            timeout = globalDefaultRetry.get("timeoutMillis");
+        }
+        return timeout == null ? DEFAULT_TIMEOUT_MILLIS : timeout.getLong();
+    }
+
+    private static Integer resolveMaxAttempts(JsonObject retry, JsonObject globalDefaultRetry) {
+        JsonValue maxAttempts = retry.get("maxAttempts");
+        if (maxAttempts == null) {
+            maxAttempts = globalDefaultRetry.get("maxAttempts");
+        }
+        return maxAttempts == null ? null : maxAttempts.getInteger();
     }
 
     private void validateGroup(JsonValue result, List<JsonValue> resolvedThens, List<String> validationStrategies, String description) {
@@ -310,10 +474,11 @@ public abstract class GivenWhenThenTesterBase {
      * validation. Default implementation does nothing; override to observe the
      * description, request, expected result and actual result of each test case.
      * <p>
-     * whenMeta is the "meta" object sibling of "when" (on the tests[i] element);
-     * thenMeta is the "meta" object sibling of "then" (on the tests[i+1] element,
-     * the same object that already carries "setVariables"). Both default to an
-     * empty object when absent.
+     * whenMeta is the group's own "meta" - the "meta" sibling of "when" on the tests[i]
+     * element for the legacy flat form, or the "meta" sibling of "steps"/"retry"/"description"
+     * on the group wrapper for the "steps" form. thenMeta is the "meta" sibling of "then" for
+     * whichever "then" this call is about (the same object that already carries
+     * "setVariables"). Both default to an empty object when absent.
      */
     protected void onTestCase(String description, JsonValue when, JsonObject whenMeta, JsonValue then, JsonObject thenMeta, JsonValue result) {
         // no-op by default

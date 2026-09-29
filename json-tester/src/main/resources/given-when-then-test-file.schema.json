@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zuunr.com/schemas/given-when-then-test-file.schema.json",
+  "title": "GivenWhenThenTesterBase test file",
+  "description": "Structural contract for the harness-level parts of a test file (given/tests, steps, retry, meta), enforced by GivenWhenThenTesterBase before a file is run - see the 'validateTestFileFormat' meta flag to opt a file out. The domain payload inside 'given'/'when'/'then' objects is subclass-specific (e.g. HTTP request/response shape for ControllerIT) and intentionally left as opaque 'object' here. Note: this dialect (com.zuunr.json.schema) has no prefixItems/tuple-items/not, so positional invariants noted in 'description' fields below (given must be tests[0]; when must be steps[0] and appear only once) are enforced by the harness at runtime, not by this schema.",
+  "type": "object",
+  "properties": {
+    "meta": { "$ref": "#/$defs/fileMeta" },
+    "tests": {
+      "type": "array",
+      "minItems": 2,
+      "description": "tests[0] must be a givenItem (runtime-enforced, not schema-enforced here). Every later element is either a testGroup (preferred, required if 'retry' is needed) or a legacy flat when/then element grouped by array adjacency.",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/givenItem" },
+          { "$ref": "#/$defs/testGroup" },
+          { "$ref": "#/$defs/legacyWhenItem" },
+          { "$ref": "#/$defs/legacyThenItem" }
+        ]
+      }
+    }
+  },
+  "required": ["tests"],
+  "$defs": {
+
+    "fileMeta": {
+      "type": "object",
+      "description": "File-level defaults, applied to every test in this file unless overridden per-item.",
+      "properties": {
+        "validationStrategy": { "$ref": "#/$defs/validationStrategy" },
+        "variables": {
+          "type": "object",
+          "description": "Initial {{name}} -> value substitution variables, available from the first 'when' onward.",
+          "additionalProperties": { "type": "string" }
+        },
+        "defaultRetry": {
+          "$ref": "#/$defs/retry",
+          "description": "Fallback source for any field a group's own 'retry' object omits (per-field, not all-or-nothing). Only consulted for groups that declare 'retry' at all."
+        },
+        "validateTestFileFormat": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set to false to skip validating this file against given-when-then-test-file.schema.json before running it - an escape hatch for a file that intentionally doesn't conform (e.g. a fixture proving the harness rejects a malformed shape at runtime, where the schema would otherwise reject it first for an unrelated reason and mask the behavior actually being tested)."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "givenItem": {
+      "type": "object",
+      "description": "Must be tests[0] (runtime-enforced). Sets up state before any 'when' runs.",
+      "properties": { "given": { "type": "object" } },
+      "required": ["given"],
+      "additionalProperties": false
+    },
+
+    "testGroup": {
+      "type": "object",
+      "description": "One 'when' plus its 'then' assertions, explicit and order-guaranteed by array position. Prefer this over the legacy flat form for every new group, and it is the only form 'retry' may appear on.",
+      "properties": {
+        "description": { "type": "string" },
+        "meta": { "$ref": "#/$defs/groupMeta" },
+        "retry": {
+          "$ref": "#/$defs/retry",
+          "description": "Optional. Absent = run 'when' exactly once; an unmatched 'then' fails immediately. Present = re-run 'when' on the configured schedule until every 'then' matches, or until 'timeoutMillis' or 'maxAttempts' - whichever is hit FIRST - stops the loop; the in-flight attempt is still validated for real at that point."
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "description": "Must contain exactly one 'when', as steps[0] (runtime-enforced - see the top-level note on this dialect's limits), followed by one or more 'then's.",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/whenStep" },
+              { "$ref": "#/$defs/thenStep" }
+            ]
+          }
+        }
+      },
+      "required": ["steps"],
+      "additionalProperties": false
+    },
+
+    "whenStep": {
+      "type": "object",
+      "description": "Must be steps[0]. The request/action to (re-)execute; re-issued verbatim on every retry attempt.",
+      "properties": { "when": { "type": "object" } },
+      "required": ["when"],
+      "additionalProperties": false
+    },
+
+    "thenStep": {
+      "type": "object",
+      "description": "One expected-result assertion, checked against the SAME result as every other thenStep in this 'steps' array.",
+      "properties": {
+        "then": { "type": "object" },
+        "meta": { "$ref": "#/$defs/thenMeta" }
+      },
+      "required": ["then"],
+      "additionalProperties": false
+    },
+
+    "groupMeta": {
+      "type": "object",
+      "description": "Group-level behavior flags (not per-assertion config).",
+      "properties": {
+        "docExample": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this group's request/result should be recorded as an OpenAPI example (ControllerIT-specific)."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "thenMeta": {
+      "type": "object",
+      "properties": {
+        "validationStrategy": { "$ref": "#/$defs/validationStrategy" },
+        "setVariables": {
+          "type": "object",
+          "description": "Maps {{name}} -> a JSON Pointer into the result.",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "validationStrategy": {
+      "type": "string",
+      "enum": ["EXACT_MATCHING", "ALLOWING_EXTRA_PROPERTIES", "JSON_SCHEMA"]
+    },
+
+    "retry": {
+      "type": "object",
+      "description": "Polling/backoff config for one testGroup. The first 'when' call always happens immediately, with no initial delay. All fields are optional and independently fall back to 'meta.defaultRetry', then to a hardcoded harness default.",
+      "properties": {
+        "intervalMillis": {
+          "description": "Wait time before each subsequent attempt. A single number applies the same wait before every retry. An array is an explicit backoff schedule: intervalMillis[0] is the wait before attempt 2, intervalMillis[1] before attempt 3, and so on; once exhausted, its LAST value is reused until the loop stops.",
+          "oneOf": [
+            { "$ref": "#/$defs/nonNegativeMillis" },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/nonNegativeMillis" }
+            }
+          ]
+        },
+        "timeoutMillis": {
+          "$ref": "#/$defs/nonNegativeMillis",
+          "description": "Wall-clock budget for the whole group, starting at the first 'when' attempt."
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Independent safety cap on the number of 'when' calls, regardless of timeoutMillis. Whichever of timeoutMillis/maxAttempts is reached FIRST stops the loop immediately; which one tripped is reported in the log/failure output."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "nonNegativeMillis": { "type": "number", "minimum": 0 },
+
+    "legacyWhenItem": {
+      "type": "object",
+      "description": "Legacy flat form, kept for backward compatibility. 'retry' is not valid here - a 'retry' key found on this shape is a configuration error, not a silent no-op.",
+      "properties": {
+        "description": { "type": "string" },
+        "when": { "type": "object" },
+        "meta": { "$ref": "#/$defs/groupMeta" }
+      },
+      "required": ["when"],
+      "additionalProperties": false
+    },
+
+    "legacyThenItem": {
+      "type": "object",
+      "description": "Legacy flat form: one assertion belonging to the nearest preceding legacyWhenItem.",
+      "properties": {
+        "then": { "type": "object" },
+        "meta": { "$ref": "#/$defs/thenMeta" }
+      },
+      "required": ["then"],
+      "additionalProperties": false
+    }
+  }
+}

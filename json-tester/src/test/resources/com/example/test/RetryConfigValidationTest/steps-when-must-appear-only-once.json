@@ -1,0 +1,12 @@
+{
+  "tests": [
+    { "given": {} },
+    {
+      "steps": [
+        { "when": {} },
+        { "then": { "attempts": 1 } },
+        { "when": {} }
+      ]
+    }
+  ]
+}

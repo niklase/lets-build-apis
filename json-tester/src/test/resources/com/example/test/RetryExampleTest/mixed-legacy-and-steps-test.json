@@ -1,0 +1,17 @@
+{
+  "tests": [
+    { "given": {} },
+
+    { "when": {} },
+    { "then": { "attempts": 1 } },
+
+    {
+      "description": "Same file, new 'steps'+'retry' form - both shapes share the same underlying state (the 'attempts' counter continues from where the legacy pair above left it)",
+      "retry": { "intervalMillis": 5, "timeoutMillis": 2000 },
+      "steps": [
+        { "when": {} },
+        { "then": { "attempts": 3 } }
+      ]
+    }
+  ]
+}

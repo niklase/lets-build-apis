@@ -1,0 +1,13 @@
+{
+  "tests": [
+    { "given": {} },
+    {
+      "description": "maxAttempts should stop this well before the long timeout - this condition can never be met",
+      "retry": { "intervalMillis": 5, "timeoutMillis": 60000, "maxAttempts": 5 },
+      "steps": [
+        { "when": {} },
+        { "then": { "attempts": 999999 } }
+      ]
+    }
+  ]
+}
