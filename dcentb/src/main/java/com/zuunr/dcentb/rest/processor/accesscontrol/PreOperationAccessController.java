@@ -54,6 +54,15 @@ public abstract class PreOperationAccessController extends Processor {
         JsonValue errorstatus = null;
         JsonArray permissions = requestContext.get("authenticatedUser", JsonObject.EMPTY).get("permissions", JsonArray.EMPTY).getJsonArray();
 
+        for (int p = 0; p < permissions.size(); p++) {
+            if (SUPERUSER_PERMISSION.equals(permissions.get(p).getString())) {
+                // Core dcentb capability, not per-collection config: SUPERUSER is authorized
+                // for this operation unconditionally, on every collection, without any
+                // collection ever declaring a "SUPERUSER" entry in its own permissionSchemas.
+                return requestContext.put(UNRESTRICTED_ACCESS, true);
+            }
+        }
+
         JsonValue authenticatedDefault = permissionSchemas.get("AUTHENTICATED_DEFAULT");
         boolean authenticatedDefaultPermissionExist = authenticatedDefault != null;
         if (authenticatedDefaultPermissionExist) {

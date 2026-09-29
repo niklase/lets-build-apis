@@ -88,6 +88,18 @@ public class AuthenticationProcessor extends Processor {
 
     @Override
     public JsonObject process(JsonObject requestContext) {
+
+        JsonObject request = requestContext.get(REQUEST, JsonObject.EMPTY).getJsonObject();
+        JsonValue internalPrincipal = request.get(INTERNAL_PRINCIPAL);
+        if (internalPrincipal != null) {
+            // By-reference only - see SystemApiClient's Javadoc for why this key can never
+            // originate from a real inbound HTTP request. Every header-based scheme below is
+            // skipped entirely; SUPERUSER is granted unconditionally.
+            return requestContext.put("authenticatedUser", JsonObject.EMPTY
+                    .put("userId", internalPrincipal)
+                    .put("permissions", JsonArray.of(SUPERUSER_PERMISSION)));
+        }
+
         if (alternatives.isEmpty()) {
             return requestContext;
         }

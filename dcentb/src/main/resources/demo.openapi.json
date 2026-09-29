@@ -62,6 +62,47 @@
           "studentId": {
             "type": "string"
           },
+          "teacher": {
+            "type": "object"
+          },
+          "teacherId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Teachers_item_v1": {
+        "properties": {
+          "classSummary": {
+            "properties": {
+              "atRiskCount": {
+                "type": "integer"
+              },
+              "averageAttendancePercent": {
+                "type": "number"
+              },
+              "studentCount": {
+                "type": "integer"
+              },
+              "updatedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta_item_v1"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string"
+          },
           "teacherId": {
             "type": "string"
           }
@@ -75,17 +116,17 @@
         "name": "api-key",
         "type": "apiKey"
       },
+      "Auth0": {
+        "openIdConnectUrl": "https://2xx.eu.auth0.com/.well-known/openid-configuration",
+        "type": "openIdConnect",
+        "x-dcentb": {
+          "audience": "https://api201.com"
+        }
+      },
       "SelfIssuedJwt": {
         "bearerFormat": "JWT",
         "scheme": "bearer",
         "type": "http"
-      },
-      "Auth0": {
-        "type": "openIdConnect",
-        "openIdConnectUrl": "https://2xx.eu.auth0.com/.well-known/openid-configuration",
-        "x-dcentb": {
-          "audience": "https://api201.com"
-        }
       }
     }
   },
@@ -1777,11 +1818,328 @@
           }
         }
       }
+    },
+    "/teachers": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "as-admin-create-teacher-a": {
+                  "summary": "As admin, pre-provision teacher-A",
+                  "value": {
+                    "name": "Teacher A",
+                    "status": "ACTIVE",
+                    "teacherId": "teacher-A"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/Teachers_item_v1",
+                "allOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": true,
+                      "status": true,
+                      "teacherId": true
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Teachers_item_v1"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authentication error. api-key missing or invalid. "
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authorization error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "tags": [
+          "Teachers"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {
+                  "properties": {
+                    "request": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/teachers/permissions/admin/writeItem"
+                        }
+                      }
+                    }
+                  }
+                },
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/teachers/permissions/admin/readItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teachers/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Teachers_item_v1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authentication error. api-key missing or invalid. "
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authorization error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "tags": [
+          "Teachers"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {},
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "$ref": "#/x-dcentb/collections/teachers/permissions/admin/readItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Teachers_item_v1",
+                "allOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "classSummary": true,
+                      "name": true,
+                      "status": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Teachers_item_v1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authentication error. api-key missing or invalid. "
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Authorization error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "tags": [
+          "Teachers"
+        ],
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": {
+                "requestSchema": {},
+                "responseSchema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "tags": [
     {
       "name": "Students"
+    },
+    {
+      "name": "Teachers"
     }
   ],
   "version": "v1",
@@ -1824,6 +2182,9 @@
         "userId": "admin-a1"
       }
     ],
+    "asyncProcessing": {
+      "streamId": "default"
+    },
     "collections": {
       "students": {
         "permissions": {
@@ -1937,12 +2298,32 @@
                     }
                   }
                 }
+              ],
+              "properties": {
+                "teacher": {
+                  "required": [
+                    "status"
+                  ]
+                }
+              },
+              "required": [
+                "teacher"
               ]
             }
           }
         }
+      },
+      "teachers": {
+        "permissions": {
+          "admin": {
+            "readCollection": {},
+            "readItem": {},
+            "writeItem": {}
+          }
+        }
       }
     },
+    "decoratorBasePackage": "com.zuunr.dcentb.demo",
     "jwtGeneration": [
       {
         "permissions": [
@@ -1984,10 +2365,6 @@
     "mongodb": {
       "db": "dcentb-demo"
     },
-    "decoratorBasePackage": "com.zuunr.dcentb.demo",
-    "asyncProcessing": {
-      "streamId": "default"
-    },
     "topics": [
       {
         "name": "students",
@@ -1996,6 +2373,10 @@
           {
             "name": "audit",
             "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.StudentsAuditTaskProcessor"
+          },
+          {
+            "name": "classSummarySync",
+            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
           }
         ]
       }

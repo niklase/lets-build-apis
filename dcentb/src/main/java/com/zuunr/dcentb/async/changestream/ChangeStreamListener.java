@@ -7,6 +7,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.FullDocument;
 import com.zuunr.dcentb.async.leaderelection.LeaderElector;
 import com.zuunr.dcentb.async.leaderelection.LeaderLease;
 import com.zuunr.json.JsonObject;
@@ -181,15 +182,15 @@ public final class ChangeStreamListener {
         Optional<Checkpoint> checkpoint = checkpointStore.load();
         if (checkpoint.isEmpty()) {
             LOG.info("No checkpoint found for stream '{}' — starting from now", leaderElector.getStreamId());
-            return database.watch(watchPipeline).iterator();
+            return database.watch(watchPipeline).fullDocument(FullDocument.UPDATE_LOOKUP).iterator();
         }
         try {
-            return database.watch(watchPipeline).resumeAfter(checkpoint.get().getResumeToken()).iterator();
+            return database.watch(watchPipeline).fullDocument(FullDocument.UPDATE_LOOKUP).resumeAfter(checkpoint.get().getResumeToken()).iterator();
         } catch (MongoCommandException e) {
             LOG.error("Resume token for stream '{}' was rejected ({}) — falling back to the persisted checkpoint's clusterTime {}. " +
                             "Some already-processed events may be redelivered; none should be lost.",
                     leaderElector.getStreamId(), e.getMessage(), checkpoint.get());
-            return database.watch(watchPipeline).startAtOperationTime(checkpoint.get().getClusterTime()).iterator();
+            return database.watch(watchPipeline).fullDocument(FullDocument.UPDATE_LOOKUP).startAtOperationTime(checkpoint.get().getClusterTime()).iterator();
         }
     }
 

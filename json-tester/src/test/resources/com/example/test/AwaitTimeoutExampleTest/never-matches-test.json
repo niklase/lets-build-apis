@@ -1,0 +1,11 @@
+{
+  "tests": [
+    { "given": {} },
+    {
+      "description": "This condition can never be met - proves await fails loudly instead of hanging",
+      "when": {},
+      "await": { "intervalMillis": 5, "timeoutMillis": 50 }
+    },
+    { "then": { "attempts": 999999 } }
+  ]
+}

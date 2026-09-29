@@ -19,6 +19,10 @@ public class ResponseAccessController extends Processor {
     @Override
     public JsonObject process(JsonObject requestContext) {
 
+        if (requestContext.get(UNRESTRICTED_ACCESS, JsonValue.FALSE).getBoolean()) {
+            return requestContext;
+        }
+
         JsonObject response = requestContext.get(RESPONSE, JsonObject.EMPTY).getJsonObject();
 
         switch (response.get("status").getInteger()) {

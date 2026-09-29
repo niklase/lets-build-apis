@@ -23,6 +23,30 @@
               }
             },
             {
+              "drop": {
+                "collection": "teachers"
+              }
+            },
+            {
+              "insert": {
+                "collection": "teachers",
+                "documents": [
+                  {
+                    "_id": "teacher-A",
+                    "teacherId": "teacher-A",
+                    "name": "Teacher A",
+                    "status": "ACTIVE"
+                  },
+                  {
+                    "_id": "teacher-B",
+                    "teacherId": "teacher-B",
+                    "name": "Teacher B",
+                    "status": "ACTIVE"
+                  }
+                ]
+              }
+            },
+            {
               "insert": {
                 "collection": "api-keys",
                 "documents": [

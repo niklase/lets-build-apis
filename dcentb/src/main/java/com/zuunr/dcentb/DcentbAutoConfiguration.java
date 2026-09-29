@@ -4,7 +4,7 @@ import com.zuunr.dcentb.http.HttpController;
 import com.zuunr.dcentb.http.SwaggerController;
 import com.zuunr.dcentb.rest.controller.Controller;
 import com.zuunr.dcentb.rest.controller.RequestHandlerProvider;
-import com.zuunr.dcentb.rest.controller.SelfApiClient;
+import com.zuunr.dcentb.rest.controller.SystemApiClient;
 import com.zuunr.dcentb.spring.DcentbApplicationContextHolder;
 import com.zuunr.dcentb.spring.DcentbSelfUrlProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,8 +42,8 @@ public class DcentbAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SelfApiClient selfApiClient(Controller controller) {
-        return new SelfApiClient(controller);
+    public SystemApiClient systemApiClient(Controller controller) {
+        return new SystemApiClient(controller);
     }
 
     @Bean

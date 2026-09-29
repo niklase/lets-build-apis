@@ -36,30 +36,14 @@ public class NewStateCreator extends Processor {
                 break;
             }
             case "PUT": {
-                JsonValue createdAt = JsonValue.of(BackendTime.dateTimeNow());
-                JsonValue updatedAt = createdAt;
-                newState = newState.getJsonObject()
-                        .put("meta", JsonObject.EMPTY
-                                .put("createdAt", createdAt)
-                                .put("updatedAt", updatedAt)
-                                .put("id", itemId)
-                                .put("href", request.get("uri"))
-                                .put("etag", UUID.randomUUID().toString().replace("-", ""))).jsonValue();
+                newState = withFreshMeta(newState, itemId, request.get("uri"));
                 requestContext = requestContext
                         .put("newState", newState);
                 break;
             }
             case "POST": {
-                JsonValue createdAt = JsonValue.of(BackendTime.dateTimeNow());
-                JsonValue updatedAt = createdAt;
                 itemId = UUID.randomUUID().toString().replace("-", "");
-                newState = newState.getJsonObject()
-                        .put("meta", JsonObject.EMPTY
-                                .put("createdAt", createdAt)
-                                .put("updatedAt", updatedAt)
-                                .put("id", itemId)
-                                .put("href", path + "/" + itemId)
-                                .put("etag", UUID.randomUUID().toString().replace("-", ""))).jsonValue();
+                newState = withFreshMeta(newState, itemId, JsonValue.of(path + "/" + itemId));
                 requestContext = requestContext
                         .put("newState", newState);
                 break;
@@ -79,5 +63,22 @@ public class NewStateCreator extends Processor {
                 throw new IllegalStateException("Unexpected value: " + method.toUpperCase());
         }
         return requestContext.put("itemId", itemId);
+    }
+
+    /**
+     * The "brand new item" meta block PUT (create) and POST both need — identical except for
+     * where {@code id}/{@code href} come from (PUT: the path's {id}; POST: a freshly minted
+     * one). Previously duplicated inline in both branches; consolidated here so there's exactly
+     * one place that decides what "freshly created" metadata looks like.
+     */
+    private static JsonValue withFreshMeta(JsonValue body, String itemId, JsonValue href) {
+        JsonValue createdAt = JsonValue.of(BackendTime.dateTimeNow());
+        return body.getJsonObject()
+                .put("meta", JsonObject.EMPTY
+                        .put("createdAt", createdAt)
+                        .put("updatedAt", createdAt)
+                        .put("id", itemId)
+                        .put("href", href)
+                        .put("etag", UUID.randomUUID().toString().replace("-", ""))).jsonValue();
     }
 }

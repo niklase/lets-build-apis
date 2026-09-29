@@ -312,7 +312,365 @@ Put the new state in the response or no body at all the new state is null (ie re
 
 ## ResponseAccessController
 
-Verifies that the user with userInfo is authorized to read the information that is contained in the response and filters averything else (and possibly changes the status code too accordingly)  
+Verifies that the user with userInfo is authorized to read the information that is contained in the response and filters averything else (and possibly changes the status code too accordingly)
+
+---
+
+# Internal API calls: SystemApiClient and SUPERUSER
+
+Sometimes code running *inside* dcentb (a `TaskProcessor` reacting to a change stream, typically)
+needs to call this same backend's own API — read another collection's item, or write one — without
+a real HTTP round-trip and without needing real credentials or per-collection permission config for
+an identity that isn't a real external caller. `SystemApiClient` does this by re-entering
+`Controller.execute(...)` in-process (the exact same pipeline a real inbound HTTP request goes
+through — auth, access control, Mongo, `ItemDecorator`, everything) as the built-in **`SUPERUSER`**
+identity — authorized for anything any role could do via the API, on any collection, unfiltered.
+
+`SystemApiClient` grants `SUPERUSER` via a top-level `"internalPrincipal"` key on the request
+`JsonObject` — a sibling of `"headers"`/`"body"`, never a header value:
+
+```java
+JsonObject requestObject = JsonObject.EMPTY
+        .put("method", method)
+        .put("uri", uri)
+        .put("headers", headers)
+        .put(Processor.INTERNAL_PRINCIPAL, "SYSTEM"); // "internalPrincipal"
+```
+
+`AuthenticationProcessor` recognizes that key and skips every header-based authenticator entirely,
+setting `authenticatedUser.permissions = ["SUPERUSER"]`. `PreOperationAccessController` short-circuits
+to `UNRESTRICTED_ACCESS` ("unrestrictedAccess") the moment it sees `SUPERUSER` in the permission list —
+authorized unconditionally, on every collection, with **no collection ever declaring a `SUPERUSER`
+entry in its own `x-dcentb.collections.*.permissions`**; it's a core dcentb capability, not per-API
+config. `ResponseAccessController` checks the same flag and, when set, skips response filtering
+entirely — `SUPERUSER` always gets the full, unfiltered, decorated item.
+
+**This is a real security boundary, not an obfuscated secret.** `RequestUtil.createRequest` — the
+only code path from a real inbound HTTP request to a `Request` object — only ever populates
+`method`/`uri`/`headers`/`query`/`body`. It never sets `internalPrincipal`, so no external HTTP
+request can ever trigger `SUPERUSER`, regardless of what headers or body it sends.
+
+Getting it: a Spring-managed bean (a `TaskProcessor` annotated `@Component`, or any other Spring
+bean) gets it via normal constructor injection; a reflectively-constructed (non-Spring) one reaches
+it via `DcentbApplicationContextHolder.get().getBean(SystemApiClient.class)`.
+
+**Recursion caveat**: the call is synchronous on the calling thread — a `TaskProcessor` must not
+trigger an operation that re-invokes itself (directly or indirectly); there's no call-depth guard,
+same as any recursive function call. It is also not part of any transaction with the outer
+change-stream event — dcentb has no cross-request transaction concept today.
+
+---
+
+# Idempotency and etags on writes (PUT/POST/PATCH/DELETE)
+
+Every item carries `meta.etag`, set fresh on every write. The Mongo write itself is optimistic-
+concurrency-controlled *for some verbs, not all* — documented here rather than only in code comments.
+
+### What each verb's write actually guards against a stale read
+
+| Verb | `meta.etag` on write | Mongo write query | Stale-read outcome |
+|---|---|---|---|
+| **PATCH** | Kept from `currentState` (merge doesn't touch it) | `_id == X AND meta.etag == <etag read at start of request>` (`DatabaseCUDItemCommandCreator`) | **Fails closed.** If the real document moved on, this matches nothing; `upsert:true` then tries to insert a document whose `_id` already exists → Mongo duplicate-key error (`code 11000`) → `DatabaseCommandResponseVerifier` turns that into **`409 Conflict`**. A stale `currentState` produces a rejected write, never silent corruption. |
+| **POST** | Freshly minted (`NewStateCreator`) | `_id == <new random id>`, no `meta.etag` condition | Not applicable — always a new document; nothing to be stale against. |
+| **PUT, body differs from `currentState`** | *(never reaches a write — see below)* | *(never reaches a write)* | **Fails closed.** `StateTransitionValidator` compares `currentState` to `newState` (ignoring `meta`) *before* `IdempotentPutResponseCreator` ever runs; a mismatch is rejected as **`409 Conflict`** unconditionally — PUT never silently overwrites an existing item with a different body. |
+| **PUT, body matches `currentState`** | Freshly minted, then **discarded** | *(no write at all)* | `IdempotentPutResponseCreator` short-circuits with `200 currentState` — correct by construction, since `StateTransitionValidator` just confirmed the body already matches what's stored. |
+| **DELETE** | n/a | `_id == X AND meta.etag == currentState.etag` (`DatabaseCUDItemCommandCreator`) | **Fails closed.** Matching zero documents (the item was modified or deleted after this request read it) → `DatabaseCommandResponseVerifier` returns **`409 Conflict`** instead of silently no-op-succeeding with `204`. |
+
+**Correction to an earlier version of this section**: `IdempotentPutResponseCreator` does *not* blindly
+return `200` for any PUT into an existing item regardless of body — that earlier read of the code
+missed that `StateTransitionValidator` (which runs first) already does the real check. For PUT, it
+strips `meta` from both `currentState` and `newState` and compares them; a mismatch produces `409`
+itself, via the same schema-violation response shape every other validation failure in this pipeline
+uses. Only when they're equal does the request ever reach `IdempotentPutResponseCreator` — so
+returning `currentState` as the `200` body is reporting exactly what the client just asked to
+(re-)create, not stale or unrelated data. `IdempotentPutResponseCreator`'s own Javadoc now says this
+explicitly. Functionally, PUT in this codebase means "create-if-absent; if it already exists with the
+same body, hand back what's there (200); if it exists with a different body, reject (409)" — never a
+blind replace.
+
+DELETE's optimistic-concurrency guard (the last table row) is a change made alongside this
+documentation, not pre-existing — see "Implemented" below.
+
+### Implemented
+
+- **`meta.etag` duplication in `NewStateCreator`** — consolidated. PUT and POST both call a single
+  private `withFreshMeta(body, itemId, href)` helper instead of each inlining an identical
+  `createdAt`/`updatedAt`/`etag` block.
+- **DELETE now has an optimistic-concurrency guard**, matching the table above: its Mongo command
+  conditions on `_id == itemId AND meta.etag == currentState.etag` (`DatabaseCUDItemCommandCreator`),
+  and `DatabaseCommandResponseVerifier` now treats a delete that matched zero documents as a `409`
+  (previously: a silent `204` no-op, indistinguishable from a real deletion). Covered by
+  `DatabaseCUDItemCommandCreatorTest` (the command shape) and
+  `DatabaseCommandResponseVerifierTest` (the zero-matches-→-409 behavior) — the actual race this
+  guards against (the document changing in the narrow window between this request's own read and its
+  own write) isn't reproducible through `ControllerIT`'s sequential given/when/then format, so it's
+  unit-tested at the mechanism level rather than end-to-end; `idempotency-and-etag-test.json` covers
+  the DELETE happy path (still `204`) and the already-gone path (still `404`) to prove the guard is a
+  pure addition, not a behavior change, for every case that format *can* exercise.
+- ~~PUT-into-an-existing-item never actually re-validates the body~~ — turned out to already be false;
+  see the correction above. No code change was needed here, only the documentation.
+
+All of the above, plus the pre-existing PUT/PATCH/POST/DELETE behavior, is exercised end-to-end in
+`src/test/resources/.../ControllerIT/idempotency-and-etag-test.json`.
+
+---
+
+# ItemDecorator: decorating currentState and newState
+
+An `ItemDecorator` post-processes an item on its way in or out — computing a derived field, embedding
+data from another collection, normalizing input — without touching the CUD/read pipeline itself.
+
+### The idea
+
+`CurrentStateItemDecorator` and `NewStateItemDecorator` are both wired into `CUDItemRequestHandler`
+(and `ReadItemRequestHandler` reuses the current-state half). Each is a thin adapter
+(`ItemDecoratorProcessor`) that:
+
+1. Resolves your app's decorator class **by convention**, once per operation:
+   `x-dcentb.decoratorBasePackage + ".collections." + <collection name, "/"→".", "-"→"_"> + ".ItemDecorator"`
+   — e.g. `com.zuunr.dcentb.demo` + `.collections.` + `students` → `com.zuunr.dcentb.demo.collections.students.ItemDecorator`.
+2. Copies whichever state it's responsible for (`currentState` or `newState`) into a neutral
+   `itemState` key, and calls your decorator with *only* that key visible — **your decorator never
+   knows whether it's decorating currentState or newState**, so the same class handles both.
+3. Writes `itemState` back onto the state it was copying from.
+
+**Writing one is entirely optional.** No `decoratorBasePackage` configured, or no class at the
+derived name for a collection → silent no-op passthrough for that collection. A class that *does*
+exist but is shaped wrong (no `(JsonValue)` constructor, doesn't extend `Processor`) fails loudly —
+"optional" only covers "no one wrote one," not bugs in the one that was written.
+
+### How to configure it
+
+```jsonc
+{
+  "x-dcentb": {
+    "decoratorBasePackage": "com.zuunr.dcentb.demo"
+  }
+}
+```
+
+### How to code one
+
+A plain `Processor` that reads/writes only `"itemState"`:
+
+```java
+public class ItemDecorator extends Processor {
+
+    public ItemDecorator(JsonValue config) {
+        super(config);
+    }
+
+    @Override
+    public JsonObject process(JsonObject requestContext) {
+        JsonObject itemState = requestContext.get("itemState", JsonValue.NULL).getJsonObject();
+
+        // derive a field
+        JsonValue attendancePercent = itemState.get("attendancePercent");
+        if (attendancePercent != null && attendancePercent.isJsonNumber()) {
+            String status = attendancePercent.getInteger() < 60 ? "AT_RISK" : "OK";
+            itemState = itemState.put("attendanceStatus", status);
+        }
+
+        return requestContext.put("itemState", itemState);
+    }
+}
+```
+
+The real demo decorator (`demo/collections/students/ItemDecorator.java`) also embeds the full
+`teachers/{id}` item referenced by `teacherId`, so `students`' `stateTransitionSchema` can require
+`newState.teacher.status` — enforcing, declaratively, that the referenced teacher exists before a
+student write is accepted, instead of as a database foreign-key constraint.
+
+**Design note — why this decorator reads Mongo directly instead of via `SystemApiClient`**: an
+`ItemDecorator` is resolved reflectively *per operation*, including inside
+test harnesses (`ControllerIT`) that construct `RequestHandlerProvider` directly and never boot
+Spring — so no `SystemApiClient` bean exists to inject there. A plain by-id read of a collection with
+no `ItemDecorator`/write-side validation of its own returns identical content either way, so going
+straight to `MongoJsonDB` (the same escape hatch `ApiKeyAuthenticator` already uses) is a deliberate,
+narrower choice than "always go through the API" — appropriate for a **read-only, same-request**
+lookup. Contrast this with `ClassSummarySyncTaskProcessor` below, which *writes* and only ever runs
+inside a real Spring-booted app — that's where going through the REST API (and `SUPERUSER`) actually
+matters. A Spring-managed decorator (annotated `@Component`) can still use normal
+`@Autowired`/constructor injection when it needs `SystemApiClient` or anything else.
+
+---
+
+# Async task processing: change streams, leader election, and TaskProcessors
+
+dcentb can react to its own writes: every CUD operation that hits MongoDB is observable via a
+**change stream**, routed to your own **`TaskProcessor`** business logic — a fan-out/pub-sub system
+built entirely on MongoDB and Spring Boot, no external broker. This is a full feature with its own
+design docs; this section is the concept map and configuration/coding reference. Full depth:
+
+- `docs/async-tasks-processing.md` — the complete design, all decisions and their reasoning, and the
+  phase-by-phase build history.
+- `docs/leader-election.md` — the fencing-token protocol one instance uses to safely be "the one"
+  processing a stream, with automatic failover.
+- `docs/change-stream-listener.md` — how the single database-level change stream is consumed,
+  checkpointed, and kept from observing its own bookkeeping writes.
+
+### The idea
+
+```
+MongoDB write (POST/PUT/PATCH/DELETE)
+        │  (observed via a single db.watch() change stream, leader-instance only)
+        ▼
+  ChangeStreamListener  ──routes by source collection──▶  Topic
+                                                              │
+                                          1 subscriber ───────┼─────── 2+ subscribers
+                                          (direct-attach)     │        (fan-out-on-read:
+                                                               │        1 message-log write,
+                                                               ▼        every subscriber reads it)
+                                                        TaskProcessor.process(event)
+                                                               │
+                                                   SUCCESS / RETRY / ERROR_QUEUE / BLOCK_ALL
+```
+
+- **One listener for the whole app** (a single `db.watch()`), started only on the currently-elected
+  leader — see `docs/leader-election.md` for the CAS/fencing-token protocol that makes failover safe
+  (a paused-then-resumed ex-leader is fenced out, never allowed to act as leader again).
+- **Topics** map a source collection to one or more named **subscribers**. Fan-out is derived from
+  subscriber *count*, not a separate flag: exactly one subscriber attaches directly to the raw event
+  (no extra write); two or more automatically get a shared message-log write plus lockstep dispatch
+  to every subscriber — no per-subscriber offset bookkeeping is needed, because one listener drives
+  all subscribers of a topic synchronously within the same cursor advance.
+- **At-least-once delivery, checkpoint-after-processing.** A crash between "processed" and
+  "checkpoint written" causes reprocessing, not data loss — which is exactly why:
+- **Every `TaskProcessor` must be idempotent.** The same event can reach `process()` more than once
+  (a crash, an explicit `RETRY`, redelivery from the error queue).
+
+### `TaskResult` — four outcomes, not a boolean
+
+```java
+public interface TaskProcessor {
+    TaskResult process(JsonObject event);
+}
+```
+
+| Outcome | Meaning | Blast radius |
+|---|---|---|
+| `TaskResult.success()` | Done. | — |
+| `TaskResult.retry(reason)` | Transient failure. | Exactly **one** immediate inline retry; a second failure escalates to `ERROR_QUEUE` automatically — final, not a default you can override. |
+| `TaskResult.errorQueue(reason)` | Give up on this one item, for this one subscriber. | Checkpoint still advances — a struggling subscriber never blocks anything else. Retried later with backoff by `ErrorQueueProcessor`; dead-lettered after `maxErrorQueueRequeues`. |
+| `TaskResult.blockAll(reason)` | Something is wrong enough that processing must stop. | Halts the **entire** listener instance (thrown as `HaltListenerException`) — not just this topic. Does not currently survive a process restart; a restarted instance re-elects and will likely hit the same failure again (safe — never silently resumes — but not yet a persisted "stay blocked" mechanism). |
+
+An uncaught exception or a `null` return from `process()` is treated identically to an explicit
+`retry(...)`.
+
+### How to configure topics and subscribers
+
+Lives inside the one loaded OpenAPI document, under `x-dcentb`. From `demo.openapi.json`:
+
+```jsonc
+{
+  "x-dcentb": {
+    "asyncProcessing": { "streamId": "default" },
+    "topics": [
+      {
+        "name": "students",
+        "sourceCollection": "students",
+        "subscribers": [
+          {
+            "name": "audit",
+            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.StudentsAuditTaskProcessor"
+          },
+          {
+            "name": "classSummarySync",
+            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Two subscribers on `students` means this topic is fan-out-on-read: a shared message-log document is
+written per event, and both `StudentsAuditTaskProcessor` and `ClassSummarySyncTaskProcessor` are
+dispatched to it. If `x-dcentb.asyncProcessing` is absent from the loaded document entirely, async
+processing is disabled for that deployment — no MongoDB connection is even opened for it.
+
+`taskProcessorClass` is always named explicitly per subscriber (unlike `ItemDecorator`, there's no
+base-package-plus-naming-convention to derive from — see `TaskProcessorResolver`'s Javadoc for why: a
+collection can have zero, one, or many `TaskProcessor`s, so the wiring has to be explicit and listed).
+A missing/wrong class is a real configuration error and throws at startup, rather than `ItemDecorator`'s
+"optional, silently no-op" behavior.
+
+### How to code one
+
+Resolution mirrors `ItemDecoratorProcessor`: a Spring-managed bean (`@Component`, normal
+`@Autowired`/constructor injection) is preferred, falling back to reflective construction via a
+`(JsonValue)` constructor.
+
+**Simple case — no cross-collection effects, just react**, reflectively constructed:
+
+```java
+public class StudentsAuditTaskProcessor implements TaskProcessor {
+
+    public StudentsAuditTaskProcessor(JsonValue config) {
+        // (JsonValue) constructor required by the reflective-construction fallback
+    }
+
+    @Override
+    public TaskResult process(JsonObject event) {
+        String operationType = event.get("operationType").getString();
+        JsonValue documentKey = event.get("documentKey");
+        LOG.info("[students-audit] {} documentKey={}", operationType, documentKey);
+        return TaskResult.success();
+    }
+}
+```
+
+**Cross-collection case — keeping another document eventually consistent**, Spring-managed so it can
+inject `SystemApiClient`, and calling **through the REST API as `SUPERUSER`** rather than writing
+Mongo directly — this is the case where going through the API (see the section above) actually
+matters, because it re-runs that other collection's own `ItemDecorator`/`stateTransitionSchema`/
+access-control instead of bypassing them:
+
+```java
+@Component
+public class ClassSummarySyncTaskProcessor implements TaskProcessor {
+
+    private final SystemApiClient systemApiClient;
+
+    public ClassSummarySyncTaskProcessor(SystemApiClient systemApiClient) {
+        this.systemApiClient = systemApiClient;
+    }
+
+    @Override
+    public TaskResult process(JsonObject event) {
+        JsonValue fullDocument = event.get("fullDocument");
+        if (fullDocument == null || !fullDocument.isJsonObject()) {
+            return TaskResult.success(); // e.g. a delete — see the class's own Javadoc for the known gap
+        }
+        String teacherId = fullDocument.getJsonObject().get("teacherId").getString();
+
+        Response<?> studentsResponse = systemApiClient.call("POST", "/students/getCollection",
+                JsonObject.EMPTY.put("filter", JsonObject.EMPTY
+                        .put("teacherId", JsonObject.EMPTY.put("eq", teacherId))).jsonValue());
+        if (studentsResponse.getStatus() != 200) {
+            return TaskResult.retry("POST /students/getCollection returned " + studentsResponse.getStatus());
+        }
+
+        // ...recompute classSummary from studentsResponse.getBody()...
+
+        Response<?> patchResponse = systemApiClient.call("PATCH", "/teachers/" + teacherId,
+                classSummary.jsonValue());
+        if (patchResponse.getStatus() != 200) {
+            return TaskResult.retry("PATCH /teachers/" + teacherId + " returned " + patchResponse.getStatus());
+        }
+        return TaskResult.success();
+    }
+}
+```
+
+Idempotent by construction: every invocation **recomputes `classSummary` from scratch** (a fresh
+query over the teacher's current students) and PATCHes the full, current result — never an
+increment/decrement — so redelivering the same event twice produces the same end state, satisfying
+the at-least-once contract every `TaskProcessor` must tolerate.
+
+`SystemApiClient.call` needs no credentials — see "Internal API calls" above for exactly how
+`SUPERUSER` is granted and why it can never be triggered from outside the process.
 
 
 

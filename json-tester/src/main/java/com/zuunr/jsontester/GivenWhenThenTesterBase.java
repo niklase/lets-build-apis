@@ -17,6 +17,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,7 +95,9 @@ public abstract class GivenWhenThenTesterBase {
         doGiven(given);
         variables = variables.putAll(additionalVariables());
 
-        for (int i = 1; i < tests.size(); i = i + 2) {
+        JsonObject globalDefaultAwait = testJson.get(JsonArray.of("meta", "defaultAwait"), JsonObject.EMPTY.jsonValue()).getJsonObject();
+
+        for (int i = 1; i < tests.size(); ) {
 
             JsonObject whenItem = tests.get(i).getJsonObject();
             String rawDescription = whenItem.get("description", JsonValue.EMPTY_STRING).getString();
@@ -107,80 +111,167 @@ public abstract class GivenWhenThenTesterBase {
 
             when = updateWithVariableValues(when, variables);
 
-            JsonObject testItem = tests.get(i + 1).getJsonObject();
-            JsonValue then = testItem.get("then");
-
-            if (then == null) {
-                throw new RuntimeException("Missing 'then' in test element: " + i + 1);
+            // A "when" block is followed by one or more "then" blocks - every element up
+            // to (not including) the next element that itself carries a "when" key.
+            int groupEnd = i + 1;
+            while (groupEnd < tests.size() && tests.get(groupEnd).getJsonObject().get("when") == null) {
+                groupEnd++;
             }
 
-            JsonValue result = doWhen(when);
-
-            JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
-            String validationStrategy = testItem.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString();
-
-            then = updateWithVariableValues(then, variables);
-
-            switch (validationStrategy) {
-                case "ALLOWING_EXTRA_PROPERTIES": {
-
-                    for (JsonValue pathJsonValue : then.getPaths(true)) {
-                        JsonArray pathAndValue = pathJsonValue.getJsonArray();
-
-                        int schemaIndex = pathAndValue.getIndexOfFirstMatch(jsonValue -> jsonValue.isString() && "$schema".equals(jsonValue.getString()));
-                        if (schemaIndex != -1) {
-                            JsonArray pathToValue = pathAndValue.subArray(0, schemaIndex);
-                            JsonSchema schema = then.get(pathToValue.add("$schema")).as(JsonSchema.class);
-                            JsonValue value = result.get(pathToValue);
-                            JsonObject validationResult = SCHEMA_VALIDATOR.validate(value, schema, OutputStructure.DETAILED);
-                            if (!validationResult.get("valid", false).getBoolean()) {
-                                JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, value, schema);
-                                LOGGER.error("JSON Schema error at {}: {}", pathToValue.addFirst("then").as(JsonPointer.class).getJsonPointerString().toString(), JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
-                                assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
-                            }
-                        } else {
-
-                            JsonArray path = pathAndValue.allButLast();
-                            JsonValue last = pathAndValue.last();
-
-                            JsonValue actualValue = result.get(path);
-                            if (last.isJsonObject() && actualValue != null && actualValue.isJsonObject()) {
-                                // This then-leaf-object should not be validated as a leaf because it may contain more properties.
-                            } else {
-                                String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
-                                assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
-                            }
-                        }
-                    }
-                    break;
-                }
-                case "JSON_SCHEMA": {
-                    JsonObject validationResult = new JsonSchemaValidator().validate(result, then, OutputStructure.DETAILED);
-                    if (!validationResult.get("valid").getBoolean()) {
-                        JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, result, then.as(JsonSchema.class));
-                        LOGGER.error("JSON Schema error: {}", JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
-                        assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
-                    }
-                    break;
-                }
-                case "EXACT_MATCHING": {
-                    assertEquals(then, result, "Exact match failed");
-                    break;
-                }
-                default: {
-                    assertEquals(then, result, "Exact match failed");
-                }
-
+            if (groupEnd == i + 1) {
+                throw new RuntimeException("Missing 'then' in test element: " + (i + 1));
             }
 
             JsonObject whenMeta = whenItem.get("meta", JsonObject.EMPTY).getJsonObject();
-            JsonObject thenMeta = testItem.get("meta", JsonObject.EMPTY).getJsonObject();
-            onTestCase(rawDescription, when, whenMeta, then, thenMeta, result);
 
-            JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
-            variables = variables.putAll(setVariables(setVariables, result));
+            // "then" bodies and the validation strategy chosen for each don't depend on
+            // how many times "when" ends up being retried, so they're resolved once, up front.
+            List<JsonObject> testItems = new ArrayList<>();
+            List<JsonValue> resolvedThens = new ArrayList<>();
+            List<String> validationStrategies = new ArrayList<>();
+            JsonArray metaValidationStrategy = JsonArray.of("meta", "validationStrategy");
+
+            for (int k = i + 1; k < groupEnd; k++) {
+
+                JsonObject testItem = tests.get(k).getJsonObject();
+                JsonValue then = testItem.get("then");
+
+                if (then == null) {
+                    throw new RuntimeException("Missing 'then' in test element: " + k);
+                }
+
+                testItems.add(testItem);
+                resolvedThens.add(updateWithVariableValues(then, variables));
+                validationStrategies.add(testItem.get(metaValidationStrategy, testJson.get(metaValidationStrategy, JsonValue.of("EXACT_MATCHING"))).getString());
+            }
+
+            JsonValue result;
+            JsonObject await = whenItem.get("await", JsonValue.NULL).getJsonObject();
+            if (await != null) {
+                result = awaitGroup(when, resolvedThens, validationStrategies, description, await, globalDefaultAwait);
+            } else {
+                result = doWhen(when);
+                validateGroup(result, resolvedThens, validationStrategies, description);
+            }
+
+            for (int idx = 0; idx < testItems.size(); idx++) {
+                JsonObject testItem = testItems.get(idx);
+                JsonValue then = resolvedThens.get(idx);
+
+                JsonObject thenMeta = testItem.get("meta", JsonObject.EMPTY).getJsonObject();
+                onTestCase(rawDescription, when, whenMeta, then, thenMeta, result);
+
+                JsonObject setVariables = testItem.get("meta", JsonObject.EMPTY).get("setVariables", JsonObject.EMPTY).getJsonObject();
+                variables = variables.putAll(setVariables(setVariables, result));
+            }
+
+            i = groupEnd;
         }
         LOGGER.info("Test ended: {}", jsonFileName);
+    }
+
+    /**
+     * Repeats {@code doWhen(when)} on an interval until every "then" in the group matches
+     * (an idempotent "when" is required - it is re-executed on every attempt) or
+     * {@code timeoutMillis} elapses. Retries are silent (logged at DEBUG); the attempt that
+     * either finally matches or exhausts the time budget goes through the normal, throwing
+     * validation path, so a real timeout still produces an ordinary assertion failure/diff
+     * rather than a separate "timed out" error shape.
+     * <p>
+     * "await.intervalMillis"/"await.timeoutMillis" fall back to "meta.defaultAwait" on the
+     * test file, then to 200ms/5000ms.
+     */
+    private JsonValue awaitGroup(JsonValue when, List<JsonValue> resolvedThens, List<String> validationStrategies, String description, JsonObject await, JsonObject globalDefaultAwait) {
+
+        long intervalMillis = await.get("intervalMillis", globalDefaultAwait.get("intervalMillis", JsonValue.of(200))).getLong();
+        long timeoutMillis = await.get("timeoutMillis", globalDefaultAwait.get("timeoutMillis", JsonValue.of(5000))).getLong();
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+
+        int attempt = 0;
+        while (true) {
+            attempt++;
+            JsonValue result = doWhen(when);
+            boolean budgetExhausted = System.currentTimeMillis() >= deadline;
+
+            if (budgetExhausted) {
+                LOGGER.info("{}: await timed out after {} attempt(s) ({} ms budget) - asserting final result", description, attempt, timeoutMillis);
+                validateGroup(result, resolvedThens, validationStrategies, description);
+                return result;
+            }
+
+            try {
+                validateGroup(result, resolvedThens, validationStrategies, description);
+                LOGGER.info("{}: await condition met after {} attempt(s)", description, attempt);
+                return result;
+            } catch (AssertionError notYetMatching) {
+                LOGGER.debug("{}: await attempt {} not yet matching, retrying in {} ms", description, attempt, intervalMillis);
+                try {
+                    Thread.sleep(intervalMillis);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while awaiting condition: " + description, interrupted);
+                }
+            }
+        }
+    }
+
+    private void validateGroup(JsonValue result, List<JsonValue> resolvedThens, List<String> validationStrategies, String description) {
+        for (int idx = 0; idx < resolvedThens.size(); idx++) {
+            validateThen(resolvedThens.get(idx), result, validationStrategies.get(idx), description);
+        }
+    }
+
+    private void validateThen(JsonValue then, JsonValue result, String validationStrategy, String description) {
+        switch (validationStrategy) {
+            case "ALLOWING_EXTRA_PROPERTIES": {
+
+                for (JsonValue pathJsonValue : then.getPaths(true)) {
+                    JsonArray pathAndValue = pathJsonValue.getJsonArray();
+
+                    int schemaIndex = pathAndValue.getIndexOfFirstMatch(jsonValue -> jsonValue.isString() && "$schema".equals(jsonValue.getString()));
+                    if (schemaIndex != -1) {
+                        JsonArray pathToValue = pathAndValue.subArray(0, schemaIndex);
+                        JsonSchema schema = then.get(pathToValue.add("$schema")).as(JsonSchema.class);
+                        JsonValue value = result.get(pathToValue);
+                        JsonObject validationResult = SCHEMA_VALIDATOR.validate(value, schema, OutputStructure.DETAILED);
+                        if (!validationResult.get("valid", false).getBoolean()) {
+                            JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, value, schema);
+                            LOGGER.error("JSON Schema error at {}: {}", pathToValue.addFirst("then").as(JsonPointer.class).getJsonPointerString().toString(), JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
+                            assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
+                        }
+                    } else {
+
+                        JsonArray path = pathAndValue.allButLast();
+                        JsonValue last = pathAndValue.last();
+
+                        JsonValue actualValue = result.get(path);
+                        if (last.isJsonObject() && actualValue != null && actualValue.isJsonObject()) {
+                            // This then-leaf-object should not be validated as a leaf because it may contain more properties.
+                        } else {
+                            String pointer = path.as(JsonPointer.class).getJsonPointerString().toString();
+                            assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
+                        }
+                    }
+                }
+                break;
+            }
+            case "JSON_SCHEMA": {
+                JsonObject validationResult = new JsonSchemaValidator().validate(result, then, OutputStructure.DETAILED);
+                if (!validationResult.get("valid").getBoolean()) {
+                    JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, result, then.as(JsonSchema.class));
+                    LOGGER.error("JSON Schema error: {}", JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
+                    assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
+                }
+                break;
+            }
+            case "EXACT_MATCHING": {
+                assertEquals(then, result, "Exact match failed");
+                break;
+            }
+            default: {
+                assertEquals(then, result, "Exact match failed");
+            }
+        }
     }
 
     private JsonValue updateWithVariableValues(JsonValue tobeUpdated, JsonObject variables) {

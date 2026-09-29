@@ -1,0 +1,430 @@
+{
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+  },
+  "tests": [
+    {
+      "given": {
+        "dbSetup": {
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "db": "dcentb-demo",
+          "commands": [
+            {
+              "drop": {
+                "collection": "students"
+              }
+            },
+            {
+              "drop": {
+                "collection": "api-keys"
+              }
+            },
+            {
+              "drop": {
+                "collection": "teachers"
+              }
+            },
+            {
+              "insert": {
+                "collection": "teachers",
+                "documents": [
+                  {
+                    "_id": "teacher-A",
+                    "teacherId": "teacher-A",
+                    "name": "Teacher A",
+                    "status": "ACTIVE"
+                  }
+                ]
+              }
+            },
+            {
+              "insert": {
+                "collection": "api-keys",
+                "documents": [
+                  {
+                    "_id": "admin-a1-apikey",
+                    "userId": "admin-a1",
+                    "permissions": [
+                      "admin"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "config": "demo.openapi.json"
+      }
+    },
+    {
+      "description": "PUT creates a new item (no currentState yet) and mints a fresh etag",
+      "when": {
+        "method": "PUT",
+        "uri": "/students/etagtest",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Etag Test",
+          "email": "etagtest@example.com",
+          "studentId": "student-etagtest",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 90
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Etag Test",
+          "grade": "C",
+          "meta": {}
+        },
+        "status": 201,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {
+          "{{etag-v1}}": "/body/meta/etag"
+        }
+      }
+    },
+    {
+      "description": "GET reflects the etag PUT just minted",
+      "when": {
+        "method": "GET",
+        "uri": "/students/etagtest",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Etag Test",
+          "meta": {
+            "etag": "{{etag-v1}}"
+          }
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "Repeating the exact same PUT is an idempotent no-op: 200, not 201, and the etag is unchanged (nothing was actually rewritten to the database)",
+      "when": {
+        "method": "PUT",
+        "uri": "/students/etagtest",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Etag Test",
+          "email": "etagtest@example.com",
+          "studentId": "student-etagtest",
+          "teacherId": "teacher-A",
+          "grade": "C",
+          "attendancePercent": 90
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Etag Test",
+          "meta": {
+            "etag": "{{etag-v1}}"
+          }
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "PUTting a genuinely different body onto an existing item is a conflict, not a silent overwrite and not a stale-echo 200 - StateTransitionValidator rejects it before IdempotentPutResponseCreator ever runs",
+      "when": {
+        "method": "PUT",
+        "uri": "/students/etagtest",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Etag Test",
+          "email": "etagtest@example.com",
+          "studentId": "student-etagtest",
+          "teacherId": "teacher-A",
+          "grade": "D",
+          "attendancePercent": 90
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {},
+        "status": 409,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "The rejected PUT changed nothing - etag is still the original",
+      "when": {
+        "method": "GET",
+        "uri": "/students/etagtest",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "grade": "C",
+          "meta": {
+            "etag": "{{etag-v1}}"
+          }
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "PATCH is a real state change: it mints a new etag (unlike PUT's no-op case above)",
+      "when": {
+        "method": "PATCH",
+        "uri": "/students/etagtest",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "grade": "B"
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Etag Test",
+          "grade": "B",
+          "meta": {}
+        },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {
+          "{{etag-v2}}": "/body/meta/etag"
+        }
+      }
+    },
+    {
+      "description": "Normal DELETE still succeeds (regression: DatabaseCUDItemCommandCreator's new meta.etag precondition on the delete command matches the item's own current etag)",
+      "when": {
+        "method": "DELETE",
+        "uri": "/students/etagtest",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 204,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "The item is really gone",
+      "when": {
+        "method": "GET",
+        "uri": "/students/etagtest",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "Deleting an already-deleted item is still a plain 404 (CurrentStateFromDatabaseApplier short-circuits before the new etag-guarded delete command is ever built)",
+      "when": {
+        "method": "DELETE",
+        "uri": "/students/etagtest",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "POST (auto-generated id) goes through the same consolidated NewStateCreator meta helper as PUT - full create/delete round trip",
+      "when": {
+        "method": "POST",
+        "uri": "/students",
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        },
+        "body": {
+          "name": "Etag Test 2",
+          "email": "etagtest2@example.com",
+          "studentId": "student-etagtest-2",
+          "teacherId": "teacher-A",
+          "grade": "A",
+          "attendancePercent": 95
+        }
+      }
+    },
+    {
+      "then": {
+        "body": {
+          "name": "Etag Test 2",
+          "meta": {}
+        },
+        "status": 201,
+        "headers": {
+          "location": [
+            {
+              "$schema": {
+                "pattern": "^/students/[^/]+$"
+              }
+            }
+          ]
+        }
+      },
+      "meta": {
+        "setVariables": {
+          "{{item2-href}}": "/headers/location/0"
+        }
+      }
+    },
+    {
+      "description": "Delete the POST-created item - same etag-guarded delete path as the PUT-created one above",
+      "when": {
+        "method": "DELETE",
+        "uri": "{{item2-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 204,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    },
+    {
+      "description": "And it's really gone too",
+      "when": {
+        "method": "GET",
+        "uri": "{{item2-href}}",
+        "headers": {
+          "accept": [
+            "application/json"
+          ],
+          "api-key": [
+            "admin-a1-apikey"
+          ]
+        }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {}
+      }
+    }
+  ]
+}
