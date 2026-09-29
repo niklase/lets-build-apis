@@ -2,7 +2,7 @@
   "meta": {
     "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
   },
-  "tests": [
+  "sequence": [
     {
       "given": [
         {

@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://zuunr.com/schemas/given-when-then-test-file.schema.json",
   "title": "GivenWhenThenTesterBase test file",
-  "description": "Structural contract for the harness-level parts of a test file (given/tests, steps, retry, meta), enforced by GivenWhenThenTesterBase before a file is run - see the 'validateTestFileFormat' meta flag to opt a file out. The domain payload inside 'given'/'when'/'then' objects is subclass-specific (e.g. HTTP request/response shape for ControllerIT) and intentionally left as opaque 'object' here. Note: this dialect (com.zuunr.json.schema) has no prefixItems/tuple-items/not, so positional invariants noted in 'description' fields below (given must be tests[0]; when must be steps[0] and appear only once) are enforced by the harness at runtime, not by this schema.",
+  "description": "Structural contract for the harness-level parts of a test file (given/sequence, steps, retry, meta), enforced by GivenWhenThenTesterBase before a file is run - see the 'validateTestFileFormat' meta flag to opt a file out. The domain payload carried by 'given'/'when'/'then' is subclass-specific - an object for ControllerIT's HTTP request/response shape, but e.g. a plain array of Mongo commands for 'given' in the mongodb module's own harness - so it is intentionally left completely unconstrained here, not even required to be a JSON object. Note: this dialect (com.zuunr.json.schema) has no prefixItems/tuple-items/not, so positional invariants noted in 'description' fields below (given must be sequence[0]; when must be steps[0] and appear only once) are enforced by the harness at runtime, not by this schema. The array was called 'tests' in an earlier version - that name is no longer accepted at all (a file still using it is rejected at runtime with a rename hint, not silently reinterpreted).",
   "type": "object",
   "properties": {
     "meta": { "$ref": "#/$defs/fileMeta" },
-    "tests": {
+    "sequence": {
       "type": "array",
       "minItems": 2,
-      "description": "tests[0] must be a givenItem (runtime-enforced, not schema-enforced here). Every later element is either a testGroup (preferred, required if 'retry' is needed) or a legacy flat when/then element grouped by array adjacency.",
+      "description": "sequence[0] must be a givenItem (runtime-enforced, not schema-enforced here). Every later element is either a testGroup (preferred, required if 'retry' is needed) or a legacy flat when/then element grouped by array adjacency.",
       "items": {
         "oneOf": [
           { "$ref": "#/$defs/givenItem" },
@@ -20,7 +20,7 @@
       }
     }
   },
-  "required": ["tests"],
+  "required": ["sequence"],
   "$defs": {
 
     "fileMeta": {
@@ -48,8 +48,8 @@
 
     "givenItem": {
       "type": "object",
-      "description": "Must be tests[0] (runtime-enforced). Sets up state before any 'when' runs.",
-      "properties": { "given": { "type": "object" } },
+      "description": "Must be sequence[0] (runtime-enforced). Sets up state before any 'when' runs.",
+      "properties": { "given": {} },
       "required": ["given"],
       "additionalProperties": false
     },
@@ -83,7 +83,7 @@
     "whenStep": {
       "type": "object",
       "description": "Must be steps[0]. The request/action to (re-)execute; re-issued verbatim on every retry attempt.",
-      "properties": { "when": { "type": "object" } },
+      "properties": { "when": {} },
       "required": ["when"],
       "additionalProperties": false
     },
@@ -92,7 +92,7 @@
       "type": "object",
       "description": "One expected-result assertion, checked against the SAME result as every other thenStep in this 'steps' array.",
       "properties": {
-        "then": { "type": "object" },
+        "then": {},
         "meta": { "$ref": "#/$defs/thenMeta" }
       },
       "required": ["then"],
@@ -127,7 +127,8 @@
 
     "validationStrategy": {
       "type": "string",
-      "enum": ["EXACT_MATCHING", "ALLOWING_EXTRA_PROPERTIES", "JSON_SCHEMA"]
+      "enum": ["EXACT_MATCHING", "ALLOWING_EXTRA_PROPERTIES"],
+      "description": "There is no 'JSON_SCHEMA' strategy - a JSON-Schema-based assertion, whether for one field or for the whole result, is expressed under ALLOWING_EXTRA_PROPERTIES via a '$schema' key at the relevant path in 'then' (at the very top of 'then' for 'validate the whole result')."
     },
 
     "retry": {
@@ -165,7 +166,7 @@
       "description": "Legacy flat form, kept for backward compatibility. 'retry' is not valid here - a 'retry' key found on this shape is a configuration error, not a silent no-op.",
       "properties": {
         "description": { "type": "string" },
-        "when": { "type": "object" },
+        "when": {},
         "meta": { "$ref": "#/$defs/groupMeta" }
       },
       "required": ["when"],
@@ -176,7 +177,7 @@
       "type": "object",
       "description": "Legacy flat form: one assertion belonging to the nearest preceding legacyWhenItem.",
       "properties": {
-        "then": { "type": "object" },
+        "then": {},
         "meta": { "$ref": "#/$defs/thenMeta" }
       },
       "required": ["then"],

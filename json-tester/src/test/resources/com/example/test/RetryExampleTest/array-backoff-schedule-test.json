@@ -1,5 +1,5 @@
 {
-  "tests": [
+  "sequence": [
     { "given": {} },
     {
       "description": "Backoff schedule (5ms, 10ms) shorter than the 5 retries actually needed - once exhausted, its last value (10ms) is reused rather than erroring out of bounds",

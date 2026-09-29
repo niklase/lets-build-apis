@@ -2,7 +2,7 @@
   "meta": {
     "validateTestFileFormat": false
   },
-  "tests": [
+  "sequence": [
     { "given": {} },
     { "when": {}, "retry": { "timeoutMillis": 1000 } },
     { "then": { "attempts": 1 } }

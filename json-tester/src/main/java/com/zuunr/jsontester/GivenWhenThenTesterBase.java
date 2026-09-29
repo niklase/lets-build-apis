@@ -84,19 +84,25 @@ public abstract class GivenWhenThenTesterBase {
 
         JsonValue testJson = JsonValueFactory.create(jsonContent);
         JsonValue testCase = testJson;
-        JsonArray tests = testCase.get("tests", JsonValue.NULL)
+        JsonArray sequence = testCase.get("sequence", JsonValue.NULL)
                 .getJsonArray();
 
-        if (tests != null) {
-            // Schema validation only targets this ("tests"-array) shape - the older
+        if (sequence != null) {
+            // Schema validation only targets this ("sequence"-array) shape - the older
             // single given/when/then fallback below predates it and isn't validated.
             boolean validateFormat = testJson.get(JsonArray.of("meta", "validateTestFileFormat"), JsonValue.TRUE).getBoolean();
             if (validateFormat) {
                 validateTestFileFormat(testJson, jsonFileName);
             }
+        } else if (testCase.get("tests") != null) {
+            // "tests" was renamed to "sequence" - rejected outright rather than silently
+            // falling through to the (unrelated) ancient given/when/then fallback below,
+            // which would otherwise misinterpret this file in a far more confusing way.
+            throw new RuntimeException("'tests' was renamed to 'sequence' - rename the top-level "
+                    + "key in this file (no other change needed): " + jsonFileName);
         } else {
             // adding backwards compatibility
-            tests = JsonArray.of(
+            sequence = JsonArray.of(
                     testCase,
                     testCase
                             .remove(JsonArray.of("given"))
@@ -106,10 +112,10 @@ public abstract class GivenWhenThenTesterBase {
                             .remove(JsonArray.of("when")));
         }
 
-        JsonValue given = tests.get(0).getJsonObject().get("given");
+        JsonValue given = sequence.get(0).getJsonObject().get("given");
 
         if (given == null) {
-            throw new RuntimeException("Missing 'given' in test case: " + testCase);
+            throw new RuntimeException("Missing 'given' in sequence: " + testCase);
         }
 
         JsonObject variables = testCase.get(JsonArray.of("meta", "variables"), JsonObject.EMPTY.jsonValue()).getJsonObject();
@@ -121,9 +127,9 @@ public abstract class GivenWhenThenTesterBase {
 
         JsonObject globalDefaultRetry = testJson.get(JsonArray.of("meta", "defaultRetry"), JsonObject.EMPTY.jsonValue()).getJsonObject();
 
-        for (int i = 1; i < tests.size(); ) {
+        for (int i = 1; i < sequence.size(); ) {
 
-            JsonObject item = tests.get(i).getJsonObject();
+            JsonObject item = sequence.get(i).getJsonObject();
 
             if (item.containsKey("steps")) {
 
@@ -133,28 +139,28 @@ public abstract class GivenWhenThenTesterBase {
                 // are siblings of "steps", not nested inside it.
                 JsonArray steps = item.get("steps", JsonValue.NULL).getJsonArray();
                 if (steps == null || steps.isEmpty()) {
-                    throw new RuntimeException("Empty or missing 'steps' in test element: " + i);
+                    throw new RuntimeException("Empty or missing 'steps' in sequence[" + i + "]");
                 }
 
                 JsonObject firstStep = steps.get(0).getJsonObject();
                 JsonValue when = firstStep.get("when");
                 if (when == null) {
-                    throw new RuntimeException("'steps' must start with a 'when' in test element: " + i);
+                    throw new RuntimeException("'steps' must start with a 'when' in sequence[" + i + "]");
                 }
 
                 List<JsonObject> thenItems = new ArrayList<>();
                 for (int s = 1; s < steps.size(); s++) {
                     JsonObject step = steps.get(s).getJsonObject();
                     if (step.get("when") != null) {
-                        throw new RuntimeException("'when' may only appear once, as steps[0] - found again at steps[" + s + "] in test element: " + i);
+                        throw new RuntimeException("'when' may only appear once, as steps[0] - found again at steps[" + s + "] in sequence[" + i + "]");
                     }
                     if (step.get("then") == null) {
-                        throw new RuntimeException("Every 'steps' element after the first must be a 'then' - steps[" + s + "] in test element: " + i + " is neither");
+                        throw new RuntimeException("Every 'steps' element after the first must be a 'then' - steps[" + s + "] in sequence[" + i + "] is neither");
                     }
                     thenItems.add(step);
                 }
                 if (thenItems.isEmpty()) {
-                    throw new RuntimeException("'steps' must contain at least one 'then' after the 'when' in test element: " + i);
+                    throw new RuntimeException("'steps' must contain at least one 'then' after the 'when' in sequence[" + i + "]");
                 }
 
                 String rawDescription = item.get("description", JsonValue.EMPTY_STRING).getString();
@@ -171,31 +177,31 @@ public abstract class GivenWhenThenTesterBase {
                 // including) the next element that itself carries a "when" key.
                 JsonValue when = item.get("when");
                 if (when == null) {
-                    throw new RuntimeException("Missing 'when' in test element: " + i);
+                    throw new RuntimeException("Missing 'when' in sequence[" + i + "]");
                 }
                 if (item.get("retry") != null) {
                     throw new RuntimeException("'retry' is only valid inside a 'steps' group (wrap this in "
                             + "{\"description\": ..., \"retry\": ..., \"steps\": [...]}) - found directly on "
-                            + "'when' in test element: " + i);
+                            + "'when' in sequence[" + i + "]");
                 }
 
                 int groupEnd = i + 1;
-                while (groupEnd < tests.size()
-                        && tests.get(groupEnd).getJsonObject().get("when") == null
-                        && !tests.get(groupEnd).getJsonObject().containsKey("steps")) {
+                while (groupEnd < sequence.size()
+                        && sequence.get(groupEnd).getJsonObject().get("when") == null
+                        && !sequence.get(groupEnd).getJsonObject().containsKey("steps")) {
                     groupEnd++;
                 }
                 if (groupEnd == i + 1) {
-                    throw new RuntimeException("Missing 'then' in test element: " + (i + 1));
+                    throw new RuntimeException("Missing 'then' in sequence[" + (i + 1) + "]");
                 }
 
                 List<JsonObject> thenItems = new ArrayList<>();
                 for (int k = i + 1; k < groupEnd; k++) {
-                    JsonObject testItem = tests.get(k).getJsonObject();
-                    if (testItem.get("then") == null) {
-                        throw new RuntimeException("Missing 'then' in test element: " + k);
+                    JsonObject sequenceItem = sequence.get(k).getJsonObject();
+                    if (sequenceItem.get("then") == null) {
+                        throw new RuntimeException("Missing 'then' in sequence[" + k + "]");
                     }
-                    thenItems.add(testItem);
+                    thenItems.add(sequenceItem);
                 }
 
                 String rawDescription = item.get("description", JsonValue.EMPTY_STRING).getString();
@@ -241,7 +247,7 @@ public abstract class GivenWhenThenTesterBase {
                                  List<JsonObject> thenItems, JsonObject retry, JsonObject globalDefaultRetry,
                                  JsonObject variables, JsonValue testJson) {
 
-        String description = "tests[" + groupIndex + "]: " + rawDescription;
+        String description = "sequence[" + groupIndex + "]: " + rawDescription;
         LOGGER.info("{}", description);
 
         JsonValue resolvedWhen = updateWithVariableValues(when, variables);
@@ -385,6 +391,15 @@ public abstract class GivenWhenThenTesterBase {
         }
     }
 
+    /**
+     * "ALLOWING_EXTRA_PROPERTIES" is also the one and only way to express a JSON-Schema-based
+     * assertion - there is no separate "JSON_SCHEMA" validationStrategy. A "$schema" key
+     * anywhere in "then" marks everything up to that point as a path into the result, and
+     * its value as the schema to validate that path against - see the loop below. Putting
+     * "$schema" at the very top of "then" (i.e. {@code "then": {"$schema": <schema>}}) makes
+     * the path empty, which means "validate the whole result" - exactly what a dedicated
+     * whole-result mode would do, with no separate mechanism needed.
+     */
     private void validateThen(JsonValue then, JsonValue result, String validationStrategy, String description) {
         switch (validationStrategy) {
             case "ALLOWING_EXTRA_PROPERTIES": {
@@ -416,15 +431,6 @@ public abstract class GivenWhenThenTesterBase {
                             assertEquals(pointer + ": " + last, pointer + ": " + actualValue, description);
                         }
                     }
-                }
-                break;
-            }
-            case "JSON_SCHEMA": {
-                JsonObject validationResult = new JsonSchemaValidator().validate(result, then, OutputStructure.DETAILED);
-                if (!validationResult.get("valid").getBoolean()) {
-                    JsonValue apiError = ApiErrorCreator.ERROR_ARRAY_WITH_VIOLATIONS_ARRAY.createErrors(validationResult, result, then.as(JsonSchema.class));
-                    LOGGER.error("JSON Schema error: {}", JsonObject.EMPTY.put("errors", apiError).asPrettyJson());
-                    assertEquals(JsonObject.EMPTY.put("errors", JsonArray.EMPTY).jsonValue(), apiError, "JSON Schema violated");
                 }
                 break;
             }
@@ -474,7 +480,7 @@ public abstract class GivenWhenThenTesterBase {
      * validation. Default implementation does nothing; override to observe the
      * description, request, expected result and actual result of each test case.
      * <p>
-     * whenMeta is the group's own "meta" - the "meta" sibling of "when" on the tests[i]
+     * whenMeta is the group's own "meta" - the "meta" sibling of "when" on the sequence[i]
      * element for the legacy flat form, or the "meta" sibling of "steps"/"retry"/"description"
      * on the group wrapper for the "steps" form. thenMeta is the "meta" sibling of "then" for
      * whichever "then" this call is about (the same object that already carries

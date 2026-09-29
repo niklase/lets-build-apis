@@ -11,11 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Proves the structural invariants around "steps"/"retry" are enforced loudly at parse time,
- * not silently ignored or misinterpreted: 'retry' is rejected on the legacy flat 'when' shape
- * (it only makes sense as a group-level property of the explicit 'steps' shape - see
- * GivenWhenThenTesterBase's Javadoc), and a malformed 'steps' array (no leading 'when', a
- * 'when' anywhere but first, or no 'then' at all) is rejected rather than silently accepted.
+ * Proves the structural invariants around "sequence"/"steps"/"retry" are enforced loudly at
+ * parse time, not silently ignored or misinterpreted: the old "tests" key name is rejected with
+ * a rename hint rather than being silently reinterpreted as the unrelated ancient given/when/then
+ * fallback format; 'retry' is rejected on the legacy flat 'when' shape (it only makes sense as a
+ * group-level property of the explicit 'steps' shape - see GivenWhenThenTesterBase's Javadoc);
+ * and a malformed 'steps' array (no leading 'when', a 'when' anywhere but first, or no 'then' at
+ * all) is rejected rather than silently accepted.
  * <p>
  * Deliberately not using the testFiles()/@ParameterizedTest discovery pattern the passing
  * example tests use - every fixture here is designed to fail.
@@ -23,6 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RetryConfigValidationTest extends GivenWhenThenTesterBase {
 
     private int attempts;
+
+    @Test
+    void testsKeyIsRejectedWithARenameHint() throws Exception {
+        testFiles(RetryConfigValidationTest.class);
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> executeTest(Path.of("tests-key-is-rejected.json")));
+        assertTrue(thrown.getMessage().contains("'tests' was renamed to 'sequence'"), thrown.getMessage());
+    }
 
     @Test
     void retryOnLegacyWhenItemIsRejected() throws Exception {

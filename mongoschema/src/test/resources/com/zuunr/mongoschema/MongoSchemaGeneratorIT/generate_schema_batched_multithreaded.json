@@ -2,7 +2,7 @@
   "meta": {
     "validationStrategy": "EXACT_MATCHING"
   },
-  "tests": [
+  "sequence": [
     {
       "given": [
         {

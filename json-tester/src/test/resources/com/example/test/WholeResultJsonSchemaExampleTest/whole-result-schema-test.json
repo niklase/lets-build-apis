@@ -1,0 +1,21 @@
+{
+  "sequence": [
+    { "given": {} },
+    {
+      "description": "A '$schema' at the very top of 'then' validates the whole result, not just one field - this is what 'validationStrategy: JSON_SCHEMA' used to do before it was retired",
+      "when": {}
+    },
+    {
+      "meta": { "validationStrategy": "ALLOWING_EXTRA_PROPERTIES" },
+      "then": {
+        "$schema": {
+          "type": "object",
+          "required": ["attempts"],
+          "properties": {
+            "attempts": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  ]
+}

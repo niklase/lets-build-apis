@@ -1,0 +1,7 @@
+{
+  "tests": [
+    { "given": {} },
+    { "when": {} },
+    { "then": { "attempts": 1 } }
+  ]
+}

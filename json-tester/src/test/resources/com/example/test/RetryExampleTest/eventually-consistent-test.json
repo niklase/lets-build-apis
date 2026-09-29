@@ -1,5 +1,5 @@
 {
-  "tests": [
+  "sequence": [
     { "given": {} },
     {
       "description": "Poll until attempts reaches 3 - checked by two different 'then' blocks in the same retry group",

@@ -1,5 +1,5 @@
 {
-  "tests": [
+  "sequence": [
     { "given": {} },
     {
       "description": "maxAttempts should stop this well before the long timeout - this condition can never be met",

@@ -1,5 +1,5 @@
 {
-  "tests": [
+  "sequence": [
     { "given": {} },
     {
       "description": "This condition can never be met - proves retry fails loudly instead of hanging",
