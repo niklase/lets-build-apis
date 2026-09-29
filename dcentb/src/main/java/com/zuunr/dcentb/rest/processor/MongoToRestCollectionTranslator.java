@@ -16,10 +16,6 @@ public class MongoToRestCollectionTranslator extends Processor {
     public JsonObject process(JsonObject requestContext) {
         JsonObject mongoResult = requestContext.get("mongoResult", JsonObject.EMPTY).getJsonObject();
 
-        if (!mongoResult.get("ok").getInteger().equals(1)) {
-            return requestContext.put("response", JsonObject.EMPTY.put("status", 500));
-        }
-
         JsonArrayBuilder itemsBuilder = JsonArray.EMPTY.builder();
         for (JsonValue item : mongoResult.get("cursor").get("firstBatch").getJsonArray()) {
             itemsBuilder.add(MongoToApiItemTranslator.getRestItem(item.getJsonObject()));
