@@ -2323,7 +2323,7 @@
         }
       }
     },
-    "decoratorBasePackage": "com.zuunr.dcentb.demo",
+    "decoratorBasePackage": "com.zuunr.demo.students",
     "jwtGeneration": [
       {
         "permissions": [
@@ -2363,7 +2363,7 @@
       }
     ],
     "mongodb": {
-      "db": "dcentb-demo"
+      "db": "students-demo"
     },
     "topics": [
       {
@@ -2372,11 +2372,11 @@
         "subscribers": [
           {
             "name": "audit",
-            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.StudentsAuditTaskProcessor"
+            "taskProcessorClass": "com.zuunr.demo.students.collections.students.taskprocessors.StudentsAuditTaskProcessor"
           },
           {
             "name": "classSummarySync",
-            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
+            "taskProcessorClass": "com.zuunr.demo.students.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
           }
         ]
       }

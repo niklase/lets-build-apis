@@ -1,0 +1,122 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "widgets-test",
+    "version": "1.0.0",
+    "description": "Minimal, domain-neutral OpenAPI document used only by ControllerIT - proves dcentb's own CRUD/auth/access-control/etag pipeline end to end without depending on any specific demo application. See dcentb-students-demo for a full worked example with ItemDecorator/TaskProcessor/async processing."
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "api-key"
+      }
+    }
+  },
+  "paths": {
+    "/widgets": {
+      "post": {
+        "requestBody": { "content": { "application/json": { "schema": {} } } },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} }
+            }
+          }
+        }
+      },
+      "get": {
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} },
+              "user": {
+                "requestSchema": {},
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "items": {
+                              "items": {
+                                "properties": { "name": true, "meta": true },
+                                "additionalProperties": false
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/widgets/{id}": {
+      "get": {
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} },
+              "user": {
+                "requestSchema": {},
+                "responseSchema": {
+                  "properties": {
+                    "response": {
+                      "properties": {
+                        "body": {
+                          "properties": {
+                            "name": true,
+                            "meta": {
+                              "properties": { "id": true },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "requestBody": { "content": { "application/json": { "schema": {} } } },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} }
+            }
+          }
+        }
+      },
+      "patch": {
+        "requestBody": { "content": { "application/json": { "schema": {} } } },
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} }
+            }
+          }
+        }
+      },
+      "delete": {
+        "x-dcentb": {
+          "accessControl": {
+            "permissionSchemas": {
+              "admin": { "requestSchema": {}, "responseSchema": {} }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@
       "given": {
         "dbSetup": {
           "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
-          "db": "dcentb-demo",
+          "db": "students-demo",
           "commands": [
             {
               "drop": {
@@ -102,7 +102,7 @@
             }
           ]
         },
-        "config": "demo.openapi.json"
+        "config": "students-demo.openapi.json"
       }
     },
     {

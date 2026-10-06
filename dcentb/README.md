@@ -18,23 +18,19 @@ Define your schema in OpenAPI once — dcentb serves the full CRUD API immediate
 
 **Create**
 ```http
-POST /students
+POST /todos
 {
-    "name": "Anna", 
-    "email": "anna@school.com", 
-    "grade": "A", 
-    "attendancePercent": 92
+    "title": "Buy oat milk",
+    "done": false
 }
 
 201 Created
 {
-    "name": "Anna", 
-    "email": "anna@school.com", 
-    "grade": "A", 
-    "attendancePercent": 92,
+    "title": "Buy oat milk",
+    "done": false,
     "meta": {
-        "id": "abc123", 
-        "href": "/students/abc123", 
+        "id": "abc123",
+        "href": "/todos/abc123",
         "createdAt": "2024-09-01T09:00:00Z"
     }
 }
@@ -44,7 +40,7 @@ Every item gets `meta.id`, `meta.href`, `meta.createdAt` and `meta.updatedAt` fo
 
 **Filter, paginate and sort — built in**
 ```http
-GET /students?filter.teacherId.eq=teacher-A&limit=10&orderBy=name+desc
+GET /todos?filter.done.eq=false&limit=10&orderBy=createdAt+desc
 
 200 OK
 {
@@ -59,30 +55,32 @@ GET /students?filter.teacherId.eq=teacher-A&limit=10&orderBy=name+desc
 
 **Partial update and delete**
 ```http
-PATCH /students/abc123   {"grade": "B"}   → 200
-DELETE /students/abc123                   → 204
+PATCH /todos/abc123   {"done": true}   → 200
+DELETE /todos/abc123                   → 204
 ```
 
-**Access control is a JSON Schema rule in the spec — not middleware, not annotations.** Declare which roles can access which operations and which response fields they can see. Rules are data-driven: a teacher can only query students assigned to them:
+**Access control is a JSON Schema rule in the spec — not middleware, not annotations.** Declare which roles can access which operations and which response fields they can see. Rules are data-driven: a user can only query their own todos:
 
 ```json
 {
-  "permission": "teacher",
-  "requestSchema": {
-    "properties": { "query": {
-      "required": ["filter.teacherId.eq"],
-      "properties": { "filter.teacherId.eq": { "items": { "const": { "$data": "/authenticatedUser/teacherId" } } } }
-    }}
-  },
-  "responseSchema": {
-    "properties": { "body": { "properties": { "items": {
-      "items": { "properties": {"name": true, "grade": true, "email": true}, "additionalProperties": false }
-    }}}}
+  "user": {
+    "requestSchema": {
+      "properties": { "request": { "properties": { "query": {
+        "required": ["filter.userId.eq"],
+        "properties": { "filter.userId.eq": { "items": { "const": { "$data": "/authenticatedUser/userId" } } } }
+      }}}}
+    },
+    "responseSchema": {
+      "properties": { "response": { "properties": { "body": { "properties": { "items": {
+        "items": { "properties": { "title": true, "done": true, "meta": true }, "additionalProperties": false }
+      }}}}}}
+    }
   }
 }
 ```
 
-A student can only update their own email. An admin sees everything. All of this lives in the OpenAPI file — no Java code needed.
+An admin sees everything. All of this lives in the OpenAPI file — no Java code needed. See
+`dcentb-todo-demo` for this exact example, running.
 
 ---
 
@@ -203,35 +201,39 @@ docker exec mongodb mongosh --quiet -u admin -p adminpassword --authenticationDa
   --eval 'rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]})'
 ```
 
-#### 3. Run the demo backend:
+#### 3. Run a backend
+
+dcentb itself carries no bundled OpenAPI document or business logic — `dcentb.openapi.file` is a
+required property with no default, so a bare `java -jar dcentb-*.jar` with no other config will
+fail fast at startup rather than silently serving someone else's demo API. To see it running, use
+one of the example apps that *do* supply a spec:
 
 ```
-java -jar target/dcentb-1.0-SNAPSHOT-exec.jar
+mvn -f ../pom.xml install -pl dcentb -am
+cd ../dcentb-todo-demo   # a minimal, zero-Java-code CRUD API - see its own README
+mvn package
+java -jar target/dcentb-todo-demo-1.0-SNAPSHOT.jar
 ```
 
-The demo OpenAPI spec (`demo.openapi.json`) is used by default. Database is connected via ` mongodb://admin:adminpassword@localhost:27017/?authSource=admin`. 
-
-To use your own spec:
+or, for a fuller tour of `ItemDecorator`, `TaskProcessor`s and async change-stream processing:
 
 ```
-java -jar target/dcentb-1.0-SNAPSHOT-exec.jar --dcentb.openapi.file=path/to/your.openapi.json
+cd ../dcentb-students-demo   # see its own README for the full walkthrough
+mvn package
+java -jar target/dcentb-students-demo-1.0-SNAPSHOT.jar
 ```
 
-To override the MongoDB connection or database name at runtime:
+Either way, the shape is the same: your own module depends on `dcentb`, supplies its own
+`application.properties` (`dcentb.openapi.file`, `dcentb.mongodb.connection`, `dcentb.mongodb.db`)
+and its own OpenAPI spec on the classpath — exactly the "Add dcentb to an existing Spring Boot
+application" steps above, just as a standalone app instead of adding to an existing one. The API is
+then available at `http://localhost:8080` and the Swagger UI at `http://localhost:8080/swagger`.
 
-```
-java -jar target/dcentb-1.0-SNAPSHOT-exec.jar \
-  '--dcentb.mongodb.connection=mongodb://admin:adminpassword@localhost:27017/?authSource=admin' \
-  --dcentb.mongodb.db=my-database
-```
-
-The API is now available at `http://localhost:8080` and the Swagger UI at `http://localhost:8080/swagger`.
-
-The demo also has async task processing enabled (`x-dcentb.asyncProcessing`/`topics` in
-`demo.openapi.json`) — every write to `/students` is picked up via a MongoDB change stream and
-logged by `StudentsAuditTaskProcessor` (look for `[students-audit]` in the console output a moment
-after a `POST`/`PUT`/`PATCH`/`DELETE`). This is a working reference example, not just documentation —
-see `docs/async-tasks-processing.md` for the full design and `docs/leader-election.md` /
+`dcentb-students-demo` also has async task processing enabled (`x-dcentb.asyncProcessing`/`topics`
+in its own OpenAPI spec) — every write to `/students` is picked up via a MongoDB change stream and
+routed to real `TaskProcessor`s (look for `[students-audit]` in the console output a moment after a
+`POST`/`PUT`/`PATCH`/`DELETE`). This is a working reference example, not just documentation — see
+`docs/async-tasks-processing.md` for the full design and `docs/leader-election.md` /
 `docs/change-stream-listener.md` for how it's built. Async processing only activates when
 `x-dcentb.asyncProcessing` is present in the loaded OpenAPI document, so it's opt-in per deployment.
 
@@ -242,8 +244,6 @@ Supported operations are:
 - Create ```POST /{item-type}```
 - Read item ```GET /{item-type}/{id}``` and read collection of items ```GET /{item-type}?{query}``` (to follow OWASP recommendations and avoid PII - Personal Identifiable Information, in URL: ```POST /{item-type}/getCollection```)
 - Update ```PATCH /{item-type}/{id}```
-
-####  To be done
 - Delete ```DELETE /{item-type}/{id}```
 
 # The processing of a Create, Update an Delete (CUD) operations
@@ -404,14 +404,16 @@ documentation, not pre-existing — see "Implemented" below.
   `DatabaseCommandResponseVerifierTest` (the zero-matches-→-409 behavior) — the actual race this
   guards against (the document changing in the narrow window between this request's own read and its
   own write) isn't reproducible through `ControllerIT`'s sequential given/when/then format, so it's
-  unit-tested at the mechanism level rather than end-to-end; `idempotency-and-etag-test.json` covers
-  the DELETE happy path (still `204`) and the already-gone path (still `404`) to prove the guard is a
-  pure addition, not a behavior change, for every case that format *can* exercise.
+  unit-tested at the mechanism level rather than end-to-end; `widgets-test.json` covers the DELETE
+  happy path (still `204`) and the already-gone path (still `404`) to prove the guard is a pure
+  addition, not a behavior change, for every case that format *can* exercise.
 - ~~PUT-into-an-existing-item never actually re-validates the body~~ — turned out to already be false;
   see the correction above. No code change was needed here, only the documentation.
 
 All of the above, plus the pre-existing PUT/PATCH/POST/DELETE behavior, is exercised end-to-end in
-`src/test/resources/.../ControllerIT/idempotency-and-etag-test.json`.
+`src/test/resources/.../ControllerIT/widgets-test.json` — a small, domain-neutral fixture kept
+inside dcentb itself specifically so this coverage doesn't depend on any demo application.
+`dcentb-students-demo`'s own test suite exercises the same mechanics again against a real app.
 
 ---
 
@@ -428,7 +430,7 @@ data from another collection, normalizing input — without touching the CUD/rea
 
 1. Resolves your app's decorator class **by convention**, once per operation:
    `x-dcentb.decoratorBasePackage + ".collections." + <collection name, "/"→".", "-"→"_"> + ".ItemDecorator"`
-   — e.g. `com.zuunr.dcentb.demo` + `.collections.` + `students` → `com.zuunr.dcentb.demo.collections.students.ItemDecorator`.
+   — e.g. `com.acme.myapp` + `.collections.` + `widgets` → `com.acme.myapp.collections.widgets.ItemDecorator`.
 2. Copies whichever state it's responsible for (`currentState` or `newState`) into a neutral
    `itemState` key, and calls your decorator with *only* that key visible — **your decorator never
    knows whether it's decorating currentState or newState**, so the same class handles both.
@@ -444,7 +446,7 @@ exist but is shaped wrong (no `(JsonValue)` constructor, doesn't extend `Process
 ```jsonc
 {
   "x-dcentb": {
-    "decoratorBasePackage": "com.zuunr.dcentb.demo"
+    "decoratorBasePackage": "com.acme.myapp"
   }
 }
 ```
@@ -465,10 +467,10 @@ public class ItemDecorator extends Processor {
         JsonObject itemState = requestContext.get("itemState", JsonValue.NULL).getJsonObject();
 
         // derive a field
-        JsonValue attendancePercent = itemState.get("attendancePercent");
-        if (attendancePercent != null && attendancePercent.isJsonNumber()) {
-            String status = attendancePercent.getInteger() < 60 ? "AT_RISK" : "OK";
-            itemState = itemState.put("attendanceStatus", status);
+        JsonValue priority = itemState.get("priority");
+        if (priority != null && priority.isJsonNumber()) {
+            String status = priority.getInteger() >= 8 ? "URGENT" : "NORMAL";
+            itemState = itemState.put("urgencyStatus", status);
         }
 
         return requestContext.put("itemState", itemState);
@@ -476,12 +478,13 @@ public class ItemDecorator extends Processor {
 }
 ```
 
-The real demo decorator (`demo/collections/students/ItemDecorator.java`) also embeds the full
-`teachers/{id}` item referenced by `teacherId`, so `students`' `stateTransitionSchema` can require
-`newState.teacher.status` — enforcing, declaratively, that the referenced teacher exists before a
-student write is accepted, instead of as a database foreign-key constraint.
+`dcentb-students-demo`'s decorator (`ItemDecorator.java`) is a real, fuller example: it also embeds
+the full `teachers/{id}` item referenced by `teacherId`, so `students`' `stateTransitionSchema` can
+require `newState.teacher.status` — enforcing, declaratively, that the referenced teacher exists
+before a student write is accepted, instead of as a database foreign-key constraint. See that
+module's own README for the full walkthrough.
 
-**Design note — why this decorator reads Mongo directly instead of via `SystemApiClient`**: an
+**Design note — why that decorator reads Mongo directly instead of via `SystemApiClient`**: an
 `ItemDecorator` is resolved reflectively *per operation*, including inside
 test harnesses (`ControllerIT`) that construct `RequestHandlerProvider` directly and never boot
 Spring — so no `SystemApiClient` bean exists to inject there. A plain by-id read of a collection with
@@ -559,7 +562,8 @@ An uncaught exception or a `null` return from `process()` is treated identically
 
 ### How to configure topics and subscribers
 
-Lives inside the one loaded OpenAPI document, under `x-dcentb`. From `demo.openapi.json`:
+Lives inside the one loaded OpenAPI document, under `x-dcentb`. From `dcentb-students-demo`'s own
+`students-demo.openapi.json` — a real, running example, not a hypothetical:
 
 ```jsonc
 {
@@ -572,11 +576,11 @@ Lives inside the one loaded OpenAPI document, under `x-dcentb`. From `demo.opena
         "subscribers": [
           {
             "name": "audit",
-            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.StudentsAuditTaskProcessor"
+            "taskProcessorClass": "com.zuunr.demo.students.collections.students.taskprocessors.StudentsAuditTaskProcessor"
           },
           {
             "name": "classSummarySync",
-            "taskProcessorClass": "com.zuunr.dcentb.demo.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
+            "taskProcessorClass": "com.zuunr.demo.students.collections.students.taskprocessors.ClassSummarySyncTaskProcessor"
           }
         ]
       }
@@ -601,6 +605,9 @@ A missing/wrong class is a real configuration error and throws at startup, rathe
 Resolution mirrors `ItemDecoratorProcessor`: a Spring-managed bean (`@Component`, normal
 `@Autowired`/constructor injection) is preferred, falling back to reflective construction via a
 `(JsonValue)` constructor.
+
+Both examples below are the real classes from `dcentb-students-demo` — see that module's own README
+for the full walkthrough.
 
 **Simple case — no cross-collection effects, just react**, reflectively constructed:
 

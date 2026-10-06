@@ -1,4 +1,4 @@
-package com.zuunr.dcentb.demo.collections.students;
+package com.zuunr.demo.students.collections.students;
 
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.processor.mongo.MongoJsonDBHandle;
@@ -12,7 +12,7 @@ import com.zuunr.mongodb.MongoJsonDB;
  * Demo-only illustration of the ItemDecorator convention: computes "attendanceStatus"
  * from "attendancePercent" on whichever state it's handed via "itemState". Picked up
  * automatically by CurrentStateItemDecorator/NewStateItemDecorator because
- * demo.openapi.json sets x-dcentb.decoratorBasePackage=com.zuunr.dcentb.demo and this
+ * students-demo.openapi.json sets x-dcentb.decoratorBasePackage=com.zuunr.demo.students and this
  * class sits at <that package>.collections.students.ItemDecorator.
  *
  * Also embeds "teacher" - the full teachers/{id} item referenced by this student's
@@ -30,7 +30,7 @@ import com.zuunr.mongodb.MongoJsonDB;
  * ever booting Spring (e.g. ControllerIT), where no SystemApiClient bean exists to inject.
  * ClassSummarySyncTaskProcessor - which writes, and only ever runs inside a real
  * Spring-booted app - is where "via the REST API" actually matters, and does use
- * SystemApiClient. See docs/async-tasks-processing.md.
+ * SystemApiClient. See dcentb's docs/async-tasks-processing.md.
  */
 public class ItemDecorator extends Processor {
 

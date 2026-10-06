@@ -1,4 +1,4 @@
-package com.zuunr.dcentb.demo.collections.students.taskprocessors;
+package com.zuunr.demo.students.collections.students.taskprocessors;
 
 import com.zuunr.dcentb.async.taskprocessing.TaskProcessor;
 import com.zuunr.dcentb.async.taskprocessing.TaskResult;
@@ -16,12 +16,12 @@ import java.math.RoundingMode;
 import java.time.Instant;
 
 /**
- * Reference example for docs/async-tasks-processing.md: the second subscriber on the "students"
- * topic (alongside StudentsAuditTaskProcessor) - demonstrating a TaskProcessor that keeps
- * *another* document eventually consistent - a teacher's classSummary - purely via the REST API
- * (SystemApiClient), never touching MongoDB directly. Adding this second subscriber is also what
- * upgrades the "students" topic from direct-attach to fan-out-on-read (see TopicRouter) for the
- * first time in this demo.
+ * Reference example for dcentb's docs/async-tasks-processing.md: the second subscriber on the
+ * "students" topic (alongside StudentsAuditTaskProcessor) - demonstrating a TaskProcessor that
+ * keeps *another* document eventually consistent - a teacher's classSummary - purely via the
+ * REST API (SystemApiClient), never touching MongoDB directly. Adding this second subscriber is
+ * also what upgrades the "students" topic from direct-attach to fan-out-on-read (see
+ * TopicRouter) for the first time in this demo.
  *
  * Idempotent by construction: every invocation recomputes the teacher's classSummary from
  * scratch (a fresh getCollection query over that teacher's current students) and PATCHes the

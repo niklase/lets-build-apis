@@ -1,4 +1,4 @@
-package com.zuunr.dcentb.demo.collections.students.taskprocessors;
+package com.zuunr.demo.students.collections.students.taskprocessors;
 
 import com.zuunr.dcentb.async.taskprocessing.TaskResult;
 import com.zuunr.dcentb.rest.Request;
@@ -18,8 +18,8 @@ import java.io.InputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Stage-1 test per docs/async-tasks-processing.md's testing strategy: deterministic, no real
- * change-stream listener or leader election involved. Real students/teachers are created
+ * Stage-1 test per dcentb's docs/async-tasks-processing.md testing strategy: deterministic, no
+ * real change-stream listener or leader election involved. Real students/teachers are created
  * through the actual REST pipeline (proving ItemDecorator/teacher-embedding/referential
  * integrity work end to end for the "given" data), then a synthetic change-stream-shaped event
  * is built by hand and handed directly to ClassSummarySyncTaskProcessor.process(...) - "acting
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ClassSummarySyncTaskProcessorIT {
 
     private static final String CONNECTION = "mongodb://admin:adminpassword@localhost:27017/?authSource=admin";
-    private static final String DB = "dcentb-demo";
+    private static final String DB = "students-demo";
 
     private RequestHandlerProvider requestHandlerProvider;
     private ClassSummarySyncTaskProcessor taskProcessor;
@@ -41,7 +41,7 @@ class ClassSummarySyncTaskProcessorIT {
         mongoJsonDB.runCommand(JsonObject.EMPTY.put("drop", JsonObject.EMPTY.put("collection", "students")));
         mongoJsonDB.runCommand(JsonObject.EMPTY.put("drop", JsonObject.EMPTY.put("collection", "teachers")));
 
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("demo.openapi.json")) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("students-demo.openapi.json")) {
             JsonObject config = JsonValueFactory.create(new String(is.readAllBytes())).getJsonObject();
             requestHandlerProvider = new RequestHandlerProvider(config, JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB));
         }

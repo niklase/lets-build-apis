@@ -27,7 +27,11 @@ public class DcentbAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public RequestHandlerProvider requestHandlerProvider(
-            @Value("${dcentb.openapi.file:classpath:demo.openapi.json}") Resource resource,
+            // No bundled default: dcentb carries no API-specific OpenAPI document of its own -
+            // every real app (e.g. dcentb-students-demo, dcentb-todo-demo) sets this explicitly
+            // in its own application.properties. Spring fails fast at startup with a clear
+            // "Could not resolve placeholder 'dcentb.openapi.file'" if it's left unset.
+            @Value("${dcentb.openapi.file}") Resource resource,
             @Value("${dcentb.mongodb.connection:mongodb://admin:adminpassword@localhost:27017/?authSource=admin}") String mongodbConnectionString,
             @Value("${dcentb.mongodb.db:}") String databaseName
     ) throws IOException {
@@ -62,7 +66,7 @@ public class DcentbAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public SwaggerController swaggerController(
-            @Value("${dcentb.openapi.file:classpath:demo.openapi.json}") Resource openapiResource) {
+            @Value("${dcentb.openapi.file}") Resource openapiResource) {
         return new SwaggerController(openapiResource);
     }
 }

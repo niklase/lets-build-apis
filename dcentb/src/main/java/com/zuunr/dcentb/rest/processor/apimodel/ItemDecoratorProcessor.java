@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * it's decorating currentState or newState. See CurrentStateItemDecorator and
  * NewStateItemDecorator for the two concrete instances wired into CUDItemRequestHandler.
  *
- * The collection's common name (e.g. "students", or "domain-1/houses" for a nested
+ * The collection's common name (e.g. "widgets", or "domain-1/houses" for a nested
  * resource) is derived via CollectionNameProvider, exactly as PreOperationAccessController
  * already does for "x-dcentb.collections.<name>...". Each "/"-separated segment has its
  * hyphens replaced with underscores (Java package names can't contain hyphens) and the

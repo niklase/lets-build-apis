@@ -72,6 +72,25 @@
 					<classifier>exec</classifier>
 				</configuration>
 			</plugin>
+			<plugin>
+				<!--
+				Publishes DcentbGivenWhenThenTester/OpenApiExampleAugmenter (and everything else
+				under src/test) as a second artifact (classifier "tests") so sibling demo modules
+				(e.g. dcentb-students-demo) can build their own ControllerIT-style integration
+				tests against the same harness dcentb's own ControllerIT uses, instead of
+				duplicating it. Depend on it via <type>test-jar</type>, scope test - never from
+				dcentb's own main code, which would be circular.
+				-->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>

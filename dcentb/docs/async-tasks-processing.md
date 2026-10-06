@@ -1,5 +1,12 @@
 New feature in dcentb
 
+> **Note (added later):** the students/teachers demo referenced throughout this document
+> (`StudentsAuditTaskProcessor`, `ClassSummarySyncTaskProcessor`, `demo.openapi.json`, etc.) has
+> since moved out of dcentb into its own module, `dcentb-students-demo` (dcentb itself carries no
+> API-specific business logic or API definitions). This document is left as-is below as an
+> accurate historical record of what was actually built and verified at the time - the design
+> and the async-processing mechanics it describes are unchanged, only the demo's location is.
+
 REST API is not enough to build a backend. Dcentb also needs processing that starts by some client writing to DB. The mechanism I want to use is mongodb changestreams. 
 
 It should be possible to listen to a mongodb collection change stream and have dcentb execute TaskHandler/ChangestreamItemHandler (give me better exxamples of names if that is not a good name) in a similar way as a HTTP request is processed by a RequestHandler. But in the case of a change stream item there is no request and responce. I want to use the vocabolary in the code that is correct for async processing.

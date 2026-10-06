@@ -1,0 +1,246 @@
+{
+  "meta": {
+    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
+  },
+  "sequence": [
+    {
+      "given": {
+        "dbSetup": {
+          "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
+          "db": "dcentb-test",
+          "commands": [
+            { "drop": { "collection": "widgets" } },
+            { "drop": { "collection": "api-keys" } },
+            {
+              "insert": {
+                "collection": "api-keys",
+                "documents": [
+                  { "_id": "admin-a1-apikey", "userId": "admin-a1", "permissions": ["admin"] },
+                  { "_id": "user-u1-apikey", "userId": "user-u1", "permissions": ["user"] }
+                ]
+              }
+            }
+          ]
+        },
+        "config": "widgets-test.openapi.json"
+      }
+    },
+
+    {
+      "description": "Admin creates a widget",
+      "when": {
+        "method": "POST",
+        "uri": "/widgets",
+        "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+        "body": { "name": "Gizmo", "internalNotes": "cost $3 to make" }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Gizmo", "internalNotes": "cost $3 to make", "meta": {} },
+        "status": 201,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": {
+          "{{widget-id}}": "/body/meta/id",
+          "{{widget-href}}": "/body/meta/href"
+        }
+      }
+    },
+
+    {
+      "description": "Admin reads it back fully",
+      "when": {
+        "method": "GET",
+        "uri": "{{widget-href}}",
+        "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Gizmo", "internalNotes": "cost $3 to make" },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "A 'user' role reads the same widget - response-filtering access control strips internalNotes (exact match, to prove the field is genuinely absent, not just unchecked)",
+      "when": {
+        "method": "GET",
+        "uri": "{{widget-href}}",
+        "headers": { "accept": ["application/json"], "api-key": ["user-u1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Gizmo", "meta": { "id": "{{widget-id}}" } },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "validationStrategy": "EXACT_MATCHING",
+        "setVariables": {}
+      }
+    },
+
+    {
+      "description": "A 'user' role cannot create - no permissionSchemas entry for 'user' on POST /widgets",
+      "when": {
+        "method": "POST",
+        "uri": "/widgets",
+        "headers": { "content-type": ["application/json"], "api-key": ["user-u1-apikey"] },
+        "body": { "name": "Not allowed" }
+      }
+    },
+    {
+      "then": {
+        "status": 403,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "PUT creates a new item at a caller-chosen id",
+      "when": {
+        "method": "PUT",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+        "body": { "name": "Widget One" }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Widget One", "meta": {} },
+        "status": 201,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": { "{{etag-v1}}": "/body/meta/etag" }
+      }
+    },
+
+    {
+      "description": "Repeating the exact same PUT is an idempotent no-op: 200, etag unchanged",
+      "when": {
+        "method": "PUT",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+        "body": { "name": "Widget One" }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Widget One", "meta": { "etag": "{{etag-v1}}" } },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "PUTting a genuinely different body onto an existing item is a conflict, not a silent overwrite",
+      "when": {
+        "method": "PUT",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+        "body": { "name": "Widget One Renamed" }
+      }
+    },
+    {
+      "then": {
+        "status": 409,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "PATCH is a real state change: it mints a new etag",
+      "when": {
+        "method": "PATCH",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+        "body": { "name": "Widget One Updated" }
+      }
+    },
+    {
+      "then": {
+        "body": { "name": "Widget One Updated", "meta": {} },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": {
+        "setVariables": { "{{etag-v2}}": "/body/meta/etag" }
+      }
+    },
+
+    {
+      "description": "Collection read with a filter",
+      "when": {
+        "method": "GET",
+        "uri": "/widgets?filter.name.eq=Widget%20One%20Updated",
+        "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "body": { "items": [ { "name": "Widget One Updated" } ] },
+        "status": 200,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "Normal DELETE succeeds (etag-guarded delete command matches the item's own current etag)",
+      "when": {
+        "method": "DELETE",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "status": 204,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "The item is really gone",
+      "when": {
+        "method": "GET",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    },
+
+    {
+      "description": "Deleting an already-deleted item is still a plain 404",
+      "when": {
+        "method": "DELETE",
+        "uri": "/widgets/widget-put-1",
+        "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+      }
+    },
+    {
+      "then": {
+        "status": 404,
+        "headers": {}
+      },
+      "meta": { "setVariables": {} }
+    }
+  ]
+}

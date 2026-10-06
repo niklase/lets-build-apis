@@ -10,8 +10,6 @@ import com.zuunr.mongodb.MongoJsonDB;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.InputStream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -20,31 +18,56 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * granted unconditionally and unfiltered when the request carries a top-level
  * "internalPrincipal" key, and - the actual security property - never granted by anything an
  * external HTTP request could ever send, including a header of the same name.
+ * <p>
+ * Deliberately against a minimal, synthetic "widgets" collection rather than any real demo API -
+ * this is a core framework guarantee, not something that should depend on a particular app's
+ * OpenAPI document existing on the classpath.
  */
 class SuperuserAccessIT {
 
     private static final String CONNECTION = "mongodb://admin:adminpassword@localhost:27017/?authSource=admin";
-    private static final String DB = "dcentb-demo";
+    private static final String DB = "dcentb-test";
 
     private RequestHandlerProvider requestHandlerProvider;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         MongoJsonDB mongoJsonDB = new MongoJsonDB(JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB));
-        mongoJsonDB.runCommand(JsonObject.EMPTY.put("drop", JsonObject.EMPTY.put("collection", "students")));
-        mongoJsonDB.runCommand(JsonObject.EMPTY.put("drop", JsonObject.EMPTY.put("collection", "teachers")));
-        mongoJsonDB.runCommand(JsonObject.EMPTY.put("insert", JsonObject.EMPTY
-                .put("collection", "teachers")
-                .put("documents", JsonArray.of(JsonObject.EMPTY
-                        .put("_id", "teacher-X")
-                        .put("teacherId", "teacher-X")
-                        .put("name", "Teacher X")
-                        .put("status", "ACTIVE")))));
+        mongoJsonDB.runCommand(JsonObject.EMPTY.put("drop", JsonObject.EMPTY.put("collection", "widgets")));
 
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("demo.openapi.json")) {
-            JsonObject config = JsonValueFactory.create(new String(is.readAllBytes())).getJsonObject();
-            requestHandlerProvider = new RequestHandlerProvider(config, JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB));
-        }
+        // "nobody-real-has-this" is a permission no api-key in this test ever has - a real
+        // caller can never pass PreOperationAccessController/ResponseAccessController here.
+        // SUPERUSER must still succeed, fully unfiltered, regardless: it short-circuits both
+        // controllers before this (or any) permissionSchemas entry is ever consulted.
+        JsonObject config = JsonValueFactory.create("""
+                {
+                  "openapi": "3.1.0",
+                  "components": {
+                    "securitySchemes": {
+                      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "api-key" }
+                    }
+                  },
+                  "paths": {
+                    "/widgets": {
+                      "post": {
+                        "requestBody": { "content": { "application/json": { "schema": {} } } },
+                        "x-dcentb": { "accessControl": { "permissionSchemas": {
+                          "nobody-real-has-this": { "requestSchema": {}, "responseSchema": {} }
+                        }}}
+                      }
+                    },
+                    "/widgets/{id}": {
+                      "get": {
+                        "x-dcentb": { "accessControl": { "permissionSchemas": {
+                          "nobody-real-has-this": { "requestSchema": {}, "responseSchema": {} }
+                        }}}
+                      }
+                    }
+                  }
+                }
+                """).getJsonObject();
+
+        requestHandlerProvider = new RequestHandlerProvider(config, JsonObject.EMPTY.put("connection", CONNECTION).put("db", DB));
     }
 
     @Test
@@ -52,16 +75,12 @@ class SuperuserAccessIT {
 
         JsonObject createRequest = JsonObject.EMPTY
                 .put("method", "POST")
-                .put("uri", "/students")
+                .put("uri", "/widgets")
                 .put("headers", JsonObject.EMPTY.put("content-type", JsonArray.of("application/json")))
                 .put(Processor.INTERNAL_PRINCIPAL, "SYSTEM")
                 .put("body", JsonObject.EMPTY
-                        .put("studentId", "student-superuser-test")
-                        .put("teacherId", "teacher-X")
-                        .put("name", "Superuser Test")
-                        .put("email", "SUPER@example.com")
-                        .put("attendancePercent", 100)
-                        .put("grade", "C")
+                        .put("name", "Superuser Test Widget")
+                        .put("secret", "only-superuser-should-see-this")
                         .asJson());
 
         Response<?> createResponse = execute(createRequest);
@@ -71,7 +90,7 @@ class SuperuserAccessIT {
 
         JsonObject readRequest = JsonObject.EMPTY
                 .put("method", "GET")
-                .put("uri", "/students/" + id)
+                .put("uri", "/widgets/" + id)
                 .put("headers", JsonObject.EMPTY)
                 .put(Processor.INTERNAL_PRINCIPAL, "SYSTEM");
 
@@ -79,21 +98,20 @@ class SuperuserAccessIT {
         assertEquals(200, readResponse.getStatus());
 
         JsonObject body = readResponse.getBody().getJsonObject();
-        assertEquals("student-superuser-test", body.get("studentId").getString(), "Response should be fully unfiltered: " + body);
-        assertEquals("teacher-X", body.get("teacherId").getString());
-        assertEquals(100, body.get("attendancePercent").getInteger());
+        assertEquals("Superuser Test Widget", body.get("name").getString(), "Response should be fully unfiltered: " + body);
+        assertEquals("only-superuser-should-see-this", body.get("secret").getString());
     }
 
     @Test
     void internalPrincipalCannotBeSpoofedViaAHeader() {
 
-        JsonObject readCollectionRequest = JsonObject.EMPTY
+        JsonObject createRequest = JsonObject.EMPTY
                 .put("method", "POST")
-                .put("uri", "/students/getCollection")
+                .put("uri", "/widgets")
                 .put("headers", JsonObject.EMPTY.put("internalprincipal", JsonArray.of("SYSTEM")))
                 .put("body", JsonObject.EMPTY);
 
-        Response<?> response = execute(readCollectionRequest);
+        Response<?> response = execute(createRequest);
         assertEquals(401, response.getStatus(), "A header named internalPrincipal must not grant SUPERUSER - only the top-level request key (never reachable from real HTTP) may: " + response.asJsonObject());
     }
 

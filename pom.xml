@@ -13,6 +13,7 @@
         <module>parent</module>
         <module>dcentb</module>
         <module>dcentb-todo-demo</module>
+        <module>dcentb-students-demo</module>
         <module>json-tester</module>
         <module>mongodb</module>
         <module>mongoschema</module>
