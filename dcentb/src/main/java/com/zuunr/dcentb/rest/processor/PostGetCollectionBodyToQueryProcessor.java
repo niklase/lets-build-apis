@@ -25,7 +25,7 @@ public class PostGetCollectionBodyToQueryProcessor extends Processor {
 
     private static final String GET_COLLECTION_SUFFIX = "/getCollection";
 
-    PostGetCollectionBodyToQueryProcessor(JsonValue config){
+    public PostGetCollectionBodyToQueryProcessor(JsonValue config){
         super(config);
     }
 

@@ -9,7 +9,6 @@ import com.zuunr.json.util.ApiErrorCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -66,7 +65,10 @@ public abstract class GivenWhenThenTesterBase {
         Class clazz = this.getClass();
         URL resource = clazz.getResource(clazz.getSimpleName() + "/" + jsonFileName.toString());
 
-        Path testFilePath = Path.of(testFolderUri.getPath() + File.separatorChar + jsonFileName.toString());
+        // Resolve against the URI, never testFolderUri.getPath() + a separator: that path is
+        // URI syntax, so on Windows it reads /C:/... and Path.of rejects it outright
+        // (InvalidPathException: Illegal char <:> at index 2) before any test file is read.
+        Path testFilePath = Paths.get(testFolderUri).resolve(jsonFileName.toString());
 
         LOGGER.debug("file: {}", testFilePath);
         try {

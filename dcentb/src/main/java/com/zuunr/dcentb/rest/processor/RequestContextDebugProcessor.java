@@ -5,7 +5,7 @@ import com.zuunr.json.JsonValue;
 
 public class RequestContextDebugProcessor extends Processor {
 
-    RequestContextDebugProcessor(JsonValue config){
+    public RequestContextDebugProcessor(JsonValue config){
         super(config);
     }
 
