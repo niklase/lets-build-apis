@@ -1,0 +1,23 @@
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+    Bumps dcentb's own loggers to DEBUG for test runs only (logback-test.xml on the test
+    classpath takes priority over logback.xml automatically - standard logback convention).
+    This is what makes RequestHandlerBase's per-processor requestContext dumps (now DEBUG,
+    not INFO, in main code - see RequestHandlerBase.logRequestContext) show up by default
+    when running DcentbGivenWhenThenTester/ControllerIT, without requiring a deployed app to
+    eat that verbosity by default too.
+    -->
+    <logger name="com.zuunr.dcentb" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

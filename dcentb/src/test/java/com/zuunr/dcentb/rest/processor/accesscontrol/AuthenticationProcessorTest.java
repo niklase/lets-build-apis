@@ -115,4 +115,48 @@ class AuthenticationProcessorTest {
         assertNull(result.get("response"));
         assertEquals("user-3", result.get("authenticatedUser").getJsonObject().get("userId").getString());
     }
+
+    private JsonArray authorizationHeader(JsonObject requestContext) {
+        return requestContext.get("request").getJsonObject()
+                .get("headers").getJsonObject()
+                .get("authorization").getJsonArray();
+    }
+
+    @Test
+    void successfulAuthenticationRedactsTheAuthorizationHeaderGoingForward() {
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(JsonObject.EMPTY));
+
+        String token = primaryIssuer.token("user-1", null, Instant.now().plusSeconds(60));
+        JsonObject result = processor.process(requestContextWithBearer(token));
+
+        assertNull(result.get("response"));
+        assertEquals(JsonArray.of("*****"), authorizationHeader(result));
+    }
+
+    @Test
+    void failedAuthenticationStillRedactsTheAuthorizationHeader() {
+        JsonObject operation = operationRestrictedTo("Secondary");
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(operation));
+
+        String primaryToken = primaryIssuer.token("user-1", null, Instant.now().plusSeconds(60));
+        JsonObject rejected = processor.process(requestContextWithBearer(primaryToken));
+
+        assertEquals(401, rejected.get("response").getJsonObject().get("status").getInteger());
+        assertEquals(JsonArray.of("*****"), authorizationHeader(rejected));
+    }
+
+    @Test
+    void noAuthRequiredStillRedactsAnAuthorizationHeaderIfOneWasSentAnyway() {
+        JsonObject operation = operationRestrictedTo();
+        AuthenticationProcessor processor = new AuthenticationProcessor(configWith(operation));
+
+        // The operation doesn't require auth, but a client sending a credential header
+        // anyway must never have it echoed on, in clear text, to every later processor.
+        String token = primaryIssuer.token("user-1", null, Instant.now().plusSeconds(60));
+        JsonObject result = processor.process(requestContextWithBearer(token));
+
+        assertNull(result.get("response"));
+        assertNull(result.get("authenticatedUser"));
+        assertEquals(JsonArray.of("*****"), authorizationHeader(result));
+    }
 }

@@ -95,13 +95,13 @@ public class AuthenticationProcessor extends Processor {
             // By-reference only - see SystemApiClient's Javadoc for why this key can never
             // originate from a real inbound HTTP request. Every header-based scheme below is
             // skipped entirely; SUPERUSER is granted unconditionally.
-            return requestContext.put("authenticatedUser", JsonObject.EMPTY
+            return CredentialHeaderRedactor.redact(requestContext.put("authenticatedUser", JsonObject.EMPTY
                     .put("userId", internalPrincipal)
-                    .put("permissions", JsonArray.of(SUPERUSER_PERMISSION)));
+                    .put("permissions", JsonArray.of(SUPERUSER_PERMISSION))));
         }
 
         if (alternatives.isEmpty()) {
-            return requestContext;
+            return CredentialHeaderRedactor.redact(requestContext);
         }
 
         JsonObject lastFailureResponse = null;
@@ -109,11 +109,11 @@ public class AuthenticationProcessor extends Processor {
             JsonObject result = authenticator.process(requestContext);
             JsonValue response = result.get(RESPONSE);
             if (response == null) {
-                return result;
+                return CredentialHeaderRedactor.redact(result);
             }
             lastFailureResponse = response.getJsonObject();
         }
 
-        return requestContext.put(RESPONSE, lastFailureResponse);
+        return CredentialHeaderRedactor.redact(requestContext.put(RESPONSE, lastFailureResponse));
     }
 }

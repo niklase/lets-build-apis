@@ -3,6 +3,7 @@ package com.zuunr.dcentb.rest.controller;
 import com.zuunr.dcentb.rest.Request;
 import com.zuunr.dcentb.rest.Response;
 import com.zuunr.dcentb.rest.processor.Processor;
+import com.zuunr.dcentb.rest.processor.accesscontrol.CredentialHeaderRedactor;
 import com.zuunr.dcentb.rest.processor.accesscontrol.ResponseAccessController;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
@@ -33,12 +34,12 @@ public abstract class RequestHandlerBase implements RequestHandler {
         try {
             JsonObject updatedRequestContext = JsonObject.EMPTY.put(Processor.REQUEST, request.asJsonObject());
             for (Processor processor : getProcessors()) {
-                logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
+                logRequestContext(processor.getClass().getSimpleName(), updatedRequestContext);
                 updatedRequestContext = processor.process(updatedRequestContext);
                 JsonObject response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
                 if (response != null) {
                     processor = responseAccessController;
-                    logger.info("{} requestContext: {}", processor.getClass().getSimpleName(), updatedRequestContext.toString());
+                    logRequestContext(processor.getClass().getSimpleName(), updatedRequestContext);
                     updatedRequestContext = responseAccessController.process(updatedRequestContext);
                     response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
                     JsonObject headers = updatedRequestContext.get(Processor.RESPONSE, JsonObject.EMPTY).getJsonObject().get("headers", JsonObject.EMPTY).getJsonObject();
@@ -50,5 +51,22 @@ public abstract class RequestHandlerBase implements RequestHandler {
             logger.error("processInternally exception", e);
         }
         return JsonObject.EMPTY.put("status", 500).as(Response.class);
+    }
+
+    /**
+     * Diagnostic dump of the full requestContext as it enters a given processor. Logged
+     * redacted at DEBUG by default (CredentialHeaderRedactor masks any raw "api-key"/
+     * "authorization" header - the only point one can still be present in clear text is the
+     * entry into AuthenticationProcessor itself, before it has had a chance to redact the
+     * context it returns, so this call site redacts independently rather than relying on
+     * that). TRACE opts into the real, unredacted values when actually tracking down an
+     * auth-header problem - enabling it means credentials will appear in this logger's output.
+     */
+    private void logRequestContext(String processorName, JsonObject requestContext) {
+        if (logger.isTraceEnabled()) {
+            logger.trace("{} requestContext (UNREDACTED - contains credentials): {}", processorName, requestContext);
+        } else if (logger.isDebugEnabled()) {
+            logger.debug("{} requestContext: {}", processorName, CredentialHeaderRedactor.redact(requestContext));
+        }
     }
 }
