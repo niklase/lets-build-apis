@@ -14,7 +14,7 @@
     <name>databiit-parent</name>
     <url>http://maven.apache.org</url>
     <properties>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
         <spring.boot>4.1.0</spring.boot>
         <databiit>0.1.0-SNAPSHOT</databiit>
         <freemarker.version>2.3.34</freemarker.version>
