@@ -67,18 +67,18 @@
     },
 
     {
-      "description": "A 'user' role reads the same widget - response-filtering access control strips internalNotes (exact match, to prove the field is genuinely absent, not just unchecked)",
+      "description": "A 'user' role reads the same widget - response-filtering access control strips internalNotes (exact match, to prove the field is genuinely absent, not just unchecked). Also sends its own x-request-id to prove it's echoed back rather than replaced, since this block's EXACT_MATCHING can't tolerate an unpredictable generated one.",
       "when": {
         "method": "GET",
         "uri": "{{widget-href}}",
-        "headers": { "accept": ["application/json"], "api-key": ["user-u1-apikey"] }
+        "headers": { "accept": ["application/json"], "api-key": ["user-u1-apikey"], "x-request-id": ["widgets-test-fixed-request-id"] }
       }
     },
     {
       "then": {
         "body": { "name": "Gizmo", "meta": { "id": "{{widget-id}}" } },
         "status": 200,
-        "headers": {}
+        "headers": { "x-request-id": ["widgets-test-fixed-request-id"] }
       },
       "meta": {
         "validationStrategy": "EXACT_MATCHING",

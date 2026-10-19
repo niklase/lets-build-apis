@@ -10,12 +10,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Covers the one case RequestHandlerBase can't delegate to a specific processor: an
- * uncaught exception from anywhere in the pipeline. Before this, it became a bare
- * {"status":500} with nothing a caller or an operator could use to find the one log line
- * that explains it. Every other response's body is a specific processor's own concern and
- * is asserted exactly by fixture-driven tests elsewhere, so requestId is deliberately only
- * added to this one.
+ * Covers requestId's one job: give every response - success or failure, from any processor
+ * or none - a correlatable x-request-id header, honoring one the caller already sent instead
+ * of replacing it. It's a header rather than a body field so ResponseAccessController's
+ * per-role response-schema filtering (which runs on the body, not headers) can never strip
+ * it for some roles and not others - see RequestHandlerBase.withRequestId.
  */
 class RequestHandlerBaseTest {
 
@@ -66,14 +65,18 @@ class RequestHandlerBaseTest {
         return new Request(JsonObject.EMPTY.put("headers", headers));
     }
 
+    private static String requestIdHeader(Response response) {
+        return response.getHeaders().get("x-request-id", JsonArray.EMPTY).getJsonArray().get(0).getString();
+    }
+
     @Test
-    void exceptionFromAProcessorReturns500WithAGeneratedRequestId() {
+    void exceptionFromAProcessorReturns500WithAGeneratedRequestIdHeader() {
         TestRequestHandler handler = new TestRequestHandler(new ThrowingProcessor());
 
         Response response = handler.process(requestWithHeaders(JsonObject.EMPTY));
 
         assertEquals(500, response.getStatus());
-        String requestId = response.asJsonObject().get("requestId").getString();
+        String requestId = requestIdHeader(response);
         assertNotNull(requestId);
         assertFalse(requestId.isBlank());
     }
@@ -85,7 +88,7 @@ class RequestHandlerBaseTest {
 
         Response response = handler.process(requestWithHeaders(headers));
 
-        assertEquals("caller-assigned-id", response.asJsonObject().get("requestId").getString());
+        assertEquals("caller-assigned-id", requestIdHeader(response));
     }
 
     @Test
@@ -95,18 +98,17 @@ class RequestHandlerBaseTest {
         Response first = handler.process(requestWithHeaders(JsonObject.EMPTY));
         Response second = handler.process(requestWithHeaders(JsonObject.EMPTY));
 
-        assertNotEquals(
-                first.asJsonObject().get("requestId").getString(),
-                second.asJsonObject().get("requestId").getString());
+        assertNotEquals(requestIdHeader(first), requestIdHeader(second));
     }
 
     @Test
-    void successfulResponseIsUnchangedNoRequestIdAdded() {
+    void successfulResponseAlsoGetsARequestIdHeader() {
         TestRequestHandler handler = new TestRequestHandler(new RespondingProcessor(200));
+        JsonObject headers = JsonObject.EMPTY.put("x-request-id", JsonArray.of("caller-assigned-id"));
 
-        Response response = handler.process(requestWithHeaders(JsonObject.EMPTY));
+        Response response = handler.process(requestWithHeaders(headers));
 
         assertEquals(200, response.getStatus());
-        assertNull(response.asJsonObject().get("requestId"));
+        assertEquals("caller-assigned-id", requestIdHeader(response));
     }
 }
