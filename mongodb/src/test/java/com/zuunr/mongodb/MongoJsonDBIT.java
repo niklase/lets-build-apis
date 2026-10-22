@@ -52,6 +52,11 @@ public class MongoJsonDBIT extends GivenWhenThenTesterBase {
     }
 
     @Test
+    void pingSucceedsAgainstAReachableDatabase() {
+        mongoJsonDB.ping(); // throws on failure - reaching this line at all is the assertion
+    }
+
+    @Test
     void insert1() {
         JsonObject result = mongoJsonDB.runCommand(
                 JsonObject.EMPTY

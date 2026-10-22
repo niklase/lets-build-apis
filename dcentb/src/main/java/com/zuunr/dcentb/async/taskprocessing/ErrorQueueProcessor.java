@@ -84,6 +84,10 @@ public final class ErrorQueueProcessor {
         }
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     private void pollLoop() {
         while (running) {
             if (leaderElector.isStillLeader()) {

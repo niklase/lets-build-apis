@@ -97,6 +97,29 @@ public final class ErrorQueueStore {
         mongoJsonDB.runCommand(command);
     }
 
+    /** Total documents currently in the error queue (due or not) - a depth gauge, not an eligibility check like {@link #fetchDueBatch}. */
+    public long count() {
+        return countCollection(collection);
+    }
+
+    /** Total documents ever moved to {@code deadLetterCollection} - a parameter, not a stored field, same as {@link #moveToDeadLetter}. */
+    public long deadLetterCount(String deadLetterCollection) {
+        return countCollection(deadLetterCollection);
+    }
+
+    private long countCollection(String collectionName) {
+        JsonObject command = JsonObject.EMPTY.put("aggregate", JsonObject.EMPTY
+                .put("collection", collectionName)
+                .put("pipeline", JsonArray.of(JsonObject.EMPTY.put("$count", "n")))
+                .put("cursor", JsonObject.EMPTY));
+        JsonObject result = mongoJsonDB.runCommand(command);
+        JsonArray firstBatch = result.get(JsonArray.of("cursor", "firstBatch")).getJsonArray();
+        if (firstBatch.size() == 0) {
+            return 0L; // $count omits the field entirely on an empty collection
+        }
+        return firstBatch.get(0).getJsonObject().get("n").getLong();
+    }
+
     public void moveToDeadLetter(JsonObject item, TaskResult finalResult, String deadLetterCollection) {
         JsonObject deadLetterDoc = item
                 .put("finalReason", finalResult.getReason() == null ? JsonValue.NULL : JsonValue.of(finalResult.getReason()))

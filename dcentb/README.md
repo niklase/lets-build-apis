@@ -679,8 +679,18 @@ the at-least-once contract every `TaskProcessor` must tolerate.
 `SystemApiClient.call` needs no credentials — see "Internal API calls" above for exactly how
 `SUPERUSER` is granted and why it can never be triggered from outside the process.
 
+---
 
+# Health, readiness and metrics
 
+Spring Boot Actuator support — `/actuator/health`, `/actuator/health/readiness`,
+`/actuator/health/liveness`, and Micrometer metrics for the async pipeline (leader state,
+change-stream lag, error-queue depth) — is a required dependency of dcentb, so it works the moment
+you add dcentb, with one property (`dcentb.actuator.enabled=false`) to turn the whole thing off.
+
+Full depth, including the reasoning behind every default (why leadership/Mongo blips never gate
+liveness, why lag/queue-depth are sampled rather than computed inline, and the specific credential-
+leak gap dcentb defends against even though it's dormant by default): `docs/health-readiness-metrics.md`.
 
 
 

@@ -80,6 +80,19 @@ public class MongoJsonDB implements AutoCloseable{
         return resourceDeserializer.deserialize(document, JsonObjectWrapper.class).asJsonObject();
     }
 
+    /**
+     * Lightweight liveness/readiness probe: issues the Mongo {@code ping} admin command directly
+     * against the driver, bypassing the JSON-command validation/translation {@link #runCommand}
+     * uses - {@code ping} isn't one of the CRUD-shaped commands {@link #translate} models, and would
+     * throw "Unsupported command" if attempted through it. Throws whatever the driver throws on
+     * failure; callers decide how to turn that into a health status. Unrelated to, and does not
+     * change, the one-time ping already done in the (connectionString, databaseName) constructor,
+     * which logs to System.out/System.err and swallows everything - that path stays as-is.
+     */
+    public void ping() {
+        mongoDatabase.runCommand(new Document("ping", 1));
+    }
+
     public JsonObject runCommand(JsonObject command) {
 
         MONGODB_JSON_SCHEMA.validate();

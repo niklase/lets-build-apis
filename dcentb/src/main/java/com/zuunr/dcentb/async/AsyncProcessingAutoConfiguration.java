@@ -60,7 +60,7 @@ public class AsyncProcessingAutoConfiguration {
         Optional<AsyncProcessingSettings> settingsOptional = AsyncProcessingSettings.parse(openApiDocument);
         if (settingsOptional.isEmpty()) {
             LOG.info("No x-dcentb.asyncProcessing section in the OpenAPI document — async task processing is disabled for this deployment.");
-            return new AsyncProcessingLifecycle(null, null);
+            return new AsyncProcessingLifecycle(null, null, null, null, null);
         }
         AsyncProcessingSettings settings = settingsOptional.get();
 
@@ -90,7 +90,8 @@ public class AsyncProcessingAutoConfiguration {
         LOG.info("Async task processing enabled: instanceId='{}', streamId='{}', db='{}', {} topic(s), watching collections {}",
                 instanceId, settings.getStreamId(), databaseName, settings.getTopics().size(), watchedCollections);
 
-        return new AsyncProcessingLifecycle(listener, errorQueueProcessor);
+        return new AsyncProcessingLifecycle(listener, errorQueueProcessor, checkpointStore, errorQueueStore,
+                settings.getDeadLetterCollection());
     }
 
     /** Mirrors RequestHandlerProvider.applyMongodbConfig's db-name resolution: property, else the OpenAPI document's own x-dcentb.mongodb.db. */

@@ -110,6 +110,15 @@ public final class ChangeStreamListener {
         leaderElector.release();
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
+    /** Zero-side-effect snapshot - see {@link LeaderElector#currentLease()} for why this is safe to call from a health check. */
+    public LeaderLease currentLease() {
+        return leaderElector.currentLease();
+    }
+
     private void runLoop() {
         while (running) {
             LeaderLease lease = leaderElector.tryAcquireOrRenew();

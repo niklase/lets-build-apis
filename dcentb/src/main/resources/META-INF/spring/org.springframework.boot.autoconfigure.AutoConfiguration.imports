@@ -1,2 +1,3 @@
 com.zuunr.dcentb.DcentbAutoConfiguration
 com.zuunr.dcentb.async.AsyncProcessingAutoConfiguration
+com.zuunr.dcentb.actuator.DcentbActuatorAutoConfiguration

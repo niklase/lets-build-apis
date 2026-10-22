@@ -93,6 +93,14 @@ A moment later, check the console log for `[students-audit] insert ...` and `[cl
 teacherId=teacher-A studentCount=1 ...` — proof the change-stream pipeline (leader election →
 change stream → topic routing → `TaskProcessor`) is really running, not just configured.
 
+The same proof, live, without tailing logs: hit `http://localhost:8080/actuator/health/asyncProcessing`
+(leader state, `generation`, `errorQueueProcessorRunning`) and
+`http://localhost:8080/actuator/metrics/dcentb.async.errorqueue.depth` (and
+`dcentb.async.changestream.lag.seconds`) before and after the `POST`s above. This demo widens
+Actuator exposure in its own `application.properties` specifically so this is browsable — see
+`dcentb/docs/health-readiness-metrics.md` for why dcentb's own shipped defaults are narrower than
+that everywhere else.
+
 ---
 
 ## Access control
