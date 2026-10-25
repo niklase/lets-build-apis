@@ -47,6 +47,7 @@ class SuperuserAccessIT {
                       "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "api-key" }
                     }
                   },
+                  "x-dcentb": { "collections": { "widgets": { "dbSchema": true } } },
                   "paths": {
                     "/widgets": {
                       "post": {

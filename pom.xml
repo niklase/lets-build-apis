@@ -20,7 +20,6 @@
         <module>openapi</module>
         <module>java-object-gen</module>
         <module>form-builder</module>
-        <module>sqlschema</module>
     </modules>
     <name>databiit-opensource</name>
 </project>

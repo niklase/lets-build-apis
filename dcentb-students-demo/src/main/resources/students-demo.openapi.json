@@ -14,7 +14,8 @@
             "type": "string"
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "x-dbtype": "String"
           },
           "updatedAt": {}
         },
@@ -2311,6 +2312,9 @@
               ]
             }
           }
+        },
+        "dbSchema": {
+          "$ref": "#/components/schemas/Students_item_v1"
         }
       },
       "teachers": {
@@ -2320,6 +2324,44 @@
             "readItem": {},
             "writeItem": {}
           }
+        },
+        "dbSchema": {
+          "properties": {
+            "classSummary": {
+              "properties": {
+                "updatedAt": {
+                  "type": "string"
+                },
+                "studentCount": {
+                  "type": "integer"
+                },
+                "atRiskCount": {
+                  "type": "integer"
+                },
+                "averageAttendancePercent": {
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "teacherId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "INACTIVE"
+              ]
+            },
+            "meta": {
+              "$ref": "#/components/schemas/Meta_item_v1"
+            }
+          },
+          "type": "object"
         }
       }
     },

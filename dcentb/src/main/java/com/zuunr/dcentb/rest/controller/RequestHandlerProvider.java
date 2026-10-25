@@ -45,13 +45,21 @@ public class RequestHandlerProvider {
     }
 
     public RequestHandlerProvider(JsonObject openApiDocument, JsonObject mongoDbConfig) {
-        openApiDocument = applyMongodbConfig(openApiDocument, mongoDbConfig);
-        new ApiKeyProvisioner().provision(openApiDocument);
-        new JwtSecretProvisioner().provision(openApiDocument);
-        pathConfigMapper = setupPathConfigMapper(openApiDocument);
+        JsonObject configuredDocument = applyExternalMongoConfig(openApiDocument, mongoDbConfig);
+        JsonObject effectiveDocument = configuredDocument.as(EffectiveOpenApiDoc.class).getJsonValue().getJsonObject();
+        new ApiKeyProvisioner().provision(effectiveDocument);
+        new JwtSecretProvisioner().provision(effectiveDocument);
+        pathConfigMapper = setupPathConfigMapper(effectiveDocument);
     }
 
-    private static JsonObject applyMongodbConfig(JsonObject openApiDocument, JsonObject mongoConfig) {
+    /**
+     * Merges the externally-supplied (Spring property) connection string/database name
+     * into the document's top-level "x-dcentb.mongodb", falling back to whatever the
+     * document already declares there itself. This is deployment configuration, not a
+     * default derived from the document's own structure - see {@link EffectiveOpenApiDoc}
+     * for everything else (collection names, collectionSchemas).
+     */
+    private static JsonObject applyExternalMongoConfig(JsonObject openApiDocument, JsonObject mongoConfig) {
 
         JsonObject globalMongoConfig = openApiDocument.get("x-dcentb", JsonObject.EMPTY).get("mongodb", JsonObject.EMPTY).getJsonObject();
         JsonValue globalConnection = globalMongoConfig.get("connection", JsonValue.NULL);
@@ -62,62 +70,9 @@ public class RequestHandlerProvider {
             databaseName = globalDb.getString();
         }
 
-        openApiDocument = openApiDocument
+        return openApiDocument
                 .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "connection"), connectionString)
                 .put(JsonArray.of(Processor.X_DCENTB, "mongodb", "db"), databaseName);
-
-        JsonObject paths = openApiDocument.get("paths").getJsonObject();
-        JsonObject updatedPaths = paths;
-        for (String path : paths.keySet()) {
-
-            String defaultMongoCollectionName = getMongoCollectionName(path);
-
-            JsonObject operations = paths.get(path).getJsonObject();
-            JsonObject updatedOperations = operations;
-            for (String method : operations.keySet()) {
-                JsonObject operation = operations.get(method).getJsonObject();
-                JsonValue collectionName = operation.get("x-dcentb", JsonObject.EMPTY).getJsonObject().get("mongodb", JsonObject.EMPTY).getJsonObject().get("collection");
-                collectionName = collectionName == null
-                        ? JsonValue.of(defaultMongoCollectionName)
-                        : collectionName;
-                operation = operation.put(JsonArray.of(Processor.X_DCENTB, "mongodb", "collection"), collectionName);
-
-                JsonValue xDcentb = operation.get("x-dcentb");
-                if (xDcentb != null && xDcentb.getJsonObject() != null) {
-                    JsonValue mongodb = xDcentb.getJsonObject().get("mongodb");
-                    if (mongodb != null && mongodb.getJsonObject() != null) {
-                        JsonObject updatedMongodb = mongodb.getJsonObject();
-                        if (databaseName != null) {
-                            updatedMongodb = updatedMongodb.put("db", databaseName);
-                        }
-                        if (connectionString != null) {
-                            updatedMongodb = updatedMongodb.put("connection", connectionString);
-                        }
-                        if (updatedMongodb.get("collection") == null) {
-                            updatedMongodb = updatedMongodb.put("collection", defaultMongoCollectionName);
-                        }
-
-                        JsonObject updatedXDcentb = xDcentb.getJsonObject().put("mongodb", updatedMongodb.jsonValue());
-                        JsonObject updatedOperation = operation.put("x-dcentb", updatedXDcentb.jsonValue());
-                        updatedOperations = updatedOperations.put(method, updatedOperation.jsonValue());
-                    }
-                }
-            }
-            updatedPaths = updatedPaths.put(path, updatedOperations.jsonValue());
-        }
-        return openApiDocument.put("paths", updatedPaths.jsonValue());
-    }
-
-    private static String getMongoCollectionName(String path) {
-        if (path.endsWith("/getCollection")) {
-            path = path.substring(0, path.length() - "/getCollection".length());
-        } else {
-            int braceIndex = path.indexOf('{');
-            if (braceIndex != -1) {
-                path = path.substring(0, braceIndex);
-            }
-        }
-        return path.replaceAll("^/+|/+$", "");
     }
 
     private static PathConfigMapper setupPathConfigMapper(JsonObject openApiDocument) {

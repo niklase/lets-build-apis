@@ -10,7 +10,11 @@ import java.util.List;
 
 public class DeleteCommandTranslator {
 
-    private final Json2BsonQueryTranslator queryTranslator = new Json2BsonQueryTranslator();
+    private final Json2BsonQueryTranslator queryTranslator;
+
+    public DeleteCommandTranslator(CollectionSchemas collectionSchemas) {
+        this.queryTranslator = new Json2BsonQueryTranslator(collectionSchemas);
+    }
 
     public Document translate(JsonObject deleteCommand) {
 
@@ -23,7 +27,7 @@ public class DeleteCommandTranslator {
         List<Document> deletesTranslated = new ArrayList<>(deletesJson.size());
 
         for (int i = 0; i < deletesJson.size(); i++) {
-            deletesTranslated.add(translateDeletesItem(deletesJson.get(i).getJsonObject()));
+            deletesTranslated.add(translateDeletesItem(collection, deletesJson.get(i).getJsonObject()));
         }
         translated.put("deletes", deletesTranslated);
 
@@ -62,9 +66,9 @@ public class DeleteCommandTranslator {
         return translated;
     }
 
-    private Document translateDeletesItem(JsonObject deletesItem) {
+    private Document translateDeletesItem(String collection, JsonObject deletesItem) {
         Document translated = new Document();
-        translated.put("q", queryTranslator.translateQuery(deletesItem.get("q").getJsonObject()));
+        translated.put("q", queryTranslator.translateQuery(collection, deletesItem.get("q").getJsonObject()));
         translated.put("limit", deletesItem.get("limit").getJsonNumber().intValue());
         return translated;
     }

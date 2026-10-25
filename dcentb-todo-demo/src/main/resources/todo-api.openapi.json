@@ -8,6 +8,13 @@
         "demo-secret_alice_user": {},
         "demo-secret_bob_user": {}
       }
+    },
+    "collections": {
+      "todos": {
+        "dbSchema": {
+          "$ref": "#/components/schemas/Todo"
+        }
+      }
     }
   },
   "openapi": "3.1.0",

@@ -65,11 +65,6 @@
             </dependency>
             <dependency>
                 <groupId>com.zuunr</groupId>
-                <artifactId>sqlschema</artifactId>
-                <version>${databiit}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.zuunr</groupId>
                 <artifactId>openapi</artifactId>
                 <version>${databiit}</version>
             </dependency>
@@ -126,6 +121,26 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <build>
+        <plugins>
+            <!-- spring-boot-starter-parent only wires up Surefire (the "test" phase, *Test.java
+                 classes) by default - it never binds Failsafe, so *IT.java classes (integration
+                 tests needing a live MongoDB) were silently never run by "mvn verify" until this
+                 was added. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
 
 

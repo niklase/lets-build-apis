@@ -23,6 +23,8 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * <p>The ResourceDeserializer is responsible for converting Objects
  * to a defined resource class.</p>
@@ -39,6 +41,7 @@ public class ResourceDeserializer {
         objectMapper.registerModule(new SimpleModule()
                 .addSerializer(Decimal128.class, new Decimal128Serializer())
                 .addSerializer(ObjectId.class, new com.zuunr.mongodb.ObjectIdSerializer())
+                .addSerializer(Date.class, new DateSerializer())
         );
 
         return this;

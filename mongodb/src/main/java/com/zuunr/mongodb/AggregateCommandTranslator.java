@@ -10,7 +10,11 @@ import java.util.List;
 
 public class AggregateCommandTranslator extends AbstractCommandTranslator {
 
-    private Json2BsonQueryTranslator queryTranslator = new Json2BsonQueryTranslator();
+    private final Json2BsonQueryTranslator queryTranslator;
+
+    public AggregateCommandTranslator(CollectionSchemas collectionSchemas) {
+        this.queryTranslator = new Json2BsonQueryTranslator(collectionSchemas);
+    }
 
     public Document translate(JsonObject aggregateOperand) {
         Document translated = new Document();
@@ -29,7 +33,7 @@ public class AggregateCommandTranslator extends AbstractCommandTranslator {
         return translated;
     }
 
-    private List<Document> translatePipeline(JsonArray pipeline) {
+    private List<Document> translatePipeline(String collection, JsonArray pipeline) {
         List<Document> translated = new ArrayList<>(pipeline.size());
         for (int i = 0; i < pipeline.size(); i++) {
             Document translatedPipelineStage;
@@ -39,10 +43,10 @@ public class AggregateCommandTranslator extends AbstractCommandTranslator {
             translatedPipelineStage = new Document();
             switch (stageOperator) {
                 case "$match": {
-                    translatedPipelineStage.put(stageOperator, queryTranslator.translateQuery(stageOperand.getJsonObject()));
+                    translatedPipelineStage.put(stageOperator, queryTranslator.translateQuery(collection, stageOperand.getJsonObject()));
                     continue;
                 } case "$pipeline":{
-                    translatedPipelineStage.put(stageOperator, translatePipeline(stageOperand.getJsonArray()));
+                    translatedPipelineStage.put(stageOperator, translatePipeline(collection, stageOperand.getJsonArray()));
                     continue;
                 } default:{
                     translatedPipelineStage.put(stageOperator, translateDocuments(stageOperand).get(0));

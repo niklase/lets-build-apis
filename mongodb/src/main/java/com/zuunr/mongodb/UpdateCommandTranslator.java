@@ -10,7 +10,13 @@ import java.util.List;
 
 public class UpdateCommandTranslator {
 
-    private final Json2BsonQueryTranslator queryTranslator = new Json2BsonQueryTranslator();
+    private final Json2BsonQueryTranslator queryTranslator;
+    private final CollectionSchemas collectionSchemas;
+
+    public UpdateCommandTranslator(CollectionSchemas collectionSchemas) {
+        this.collectionSchemas = collectionSchemas;
+        this.queryTranslator = new Json2BsonQueryTranslator(collectionSchemas);
+    }
 
     public Document translate(JsonObject updateCommand) {
         Document translated = new Document();
@@ -22,29 +28,29 @@ public class UpdateCommandTranslator {
         translated.put("update", collection); // collection name
 
         JsonArray updates = updateCommand.get("updates").getJsonArray();
-        List updatesTranslated = translateUpdates(updates);
+        List updatesTranslated = translateUpdates(collection, updates);
         translated.put("updates", updatesTranslated);
         return translated;
     }
 
-    private List<Object> translateUpdates(JsonArray updates) {
+    private List<Object> translateUpdates(String collection, JsonArray updates) {
         ArrayList<Object> list = new ArrayList<>();
         for (int i = 0; i < updates.size(); i++) {
 
             JsonObject updateStatement = updates.get(i).getJsonObject();
-            list.add(translateUpdateStatement(updateStatement));
+            list.add(translateUpdateStatement(collection, updateStatement));
         }
         return list;
     }
 
-    private Document translateUpdateStatement(JsonObject updateStatement) {
+    private Document translateUpdateStatement(String collection, JsonObject updateStatement) {
 
         Document updateStatementDoc = new Document();
 
-        Document q = queryTranslator.translateQuery(updateStatement.get("q").getJsonObject());
+        Document q = queryTranslator.translateQuery(collection, updateStatement.get("q").getJsonObject());
         updateStatementDoc.put("q", q);
 
-        Document u = Json2BsonTranslator.translate(updateStatement.get("u").getJsonObject());
+        Document u = collectionSchemas.translateDocument(collection, updateStatement.get("u").getJsonObject());
 
         updateStatementDoc.put("u", u);
 

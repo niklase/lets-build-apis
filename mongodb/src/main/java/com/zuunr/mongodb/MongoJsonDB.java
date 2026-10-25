@@ -22,13 +22,20 @@ public class MongoJsonDB implements AutoCloseable{
     private final CreateIndexesCommandTranslator createIndexes = new CreateIndexesCommandTranslator();
     private final CreateUserCommandTranslator createUser = new CreateUserCommandTranslator();
     private final DropDatabaseCommandTranslator dropDatabase = new DropDatabaseCommandTranslator();
-    private final AggregateCommandTranslator aggregate = new AggregateCommandTranslator();
-    private final FindCommandTranslator find = new FindCommandTranslator();
-    private final FindAndModifyCommandTranslator findAndModify = new FindAndModifyCommandTranslator();
-    private final InsertCommandTranslator insert = new InsertCommandTranslator();
-    private final UpdateCommandTranslator update = new UpdateCommandTranslator();
-    private final DeleteCommandTranslator delete = new DeleteCommandTranslator();
     private final DropCommandTranslator drop = new DropCommandTranslator();
+
+    // These translate a collection's own documents or query filters (insert's "documents",
+    // update's "q"/"u", findAndModify's "query"/"update", find's "filter", delete's "q",
+    // aggregate's "$match" stages), so - unlike the translators above - they need the
+    // collection's registered schema and are built once that schema registry exists, in
+    // initCollectionSchemas().
+    private CollectionSchemas collectionSchemas;
+    private AggregateCommandTranslator aggregateCommandTranslator;
+    private FindCommandTranslator findCommandTranslator;
+    private FindAndModifyCommandTranslator findAndModifyCommandTranslator;
+    private InsertCommandTranslator insertCommandTranslator;
+    private UpdateCommandTranslator updateCommandTranslator;
+    private DeleteCommandTranslator deleteCommandTranslator;
 
     private static final JsonSchema MONGODB_JSON_SCHEMA = JsonValueFactory.create(MongoJsonDB.class.getResourceAsStream("mongodb.schema.json")).as(JsonSchema.class);
     private static final JsonSchemaValidator JSON_SCHEMA_VALIDATOR = new JsonSchemaValidator();
@@ -40,10 +47,14 @@ public class MongoJsonDB implements AutoCloseable{
         this(mongoConfig.getJsonObject());
     }
 
+    /**
+     * @param config may also carry "collectionSchemas" - see {@link CollectionSchemas}.
+     */
     public MongoJsonDB(JsonObject config) {
         this(
                 config.get("connection").getString(),
-                config.get("db").getString());
+                config.get("db").getString(),
+                config);
     }
 
     public JsonObject validateCommand(JsonObject command) {
@@ -51,6 +62,15 @@ public class MongoJsonDB implements AutoCloseable{
     }
 
     public MongoJsonDB(String connectionString, String databaseName) {
+        this(connectionString, databaseName, JsonObject.EMPTY);
+    }
+
+    /**
+     * @param config carries "collectionSchemas" - see {@link CollectionSchemas}. "connection" and
+     *               "db" are ignored here; they're only read by {@link #MongoJsonDB(JsonObject)}.
+     */
+    public MongoJsonDB(String connectionString, String databaseName, JsonObject config) {
+        initCollectionSchemas(config);
 
         // Create a MongoClient instance
         try {
@@ -67,7 +87,25 @@ public class MongoJsonDB implements AutoCloseable{
     }
 
     public MongoJsonDB(MongoDatabase mongoDatabase) {
+        this(mongoDatabase, JsonObject.EMPTY);
+    }
+
+    /**
+     * @param config carries "collectionSchemas" - see {@link CollectionSchemas}.
+     */
+    public MongoJsonDB(MongoDatabase mongoDatabase, JsonObject config) {
         this.mongoDatabase = mongoDatabase;
+        initCollectionSchemas(config);
+    }
+
+    private void initCollectionSchemas(JsonObject config) {
+        this.collectionSchemas = new CollectionSchemas(config);
+        this.aggregateCommandTranslator = new AggregateCommandTranslator(collectionSchemas);
+        this.findCommandTranslator = new FindCommandTranslator(collectionSchemas);
+        this.findAndModifyCommandTranslator = new FindAndModifyCommandTranslator(collectionSchemas);
+        this.insertCommandTranslator = new InsertCommandTranslator(collectionSchemas);
+        this.updateCommandTranslator = new UpdateCommandTranslator(collectionSchemas);
+        this.deleteCommandTranslator = new DeleteCommandTranslator(collectionSchemas);
     }
 
     /**
@@ -119,7 +157,7 @@ public class MongoJsonDB implements AutoCloseable{
         //System.out.println("db command: "+commandName+"\n" + commandValue.asPrettyJson());
         switch (commandName) {
             case "aggregate":
-                return aggregate.translate(commandValue);
+                return aggregateCommandTranslator.translate(commandValue);
             case "create":
                 return create.translate(commandValue);
             case "createIndexes":
@@ -129,15 +167,15 @@ public class MongoJsonDB implements AutoCloseable{
             case "dropDatabase":
                 return dropDatabase.translate(commandValue);
             case "find":
-                return find.translate(commandValue);
+                return findCommandTranslator.translate(commandValue);
             case "findAndModify":
-                return findAndModify.translate(commandValue);
+                return findAndModifyCommandTranslator.translate(commandValue);
             case "insert":
-                return insert.translate(commandValue);
+                return insertCommandTranslator.translate(commandValue);
             case "update":
-                return update.translate(commandValue);
+                return updateCommandTranslator.translate(commandValue);
             case "delete":
-                return delete.translate(commandValue);
+                return deleteCommandTranslator.translate(commandValue);
             case "drop":
                 return drop.translate(commandValue);
             default:

@@ -5,7 +5,13 @@ import com.zuunr.json.JsonValue;
 import org.bson.Document;
 
 public class FindAndModifyCommandTranslator extends AbstractCommandTranslator {
-    private final Json2BsonQueryTranslator queryTranslator = new Json2BsonQueryTranslator();
+    private final Json2BsonQueryTranslator queryTranslator;
+    private final CollectionSchemas collectionSchemas;
+
+    public FindAndModifyCommandTranslator(CollectionSchemas collectionSchemas) {
+        this.collectionSchemas = collectionSchemas;
+        this.queryTranslator = new Json2BsonQueryTranslator(collectionSchemas);
+    }
 
     public Document translate(JsonObject findAndModifyCommand) {
         Document translated = new Document();
@@ -15,14 +21,17 @@ public class FindAndModifyCommandTranslator extends AbstractCommandTranslator {
 
         JsonObject query = findAndModifyCommand.get("query", JsonValue.NULL).getJsonObject();
         if (query != null) {
-            translated.put("query", queryTranslator.translateQuery(query));
+            translated.put("query", queryTranslator.translateQuery(collection, query));
         }
 
         JsonValue update = findAndModifyCommand.get("update");
         if (update != null) {
-            // A single modifier document (e.g. {"$set": {...}, "$inc": {...}}), not a list — findAndModify's
-            // "update" field takes one document, unlike the bulk "update" command's per-statement "u".
-            translated.put("update", Json2BsonTranslator.translate(update.getJsonObject()));
+            // A single document, not a list — findAndModify's "update" field takes one document, unlike
+            // the bulk "update" command's per-statement "u". It may be a full replacement document (then
+            // translated against the collection's own schema) or a modifier document such as
+            // {"$set": {...}, "$inc": {...}} (then translated with the default mapping regardless) —
+            // collectionSchemas.translateDocument tells the two apart.
+            translated.put("update", collectionSchemas.translateDocument(collection, update.getJsonObject()));
         }
 
         JsonValue upsert = findAndModifyCommand.get("upsert");

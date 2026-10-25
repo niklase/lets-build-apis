@@ -7,8 +7,12 @@ import org.bson.Document;
 
 public class FindCommandTranslator {
 
-    private final Json2BsonQueryTranslator queryTranslator = new Json2BsonQueryTranslator();
+    private final Json2BsonQueryTranslator queryTranslator;
     private final Json2BsonSortTranslator sortTranslator = new Json2BsonSortTranslator();
+
+    public FindCommandTranslator(CollectionSchemas collectionSchemas) {
+        this.queryTranslator = new Json2BsonQueryTranslator(collectionSchemas);
+    }
 
     public Document translate(JsonObject findCommand) {
         Document translated = new Document();
@@ -21,7 +25,7 @@ public class FindCommandTranslator {
 
         JsonObject filter = findCommand.get("filter", JsonValue.NULL).getJsonObject();
         if (filter != null) {
-            translated.put("filter", queryTranslator.translateQuery(filter));
+            translated.put("filter", queryTranslator.translateQuery(collection, filter));
         }
 
         Integer skip = findCommand.get("skip", JsonValue.NULL).getInteger();
