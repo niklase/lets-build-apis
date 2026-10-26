@@ -1,8 +1,17 @@
 # Generic HTML/HTMX rendering for API resources — design (v1: read-only)
 
-Status: **design proposal, nothing implemented yet.** Scope agreed for v1: read-only list and
-detail views for every collection, plus a dashboard page listing all collections. Create/update/
-delete UI, and anything about forms, is explicitly deferred to a later version.
+Status: **implemented.** v1 scope: read-only list and detail views for every collection, plus a
+dashboard page listing all collections, and a cookie-based login for browser navigation.
+Create/update/delete UI, and anything about forms beyond login, is explicitly deferred to a later
+version.
+
+Implementation: `rest/controller/EffectiveXUi.java` (the `x-ui` resolution pass), `rest/html/*`
+(pure rendering/content-negotiation/cookie utilities, no Spring/Mongo dependency),
+`rest/processor/html/*` (the processors wired into the request pipeline), `rest/requesthandler/
+html/*` (the `/ui`, `/ui/login`, `/ui/logout` handlers). Tests: a unit test per class above
+(`src/test/java/com/zuunr/dcentb/rest/{html,processor/html,controller}/`), plus manual end-to-end
+verification against `dcentb-todo-demo` with a real MongoDB (see that demo's `todo-api.openapi.json`
+for a worked `x-ui` example).
 
 Everything here is driven by the OpenAPI document — no per-collection Java, matching how
 `dbSchema`/`ItemDecorator`/`EffectiveOpenApiDoc` already work (see `README.md` and

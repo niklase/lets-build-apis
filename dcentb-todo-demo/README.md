@@ -14,6 +14,13 @@ This project is a tutorial for how dcentb turns an OpenAPI document into a runni
 | `GET /todos` | List all todos (supports `limit`, `offset`, `filter.done.eq`) |
 | `GET /todos/{id}` | Fetch one todo by id |
 | `GET /swagger` | Swagger UI — try the API interactively |
+| `GET /ui` | Browse every collection as plain HTML — no JS framework, just `x-ui` on the spec |
+| `GET /ui/login` | Log in with an API key from a browser (sets a session cookie) |
+
+Open `http://localhost:8080/todos` or `http://localhost:8080/ui` directly in a browser (not just
+`curl`/Swagger) to see the same data rendered as HTML — the same endpoints, content-negotiated by
+`Accept`. See `../dcentb/docs/html-ui-rendering-design.md` for how this works and what `Todo`'s
+`x-ui.properties` in `todo-api.openapi.json` is doing.
 
 ---
 
