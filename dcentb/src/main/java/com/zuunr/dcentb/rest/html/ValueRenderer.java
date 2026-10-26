@@ -64,7 +64,7 @@ public final class ValueRenderer {
         return html.toString();
     }
 
-    private static JsonValue displayNameOf(String propertyName, JsonArray xUiProperties) {
+    static JsonValue displayNameOf(String propertyName, JsonArray xUiProperties) {
         if (xUiProperties == null) {
             return null;
         }
