@@ -13,6 +13,12 @@
       "todos": {
         "dbSchema": {
           "$ref": "#/components/schemas/Todo"
+        },
+        "permissions": {
+          "user": {}
+        },
+        "ui": {
+          "displayName": {"en_US": "Todos", "sv_SE": "Att göra"}
         }
       }
     }
@@ -56,13 +62,12 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "user",
+            "permissionSchemas": {
+              "user": {
                 "requestSchema": {},
                 "responseSchema": true
               }
-            ]
+            }
           }
         }
       },
@@ -99,20 +104,29 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Todo"
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "user",
+            "permissionSchemas": {
+              "user": {
                 "requestSchema": {},
                 "responseSchema": true
               }
-            ]
+            }
           }
         }
       }
@@ -147,13 +161,12 @@
         },
         "x-dcentb": {
           "accessControl": {
-            "permissionSchemas": [
-              {
-                "permission": "user",
+            "permissionSchemas": {
+              "user": {
                 "requestSchema": {},
                 "responseSchema": true
               }
-            ]
+            }
           }
         }
       }
@@ -170,6 +183,12 @@
     "schemas": {
       "Todo": {
         "type": "object",
+        "x-ui": {
+          "properties": [
+            {"name": "title", "displayName": {"en_US": "Title", "sv_SE": "Titel"}},
+            {"name": "done", "displayName": {"en_US": "Done", "sv_SE": "Klar"}}
+          ]
+        },
         "properties": {
           "title": {
             "type": "string",
@@ -188,6 +207,12 @@
       "Meta": {
         "type": "object",
         "description": "Auto-populated by dcentb on write.",
+        "x-ui": {
+          "properties": [
+            {"name": "createdAt", "displayName": {"en_US": "Created", "sv_SE": "Skapad"}},
+            {"name": "updatedAt", "displayName": {"en_US": "Updated", "sv_SE": "Uppdaterad"}}
+          ]
+        },
         "properties": {
           "id": {
             "type": "string"
