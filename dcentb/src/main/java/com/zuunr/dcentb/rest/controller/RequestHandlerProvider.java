@@ -47,9 +47,62 @@ public class RequestHandlerProvider {
     public RequestHandlerProvider(JsonObject openApiDocument, JsonObject mongoDbConfig) {
         JsonObject configuredDocument = applyExternalMongoConfig(openApiDocument, mongoDbConfig);
         JsonObject effectiveDocument = configuredDocument.as(EffectiveOpenApiDoc.class).getJsonValue().getJsonObject();
+        // Synthesized *after* EffectiveOpenApiDoc: these are framework pages, not Mongo-backed
+        // collections, so they must never go through its per-path "x-dcentb.collections.<name>.
+        // dbSchema" validation - see html-ui-rendering-design.md sections 2 and 8.
+        effectiveDocument = withHtmlUiPaths(effectiveDocument);
+        effectiveDocument = effectiveDocument.as(EffectiveXUi.class).getJsonValue().getJsonObject();
         new ApiKeyProvisioner().provision(effectiveDocument);
         new JwtSecretProvisioner().provision(effectiveDocument);
         pathConfigMapper = setupPathConfigMapper(effectiveDocument);
+    }
+
+    private static final String[] HTML_UI_PATHS = {"/ui", "/ui/login", "/ui/logout"};
+
+    /**
+     * "/ui" (the dashboard), "/ui/login" and "/ui/logout" (sections 2 and 8). "/ui"'s
+     * response schema carries its own "x-ui.properties" so EffectiveXUi completes it the
+     * same as any declared path; the login/logout operations need no schema at all - their
+     * handlers are hand-written pages that never go through ValueRenderer (see
+     * Processor.HTML_ALREADY_RENDERED).
+     */
+    private static JsonObject withHtmlUiPaths(JsonObject document) {
+        JsonObject paths = document.get("paths", JsonObject.EMPTY).getJsonObject();
+        for (String reservedPath : HTML_UI_PATHS) {
+            if (paths.containsKey(reservedPath)) {
+                throw new IllegalStateException("\"" + reservedPath + "\" is reserved for the built-in HTML UI "
+                        + "(see html-ui-rendering-design.md) and cannot also be declared as an API path.");
+            }
+        }
+
+        JsonObject dashboardItemSchema = JsonObject.EMPTY
+                .put("type", "object")
+                .put("properties", JsonObject.EMPTY
+                        .put("name", JsonObject.EMPTY.put("type", "string"))
+                        .put("href", JsonObject.EMPTY.put("type", "string"))
+                        .put("displayName", JsonObject.EMPTY.put("type", "object")));
+
+        JsonObject dashboardResponseSchema = JsonObject.EMPTY
+                .put("type", "object")
+                .put("x-ui", JsonObject.EMPTY.put("properties", JsonArray.of(JsonObject.EMPTY
+                        .put("name", "collections")
+                        .put("displayName", JsonObject.EMPTY.put("en_US", "Collections")))))
+                .put("properties", JsonObject.EMPTY
+                        .put("collections", JsonObject.EMPTY.put("type", "array").put("items", dashboardItemSchema)));
+
+        JsonObject dashboardOperation = JsonObject.EMPTY
+                .put("summary", "Collections")
+                .put("responses", JsonObject.EMPTY.put("200", JsonObject.EMPTY
+                        .put("content", JsonObject.EMPTY.put("application/json", JsonObject.EMPTY.put("schema", dashboardResponseSchema)))));
+
+        paths = paths
+                .put("/ui", JsonObject.EMPTY.put("get", dashboardOperation.jsonValue()))
+                .put("/ui/login", JsonObject.EMPTY
+                        .put("get", JsonObject.EMPTY.put("summary", "Log in").jsonValue())
+                        .put("post", JsonObject.EMPTY.put("summary", "Log in").jsonValue()))
+                .put("/ui/logout", JsonObject.EMPTY.put("post", JsonObject.EMPTY.put("summary", "Log out").jsonValue()));
+
+        return document.put("paths", paths.jsonValue());
     }
 
     /**

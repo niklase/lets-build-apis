@@ -54,6 +54,9 @@ public class HtmlRenderingProcessor extends Processor {
         if (status == 401) {
             return requestContext.put(RESPONSE, redirectToLogin(request));
         }
+        if (status >= 300 && status < 400) {
+            return requestContext; // an existing redirect (e.g. from login) is complete already - never rewritten
+        }
 
         String fragment = status >= 200 && status < 300
                 ? renderSuccess(response, requestHeaders, request)
