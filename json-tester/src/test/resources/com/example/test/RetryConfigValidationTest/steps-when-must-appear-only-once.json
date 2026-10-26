@@ -1,4 +1,5 @@
 {
+  "meta": { "validateTestFileFormat": false },
   "sequence": [
     { "given": {} },
     {

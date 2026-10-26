@@ -2,22 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://zuunr.com/schemas/given-when-then-test-file.schema.json",
   "title": "GivenWhenThenTesterBase test file",
-  "description": "Structural contract for the harness-level parts of a test file (given/sequence, steps, retry, meta), enforced by GivenWhenThenTesterBase before a file is run - see the 'validateTestFileFormat' meta flag to opt a file out. The domain payload carried by 'given'/'when'/'then' is subclass-specific - an object for ControllerIT's HTTP request/response shape, but e.g. a plain array of Mongo commands for 'given' in the mongodb module's own harness - so it is intentionally left completely unconstrained here, not even required to be a JSON object. Note: this dialect (com.zuunr.json.schema) has no prefixItems/tuple-items/not, so positional invariants noted in 'description' fields below (given must be sequence[0]; when must be steps[0] and appear only once) are enforced by the harness at runtime, not by this schema. The array was called 'tests' in an earlier version - that name is no longer accepted at all (a file still using it is rejected at runtime with a rename hint, not silently reinterpreted).",
+  "description": "Structural contract for the harness-level parts of a test file (given/sequence, steps, retry, meta), enforced by GivenWhenThenTesterBase before a file is run - see the 'validateTestFileFormat' meta flag to opt a file out. The domain payload carried by 'given'/'when'/'then' is subclass-specific - an object for ControllerIT's HTTP request/response shape, but e.g. a plain array of Mongo commands for 'given' in the mongodb module's own harness - so it is intentionally left completely unconstrained here, not even required to be a JSON object. This dialect (com.zuunr.json.schema) supports 'prefixItems' - used below to enforce, structurally, that sequence[0] is a givenItem and every later element is a testGroup, and that a testGroup's steps[0] is the whenStep and every later step is a thenStep - so those positional invariants are schema-enforced, not just checked at runtime (the runtime checks in GivenWhenThenTesterBase.executeTest still exist too, as the error path for a file that opted out via 'validateTestFileFormat: false'). The legacy flat when/then form (a 'when' and its 'then'(s) as separate, adjacent 'sequence' elements grouped by array position rather than by an explicit 'steps' array) is no longer accepted at all - every group must use 'steps'. The array was called 'tests' in an earlier version - that name is no longer accepted at all (a file still using it is rejected at runtime with a rename hint, not silently reinterpreted).",
   "type": "object",
   "properties": {
     "meta": { "$ref": "#/$defs/fileMeta" },
     "sequence": {
       "type": "array",
       "minItems": 2,
-      "description": "sequence[0] must be a givenItem (runtime-enforced, not schema-enforced here). Every later element is either a testGroup (preferred, required if 'retry' is needed) or a legacy flat when/then element grouped by array adjacency.",
-      "items": {
-        "oneOf": [
-          { "$ref": "#/$defs/givenItem" },
-          { "$ref": "#/$defs/testGroup" },
-          { "$ref": "#/$defs/legacyWhenItem" },
-          { "$ref": "#/$defs/legacyThenItem" }
-        ]
-      }
+      "description": "sequence[0] must be a givenItem; every later element must be a testGroup (a 'steps' array) - enforced structurally via 'prefixItems', not just at runtime.",
+      "prefixItems": [
+        { "$ref": "#/$defs/givenItem" }
+      ],
+      "items": { "$ref": "#/$defs/testGroup" }
     }
   },
   "required": ["sequence"],
@@ -56,7 +52,7 @@
 
     "testGroup": {
       "type": "object",
-      "description": "One 'when' plus its 'then' assertions, explicit and order-guaranteed by array position. Prefer this over the legacy flat form for every new group, and it is the only form 'retry' may appear on.",
+      "description": "One 'when' plus its 'then' assertions, explicit and order-guaranteed by array position - the only shape a 'sequence' element may take (see the top-level note), and the only one 'retry' may appear on.",
       "properties": {
         "description": { "type": "string" },
         "meta": { "$ref": "#/$defs/groupMeta" },
@@ -67,13 +63,11 @@
         "steps": {
           "type": "array",
           "minItems": 2,
-          "description": "Must contain exactly one 'when', as steps[0] (runtime-enforced - see the top-level note on this dialect's limits), followed by one or more 'then's.",
-          "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/whenStep" },
-              { "$ref": "#/$defs/thenStep" }
-            ]
-          }
+          "description": "steps[0] must be the whenStep; every later element must be a thenStep - enforced structurally via 'prefixItems', not just at runtime.",
+          "prefixItems": [
+            { "$ref": "#/$defs/whenStep" }
+          ],
+          "items": { "$ref": "#/$defs/thenStep" }
         }
       },
       "required": ["steps"],
@@ -159,29 +153,6 @@
       "additionalProperties": false
     },
 
-    "nonNegativeMillis": { "type": "number", "minimum": 0 },
-
-    "legacyWhenItem": {
-      "type": "object",
-      "description": "Legacy flat form, kept for backward compatibility. 'retry' is not valid here - a 'retry' key found on this shape is a configuration error, not a silent no-op.",
-      "properties": {
-        "description": { "type": "string" },
-        "when": {},
-        "meta": { "$ref": "#/$defs/groupMeta" }
-      },
-      "required": ["when"],
-      "additionalProperties": false
-    },
-
-    "legacyThenItem": {
-      "type": "object",
-      "description": "Legacy flat form: one assertion belonging to the nearest preceding legacyWhenItem.",
-      "properties": {
-        "then": {},
-        "meta": { "$ref": "#/$defs/thenMeta" }
-      },
-      "required": ["then"],
-      "additionalProperties": false
-    }
+    "nonNegativeMillis": { "type": "number", "minimum": 0 }
   }
 }

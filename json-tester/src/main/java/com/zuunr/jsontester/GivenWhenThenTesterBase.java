@@ -23,6 +23,57 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Base class for JSON-file-driven given/when/then tests. A subclass points {@link #testFiles} at a
+ * directory of test files and this class reads each file's {@code sequence}, runs every {@code when}
+ * through the subclass's own execution logic, and asserts every {@code then} against the result.
+ *
+ * <p>Every group of one {@code when} plus the {@code then}(s) that check its result must be written as
+ * an explicit {@code steps} array, not as separate objects placed directly in {@code sequence}:
+ *
+ * <pre>{@code
+ * {
+ *   "sequence": [
+ *     { "given": {} },
+ *     {
+ *       "steps": [
+ *         { "when": {} },
+ *         { "then": { "attempts": 1 } }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * }</pre>
+ *
+ * A group may have more than one {@code then} after its {@code when}, for a sequence of assertions
+ * against the same result (see {@code WholeResultJsonSchemaExampleTest/whole-result-schema-test.json}
+ * for a real example with a {@code description} and {@code meta} on one of the steps):
+ *
+ * <pre>{@code
+ * {
+ *   "steps": [
+ *     { "when": {} },
+ *     { "then": { "attempts": 1 } },
+ *     { "then": { "status": "done" } }
+ *   ]
+ * }
+ * }</pre>
+ *
+ * There used to be a second, legacy way to write this: a {@code when} and its {@code then}(s) placed as
+ * separate, adjacent elements directly in {@code sequence}, with the grouping implied only by their
+ * position in the array rather than stated explicitly. That form made a file's structure depend on
+ * array-position bookkeeping that was easy to get wrong silently - inserting or reordering one object
+ * could silently regroup which {@code then}(s) applied to which {@code when}. It is no longer accepted:
+ * {@code given-when-then-test-file.schema.json} enforces, structurally, that every element of
+ * {@code sequence} after the first is a {@code steps}-shaped group, and that every element of a
+ * {@code steps} array after the first is a {@code then}. A file using the old form fails schema
+ * validation before it runs (see the {@code validateTestFileFormat} meta flag below for the one
+ * opt-out, which exists for the runtime-check tests in {@code RetryConfigValidationTest}, not for
+ * writing new test files).
+ *
+ * <p>Test file format is validated against {@code given-when-then-test-file.schema.json} before a file
+ * is run, unless the file sets {@code "meta": {"validateTestFileFormat": false}}.
+ */
 public abstract class GivenWhenThenTesterBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GivenWhenThenTesterBase.class);

@@ -2,29 +2,14 @@
   "sequence": [
     {
       "given": {
-        "pathToOperation": [
-          "paths",
-          "/test",
-          "post"
-        ],
+        "pathToOperation": ["paths", "/test", "post"],
         "openApiDef": {
           "openapi": "",
-          "info": {
-            "title": "Test API",
-            "version": ""
-          },
+          "info": { "title": "Test API", "version": "" },
           "paths": {
             "/test": {
               "post": {
-                "parameters": [
-                  {
-                    "name": "anInteger",
-                    "in": "query",
-                    "schema": {
-                      "type": "integer"
-                    }
-                  }
-                ]
+                "parameters": [{ "name": "anInteger", "in": "query", "schema": { "type": "integer" } }]
               }
             }
           }
@@ -32,26 +17,23 @@
       }
     },
     {
-      "when": {
-        "request": {
-          "uri": "/test?anInteger=ABC123"
+      "steps": [
+        { "when": { "request": { "uri": "/test?anInteger=ABC123" } } },
+        {
+          "then": {
+            "errors": {
+              "/request/query/anInteger/0": {
+                "rejectedValue": "ABC123",
+                "violations": {
+                  "/properties/request/properties/query/properties/anInteger/items/type": "integer"
+                }
+              }
+            },
+            "ok": false
+          },
+          "meta": {}
         }
-      }
-    },
-    {
-      "then": {
-        "errors": {
-          "/request/query/anInteger/0": {
-            "rejectedValue": "ABC123",
-            "violations": {
-              "/properties/request/properties/query/properties/anInteger/items/type": "integer"
-            }
-          }
-        },
-        "ok": false
-      },
-      "meta": {
-      }
+      ]
     }
   ]
 }

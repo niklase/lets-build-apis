@@ -2,29 +2,14 @@
   "sequence": [
     {
       "given": {
-        "pathToOperation": [
-          "paths",
-          "/test",
-          "post"
-        ],
+        "pathToOperation": ["paths", "/test", "post"],
         "openApiDef": {
           "openapi": "",
-          "info": {
-            "title": "Test API",
-            "version": ""
-          },
+          "info": { "title": "Test API", "version": "" },
           "paths": {
             "/test": {
               "post": {
-                "parameters": [
-                  {
-                    "name": "anInteger",
-                    "in": "query",
-                    "schema": {
-                      "type": "integer"
-                    }
-                  }
-                ]
+                "parameters": [{ "name": "anInteger", "in": "query", "schema": { "type": "integer" } }]
               }
             }
           }
@@ -32,25 +17,13 @@
       }
     },
     {
-      "when": {
-        "request": {
-          "uri": "/test?anInteger=123"
+      "steps": [
+        { "when": { "request": { "uri": "/test?anInteger=123" } } },
+        {
+          "then": { "request": { "query": { "anInteger": [123] } } },
+          "meta": { "validationStrategy": "ALLOWING_EXTRA_PROPERTIES" }
         }
-      }
-    },
-    {
-      "then": {
-        "request": {
-          "query": {
-            "anInteger": [
-              123
-            ]
-          }
-        }
-      },
-      "meta": {
-        "validationStrategy": "ALLOWING_EXTRA_PROPERTIES"
-      }
+      ]
     }
   ]
 }

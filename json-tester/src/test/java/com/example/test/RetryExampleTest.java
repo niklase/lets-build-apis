@@ -14,9 +14,8 @@ import java.util.stream.Stream;
  * Demonstrates "retry" (the "steps"-scoped replacement for the old "await"): a "when" is
  * re-executed on an interval until every "then" in its group matches, simulating polling an
  * eventually-consistent read (e.g. a REST endpoint updated by an async side effect) without a
- * fixed sleep. Covers: a scalar interval, an array backoff schedule shorter than the number of
- * retries actually needed (proving the last value is held rather than erroring once exhausted),
- * and the legacy flat when/then form coexisting with the new "steps" form in the same file.
+ * fixed sleep. Covers: a scalar interval, and an array backoff schedule shorter than the number
+ * of retries actually needed (proving the last value is held rather than erroring once exhausted).
  */
 class RetryExampleTest extends GivenWhenThenTesterBase {
 

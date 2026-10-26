@@ -1,10 +1,5 @@
 {
-  "meta": {
-    "validationStrategy": "ALLOWING_EXTRA_PROPERTIES",
-    "variables": {
-      "##var1##": "students"
-    }
-  },
+  "meta": { "validationStrategy": "ALLOWING_EXTRA_PROPERTIES", "variables": { "##var1##": "students" } },
   "sequence": [
     {
       "given": {
@@ -12,21 +7,9 @@
           "connection": "mongodb://admin:adminpassword@localhost:27017/?authSource=admin",
           "db": "students-demo",
           "commands": [
-            {
-              "drop": {
-                "collection": "students"
-              }
-            },
-            {
-              "drop": {
-                "collection": "api-keys"
-              }
-            },
-            {
-              "drop": {
-                "collection": "teachers"
-              }
-            },
+            { "drop": { "collection": "students" } },
+            { "drop": { "collection": "api-keys" } },
+            { "drop": { "collection": "teachers" } },
             {
               "insert": {
                 "collection": "teachers",
@@ -54,49 +37,33 @@
                     "_id": "teacher-a-apikey",
                     "userId": "teacher-A",
                     "teacherId": "teacher-A",
-                    "permissions": [
-                      "teacher"
-                    ]
+                    "permissions": ["teacher"]
                   },
                   {
                     "_id": "teacher-b-apikey",
                     "userId": "teacher-B",
                     "teacherId": "teacher-B",
-                    "permissions": [
-                      "teacher"
-                    ]
+                    "permissions": ["teacher"]
                   },
                   {
                     "_id": "student-anna-apikey",
                     "userId": "student-anna",
                     "studentId": "student-anna",
-                    "permissions": [
-                      "student"
-                    ]
+                    "permissions": ["student"]
                   },
                   {
                     "_id": "student-peter-apikey",
                     "userId": "student-peter",
                     "studentId": "student-peter",
-                    "permissions": [
-                      "student"
-                    ]
+                    "permissions": ["student"]
                   },
                   {
                     "_id": "student-robert-apikey",
                     "userId": "student-robert",
                     "studentId": "student-robert",
-                    "permissions": [
-                      "student"
-                    ]
+                    "permissions": ["student"]
                   },
-                  {
-                    "_id": "admin-a1-apikey",
-                    "userId": "admin-a1",
-                    "permissions": [
-                      "admin"
-                    ]
-                  }
+                  { "_id": "admin-a1-apikey", "userId": "admin-a1", "permissions": ["admin"] }
                 ]
               }
             }
@@ -107,873 +74,529 @@
     },
     {
       "description": "Create a new student Anna",
-      "when": {
-        "method": "POST",
-        "uri": "/students",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "POST",
+            "uri": "/students",
+            "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+            "body": {
+              "name": "Anna",
+              "email": "anna@example.com",
+              "studentId": "student-anna",
+              "teacherId": "teacher-A",
+              "grade": "C",
+              "attendancePercent": 100
+            }
+          }
         },
-        "body": {
-          "name": "Anna",
-          "email": "anna@example.com",
-          "studentId": "student-anna",
-          "teacherId": "teacher-A",
-          "grade": "C",
-          "attendancePercent": 100
+        {
+          "then": {
+            "body": { "name": "Anna", "meta": {} },
+            "status": 201,
+            "headers": { "location": [{ "$schema": { "pattern": "^/students/[^/]+$" } }] }
+          },
+          "meta": { "setVariables": { "{{student-anna-href}}": "/headers/location/0" } }
         }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "name": "Anna",
-          "meta": {}
-        },
-        "status": 201,
-        "headers": {
-          "location": [{"$schema": {"pattern": "^/students/[^/]+$"}}]
-        }
-      },
-      "meta": {
-        "setVariables": {
-          "{{student-anna-href}}": "/headers/location/0"
-        }
-      }
+      ]
     },
     {
       "description": "Create a new student Peter",
-      "when": {
-        "method": "PUT",
-        "uri": "/students/peter",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PUT",
+            "uri": "/students/peter",
+            "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+            "body": {
+              "name": "Peter",
+              "email": "peter@example.com",
+              "studentId": "student-peter",
+              "teacherId": "teacher-A",
+              "grade": "D",
+              "attendancePercent": 92
+            }
+          }
         },
-        "body": {
-          "name": "Peter",
-          "email": "peter@example.com",
-          "studentId": "student-peter",
-          "teacherId": "teacher-A",
-          "grade": "D",
-          "attendancePercent": 92
+        {
+          "then": { "body": { "name": "Peter", "meta": {} }, "status": 201, "headers": {} },
+          "meta": { "setVariables": { "{{student-peter-href}}": "/headers/location/0" } }
         }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "name": "Peter",
-          "meta": {}
-        },
-        "status": 201,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {
-          "{{student-peter-href}}": "/headers/location/0"
-        }
-      }
+      ]
     },
     {
       "description": "As admin, Create a new student Peter after Peter has already been created",
-      "when": {
-        "method": "PUT",
-        "uri": "/students/peter",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PUT",
+            "uri": "/students/peter",
+            "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+            "body": {
+              "name": "Peter",
+              "email": "peter@example.com",
+              "studentId": "student-peter",
+              "teacherId": "teacher-A",
+              "grade": "D",
+              "attendancePercent": 92
+            }
+          }
         },
-        "body": {
-          "name": "Peter",
-          "email": "peter@example.com",
-          "studentId": "student-peter",
-          "teacherId": "teacher-A",
-          "grade": "D",
-          "attendancePercent": 92
+        {
+          "then": { "body": { "name": "Peter", "meta": {} }, "status": 200, "headers": {} },
+          "meta": { "setVariables": {} }
         }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "name": "Peter",
-          "meta": {}
-        },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {
-        }
-      }
+      ]
     },
     {
       "description": "As admin, Create a new student Peter after Peter has already been created but where name is spelled differently",
-      "when": {
-        "method": "PUT",
-        "uri": "/students/peter",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PUT",
+            "uri": "/students/peter",
+            "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+            "body": {
+              "name": "PETER",
+              "email": "peter@example.com",
+              "studentId": "student-peter",
+              "teacherId": "teacher-A",
+              "grade": "D",
+              "attendancePercent": 92
+            }
+          }
         },
-        "body": {
-          "name": "PETER",
-          "email": "peter@example.com",
-          "studentId": "student-peter",
-          "teacherId": "teacher-A",
-          "grade": "D",
-          "attendancePercent": 92
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-        },
-        "status": 409,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {
-        }
-      }
+        { "then": { "body": {}, "status": 409, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "Create a new student Robert",
-      "when": {
-        "method": "POST",
-        "uri": "/students",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "POST",
+            "uri": "/students",
+            "headers": { "content-type": ["application/json"], "api-key": ["admin-a1-apikey"] },
+            "body": {
+              "name": "Robert",
+              "email": "robert@example.com",
+              "studentId": "student-robert",
+              "teacherId": "teacher-A",
+              "grade": "A",
+              "attendancePercent": 98
+            }
+          }
         },
-        "body": {
-          "name": "Robert",
-          "email": "robert@example.com",
-          "studentId": "student-robert",
-          "teacherId": "teacher-A",
-          "grade": "A",
-          "attendancePercent": 98
+        {
+          "then": { "body": { "name": "Robert", "meta": {} }, "status": 201, "headers": {} },
+          "meta": { "setVariables": { "{{student-robert-href}}": "/headers/location/0" } }
         }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "name": "Robert",
-          "meta": {}
-        },
-        "status": 201,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {
-          "{{student-robert-href}}": "/headers/location/0"
-        }
-      }
+      ]
     },
     {
       "description": "As teacher-A, try to get all students of any teacher",
-      "when": {
-        "method": "GET",
-        "uri": "/students",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-a-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {},
-        "status": 403,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "/students",
+            "headers": { "accept": ["application/json"], "api-key": ["teacher-a-apikey"] }
+          }
+        },
+        { "then": { "body": {}, "status": 403, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As teacher-A, get all students of teacher-A",
-      "when": {
-        "method": "GET",
-        "uri": "/students?filter.teacherId.eq=teacher-A",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-a-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "items": [
-            {
-              "teacherId": "teacher-A"
-            },
-            {
-              "teacherId": "teacher-A"
-            }
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "/students?filter.teacherId.eq=teacher-A",
+            "headers": { "accept": ["application/json"], "api-key": ["teacher-a-apikey"] }
+          }
         },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": {
+            "body": { "items": [{ "teacherId": "teacher-A" }, { "teacherId": "teacher-A" }] },
+            "status": 200,
+            "headers": {}
+          },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As teacher-A, try to get all students of any teacher with POST getCollection",
-      "when": {
-        "method": "POST",
-        "uri": "/students/getCollection",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-a-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "POST",
+            "uri": "/students/getCollection",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["teacher-a-apikey"]
+            },
+            "body": {}
+          }
         },
-        "body": {}
-      }
-    },
-    {
-      "then": {
-        "body": {},
-        "status": 403,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "body": {}, "status": 403, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As teacher-A, get all students of teacher-A with POST /getCollection",
-      "when": {
-        "method": "POST",
-        "uri": "/students/getCollection",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-a-apikey"
-          ]
-        },
-        "body": {
-          "filter": {
-            "teacherId": {
-              "eq": "teacher-A"
-            }
-          }
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "items": [
-            {
-              "teacherId": "teacher-A"
+      "steps": [
+        {
+          "when": {
+            "method": "POST",
+            "uri": "/students/getCollection",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["teacher-a-apikey"]
             },
-            {
-              "teacherId": "teacher-A"
-            }
-          ]
+            "body": { "filter": { "teacherId": { "eq": "teacher-A" } } }
+          }
         },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": {
+            "body": { "items": [{ "teacherId": "teacher-A" }, { "teacherId": "teacher-A" }] },
+            "status": 200,
+            "headers": {}
+          },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As teacher-A, try to get all students of teacher-B (unauthorized)",
-      "when": {
-        "method": "GET",
-        "uri": "/students?filter.teacherId.eq=teacher-B",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-a-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "errors": [
-            {
-              "rejectedValue": "teacher-B",
-              "field": "/request/query/filter.teacherId.eq/0"
-            }
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "/students?filter.teacherId.eq=teacher-B",
+            "headers": { "accept": ["application/json"], "api-key": ["teacher-a-apikey"] }
+          }
         },
-        "status": 403,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": {
+            "body": {
+              "errors": [{ "rejectedValue": "teacher-B", "field": "/request/query/filter.teacherId.eq/0" }]
+            },
+            "status": 403,
+            "headers": {}
+          },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As teacher-B, failing to set grade of a student who has teacher-A and gets a 404",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "teacher-b-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-robert-href}}",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["teacher-b-apikey"]
+            },
+            "body": { "grade": "F" }
+          }
         },
-        "body": {
-          "grade": "F"
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-        },
-        "status": 404,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "body": {}, "status": 404, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As student student-s1, get info about myself",
-      "when": {
-        "method": "GET",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "authorization": [
-            "{{bearer-jwt-student-anna}}"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "studentId": "student-anna"
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "{{student-anna-href}}",
+            "headers": { "accept": ["application/json"], "authorization": ["{{bearer-jwt-student-anna}}"] }
+          }
         },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": { "body": { "studentId": "student-anna" }, "status": 200, "headers": {} },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As admin-a1 (authenticated via self-issued JWT instead of api-key), get student anna",
-      "when": {
-        "method": "GET",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "authorization": [
-            "{{bearer-jwt-admin-a1}}"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "studentId": "student-anna"
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "{{student-anna-href}}",
+            "headers": { "accept": ["application/json"], "authorization": ["{{bearer-jwt-admin-a1}}"] }
+          }
         },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": { "body": { "studentId": "student-anna" }, "status": 200, "headers": {} },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As student student-s1, cannot get info about other student, not even info of that the student resource exists.",
-      "when": {
-        "method": "GET",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-anna-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 404,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "{{student-robert-href}}",
+            "headers": { "accept": ["application/json"], "api-key": ["student-anna-apikey"] }
+          }
+        },
+        { "then": { "status": 404, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As student student-s2 and get info about robert",
-      "when": {
-        "method": "GET",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-robert-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "{{student-robert-href}}",
+            "headers": { "accept": ["application/json"], "api-key": ["student-robert-apikey"] }
+          }
+        },
+        { "then": { "status": 200, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As student student-s3 (robert), update email of  robert",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-robert-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-robert-href}}",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["student-robert-apikey"]
+            },
+            "body": { "email": "rob@example.com" }
+          }
         },
-        "body": {
-          "email": "rob@example.com"
+        {
+          "then": {
+            "status": 200,
+            "headers": {},
+            "body": { "email": "rob@example.com", "studentId": "student-robert" }
+          },
+          "meta": { "setVariables": {} }
         }
-      }
-    },
-    {
-      "then": {
-        "status": 200,
-        "headers": {},
-        "body": {
-          "email": "rob@example.com",
-          "studentId": "student-robert"
-        }
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      ]
     },
     {
       "description": "As student student-s1 (anna), failing to update email of  robert",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-anna-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-robert-href}}",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["student-anna-apikey"]
+            },
+            "body": { "email": "rob@example.com" }
+          }
         },
-        "body": {
-          "email": "rob@example.com"
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 404,
-        "headers": {},
-        "body": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "status": 404, "headers": {}, "body": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin, cannot set grade to other than F when attendancePercent is less than 50",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-peter-href}}",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-peter-href}}",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["admin-a1-apikey"]
+            },
+            "body": { "attendancePercent": 30 }
+          }
         },
-        "body": {
-          "attendancePercent": 30
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 409,
-        "headers": {},
-        "body": {
-        }
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "status": 409, "headers": {}, "body": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin, cannot change studentId",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-peter-href}}",
-        "headers": {
-          "content-type": [
-            "application/json"
-          ],
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-peter-href}}",
+            "headers": {
+              "content-type": ["application/json"],
+              "accept": ["application/json"],
+              "api-key": ["admin-a1-apikey"]
+            },
+            "body": { "studentId": "newId" }
+          }
         },
-        "body": {
-          "studentId": "newId"
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 400,
-        "headers": {},
-        "body": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "status": 400, "headers": {}, "body": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin , get all students",
-      "when": {
-        "method": "GET",
-        "uri": "/students",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "body": {
-          "items": [
-            {
-              "teacherId": "teacher-A"
-            },
-            {
-              "teacherId": "teacher-A"
-            },
-            {
-              "teacherId": "teacher-A"
-            }
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "/students",
+            "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+          }
         },
-        "status": 200,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        {
+          "then": {
+            "body": {
+              "items": [
+                { "teacherId": "teacher-A" },
+                { "teacherId": "teacher-A" },
+                { "teacherId": "teacher-A" }
+              ]
+            },
+            "status": 200,
+            "headers": {}
+          },
+          "meta": { "setVariables": {} }
+        }
+      ]
     },
     {
       "description": "As admin, delete student robert",
-      "when": {
-        "method": "DELETE",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 204,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "DELETE",
+            "uri": "{{student-robert-href}}",
+            "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+          }
+        },
+        { "then": { "status": 204, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin, try to get deleted student robert",
-      "when": {
-        "method": "GET",
-        "uri": "{{student-robert-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 404,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "{{student-robert-href}}",
+            "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+          }
+        },
+        { "then": { "status": 404, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin, get all with special ids (in=abc123,def456) failing",
-      "when": {
-        "method": "GET",
-        "uri": "/students?filter.meta.id.in=abc123,def456",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 400,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "GET",
+            "uri": "/students?filter.meta.id.in=abc123,def456",
+            "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+          }
+        },
+        { "then": { "status": 400, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As Peter, delete student Anna",
-      "when": {
-        "method": "DELETE",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-peter-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 404,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "DELETE",
+            "uri": "{{student-anna-href}}",
+            "headers": { "accept": ["application/json"], "api-key": ["student-peter-apikey"] }
+          }
+        },
+        { "then": { "status": 404, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As Admin, delete non-existing student",
-      "when": {
-        "method": "DELETE",
-        "uri": "/students/nonexisting-1234567890",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ]
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 404,
-        "headers": {}
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      "steps": [
+        {
+          "when": {
+            "method": "DELETE",
+            "uri": "/students/nonexisting-1234567890",
+            "headers": { "accept": ["application/json"], "api-key": ["admin-a1-apikey"] }
+          }
+        },
+        { "then": { "status": 404, "headers": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As student Anna, update email",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-anna-apikey"
-          ],
-          "content-type": [
-            "application/json"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-anna-href}}",
+            "headers": {
+              "accept": ["application/json"],
+              "api-key": ["student-anna-apikey"],
+              "content-type": ["application/json"]
+            },
+            "body": { "email": "ANNA@example.com" }
+          }
         },
-        "body": {
-          "email": "ANNA@example.com"
+        {
+          "then": {
+            "status": 200,
+            "headers": {},
+            "body": { "email": "anna@example.com", "attendanceStatus": "OK" }
+          },
+          "meta": { "setVariables": {} }
         }
-      }
-    },
-    {
-      "then": {
-        "status": 200,
-        "headers": {},
-        "body": {
-          "email": "anna@example.com",
-          "attendanceStatus": "OK"
-        }
-      },
-      "meta": {
-        "setVariables": {}
-      }
+      ]
     },
     {
       "description": "As student Anna, fails to update email and grade (because not allowed to write grade)",
-      "when": {
-        "method": "PATCH",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "student-anna-apikey"
-          ],
-          "content-type": [
-            "application/json"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PATCH",
+            "uri": "{{student-anna-href}}",
+            "headers": {
+              "accept": ["application/json"],
+              "api-key": ["student-anna-apikey"],
+              "content-type": ["application/json"]
+            },
+            "body": { "email": "aNnA@example.com", "grade": "A" }
+          }
         },
-        "body": {
-          "email": "aNnA@example.com",
-          "grade": "A"
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 403,
-        "headers": {},
-        "body": {
-        }
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "status": 403, "headers": {}, "body": {} }, "meta": { "setVariables": {} } }
+      ]
     },
     {
       "description": "As admin, fails to update email with PUT",
-      "when": {
-        "method": "PUT",
-        "uri": "{{student-anna-href}}",
-        "headers": {
-          "accept": [
-            "application/json"
-          ],
-          "api-key": [
-            "admin-a1-apikey"
-          ],
-          "content-type": [
-            "application/json"
-          ]
+      "steps": [
+        {
+          "when": {
+            "method": "PUT",
+            "uri": "{{student-anna-href}}",
+            "headers": {
+              "accept": ["application/json"],
+              "api-key": ["admin-a1-apikey"],
+              "content-type": ["application/json"]
+            },
+            "body": { "email": "ANNA@example.com" }
+          }
         },
-        "body": {
-          "email": "ANNA@example.com"
-        }
-      }
-    },
-    {
-      "then": {
-        "status": 409,
-        "headers": {},
-        "body": {
-        }
-      },
-      "meta": {
-        "setVariables": {}
-      }
+        { "then": { "status": 409, "headers": {}, "body": {} }, "meta": { "setVariables": {} } }
+      ]
     }
   ]
 }

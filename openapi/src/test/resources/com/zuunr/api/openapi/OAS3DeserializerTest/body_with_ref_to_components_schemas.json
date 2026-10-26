@@ -2,27 +2,16 @@
   "sequence": [
     {
       "given": {
-        "pathToOperation": [
-          "paths",
-          "/test",
-          "post"
-        ],
+        "pathToOperation": ["paths", "/test", "post"],
         "openApiDef": {
           "openapi": "",
-          "info": {
-            "title": "Test API",
-            "version": ""
-          },
+          "info": { "title": "Test API", "version": "" },
           "paths": {
             "/test": {
               "post": {
                 "requestBody": {
                   "content": {
-                    "application/json": {
-                      "schema": {
-                        "$ref": "#/components/schemas/Cars_item_v1"
-                      }
-                    }
+                    "application/json": { "schema": { "$ref": "#/components/schemas/Cars_item_v1" } }
                   }
                 }
               }
@@ -33,18 +22,9 @@
               "Cars_item_v1": {
                 "type": "object",
                 "properties": {
-                  "brand": {
-                    "type": "string"
-                  },
-                  "productionYear": {
-                    "type": "integer"
-                  },
-                  "similarCars": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Cars_item_v1"
-                    }
-                  }
+                  "brand": { "type": "string" },
+                  "productionYear": { "type": "integer" },
+                  "similarCars": { "type": "array", "items": { "$ref": "#/components/schemas/Cars_item_v1" } }
                 }
               }
             }
@@ -53,32 +33,31 @@
       }
     },
     {
-      "when": {
-        "request": {
-          "uri": "/test",
-          "headers": {
-            "content-type": [
-              "application/json"
-            ]
-          },
-          "body": "{\"brand\": \"Audi\", \"productionYear\": 2010, \"similarCars\": [{\"brand\": \"Audi\", \"productionYear\": \"2010\"}]}"
-        }
-      }
-    },
-    {
-      "then": {
-        "errors": {
-          "/request/body/similarCars/0/productionYear": {
-            "rejectedValue": "2010",
-            "violations": {
-              "/properties/request/properties/body/$ref/properties/similarCars/items/$ref/properties/productionYear/type": "integer"
+      "steps": [
+        {
+          "when": {
+            "request": {
+              "uri": "/test",
+              "headers": { "content-type": ["application/json"] },
+              "body": "{\"brand\": \"Audi\", \"productionYear\": 2010, \"similarCars\": [{\"brand\": \"Audi\", \"productionYear\": \"2010\"}]}"
             }
           }
         },
-        "ok": false
-      },
-      "meta": {
-      }
+        {
+          "then": {
+            "errors": {
+              "/request/body/similarCars/0/productionYear": {
+                "rejectedValue": "2010",
+                "violations": {
+                  "/properties/request/properties/body/$ref/properties/similarCars/items/$ref/properties/productionYear/type": "integer"
+                }
+              }
+            },
+            "ok": false
+          },
+          "meta": {}
+        }
+      ]
     }
   ]
 }
