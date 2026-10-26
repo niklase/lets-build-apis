@@ -1,5 +1,6 @@
 package com.zuunr.dcentb.rest.processor.html;
 
+import com.zuunr.dcentb.rest.html.DisplayNameResolver;
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
@@ -8,8 +9,11 @@ import com.zuunr.json.JsonValue;
 /**
  * Builds the "/ui" dashboard body: {"collections": [{"name", "href", "displayName"}, ...]} -
  * see html-ui-rendering-design.md section 2. A collection is always listed, with
- * "displayName" falling back to the raw name at render time (ValueRenderer/
- * DisplayNameResolver) when "x-dcentb.collections.&lt;name&gt;.ui.displayName" isn't set.
+ * "displayName" falling back to the raw name when "x-dcentb.collections.&lt;name&gt;.ui.
+ * displayName" isn't set. Resolved here, into a plain string, rather than left as a raw
+ * locale map for ValueRenderer to render generically - "displayName" is this response's own
+ * label, not arbitrary resource data, so it gets the same one-shot resolution every other
+ * label in the system gets, not a nested &lt;dl&gt; of every locale.
  * <p>
  * Visibility is a coarse, best-effort check ("does any of the caller's permissions even
  * have an entry under this collection's own permissions block") - not the precise,
@@ -43,6 +47,7 @@ public class CollectionsIndexBuilder extends Processor {
 
         JsonValue authenticatedUser = requestContext.get("authenticatedUser");
         JsonArray callerPermissions = authenticatedUser == null ? null : authenticatedUser.get("permissions", JsonArray.EMPTY).getJsonArray();
+        JsonObject requestHeaders = requestContext.get(REQUEST, JsonObject.EMPTY).getJsonObject().get("headers", JsonObject.EMPTY).getJsonObject();
 
         JsonArray collections = JsonArray.EMPTY;
         for (String name : collectionsConfig.keySet()) {
@@ -51,10 +56,11 @@ public class CollectionsIndexBuilder extends Processor {
                 continue;
             }
             JsonValue displayName = collectionConfig.get(JsonArray.of("ui", "displayName"));
+            String resolvedDisplayName = DisplayNameResolver.resolve(requestHeaders, displayName, name);
             collections = collections.add(JsonObject.EMPTY
                     .put("name", name)
                     .put("href", "/" + name)
-                    .put("displayName", displayName == null ? JsonObject.EMPTY.jsonValue() : displayName));
+                    .put("displayName", resolvedDisplayName));
         }
 
         return requestContext
