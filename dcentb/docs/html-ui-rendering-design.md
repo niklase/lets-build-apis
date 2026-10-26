@@ -168,26 +168,81 @@ count later, not a blocker now.
   nested `hx-get` on the page. This is an easy thing to get wrong in just one spot and silently
   ship broken; worth a lint/test rather than trusting every template author to remember it.
 
-## Issues and risks with this design
+## 8. Auth for browser navigation — resolved: cookie-based session
 
-**Authentication for plain browser navigation is unresolved, and is the biggest open gap.**
-dcentb's access control is keyed off a custom `api-key` header (or JWT) — see
-`AuthenticationProcessor`/`todo-api.openapi.json`'s `ApiKeyAuth` security scheme. A plain `<a
-href>` click, typed URL, or bookmark is a browser navigation that **cannot carry a custom header**
-— only `fetch`/`XMLHttpRequest` (and so htmx's own AJAX requests) can. That means:
-- The *very first* load of `/ui`, or of any collection/item page reached by typing a URL or
-  opening a bookmark rather than clicking an in-page htmx link, has no way to authenticate under
-  the current access-control model.
-- Only navigation that originates from *inside* an already-running htmx page (where JS can attach
-  the header) works — which breaks the "bookmarkable page" property that's part of the appeal of
-  server-rendered URLs in the first place.
-- This needs an explicit decision before v1 is usable in a real browser: a cookie-based session
-  (login page, sets a cookie, every subsequent request — including full-page navigations — carries
-  it automatically), HTTP Basic Auth (browser's native credential prompt, still header-based but
-  the *browser* attaches it after the first prompt), or an accepted-but-flagged-insecure
-  api-key-as-query-param escape hatch for HTML mode specifically (ends up in server logs and
-  browser history, so not a casual choice). This is independent of everything else in this design
-  and should be settled first.
+Confirmed by reading `AuthenticationProcessor`/`ApiKeyAuthenticator`: today's auth is purely
+header-based (`api-key` header, or `Authorization: Bearer` for the two JWT schemes), matched by
+exact value against a Mongo `api-keys` collection — no hashing, no sessions, no cookie handling
+anywhere in the codebase (confirmed, nothing touches `Cookie`/`Set-Cookie` today). A plain browser
+navigation can't attach a custom header, so something new is needed. Decision: a cookie-based
+session with a real login page, reusing the existing api-key credential and lookup as-is.
+
+### New, deliberately unauthenticated paths
+
+`GET /ui/login` and `POST /ui/login`, synthesized the same way as `/ui` (§2) but **without**
+`AuthenticationProcessor` in their chain — they must be reachable with no credential at all. A
+`POST /ui/logout` clears the cookie and redirects back to the login page.
+
+- `GET /ui/login` renders a small, fixed, hand-written HTML form (one field: the api-key). This is
+  the one page in the whole design that is *not* an instance of the generic schema-driven
+  renderer — there's no JSON resource behind a login form, so it doesn't belong in the `x-ui`
+  machinery any more than `/swagger`'s hand-written page does. It differs from `/swagger` only in
+  that it's routed through the real pipeline (so it can set a cookie on success), not a bare Spring
+  controller.
+- `POST /ui/login`'s body is a native HTML form submission — `application/x-www-form-urlencoded`,
+  not JSON. Nothing in the pipeline parses that content type today (`OASRequestDeserializer`
+  assumes JSON bodies); this needs one small, dedicated parser scoped to this one endpoint, not a
+  general new content-type feature for the API.
+- Validation reuses `ApiKeyAuthenticator` directly: build a requestContext with the submitted
+  field as if it were the `api-key` header, and call the existing processor — zero duplicated
+  Mongo-lookup logic. On success it already produces `authenticatedUser`; on failure it already
+  produces the 401 `response`.
+- On success: `303 See Other` to `/ui` (or `?next=<path>` if present — see risk below), with
+  `Set-Cookie: dcentb-html-session=<the api-key>; HttpOnly; Secure; SameSite=Lax`. Reusing the raw
+  api-key as the cookie value is deliberate for v1: it's the exact same secret already trusted
+  today over a header, just carried differently, so this adds no new trust surface. A dedicated,
+  shorter-lived session token decoupled from the underlying api-key is a reasonable v2 hardening
+  step, not a v1 blocker.
+- On failure: re-render the same form with an inline error (200, not 401 — standard practice, so a
+  page refresh doesn't trigger the browser's "resubmit form?" prompt).
+
+### Reading the cookie back
+
+`ApiKeyAuthenticator` gets one new fallback: if the `api-key` header is absent **and** the request
+negotiated for `text/html` (the same Accept-preference predicate the HTML renderer itself uses in
+§1 — it needs to be one shared, stateless helper called from both places, not reimplemented twice,
+since the two checks disagreeing would be a real bug), read `dcentb-html-session` from the `Cookie`
+request header instead. JSON API behavior is unchanged in every case: no cookie is ever consulted
+unless the request already asked for HTML. This also needs a small new utility — nothing parses the
+`Cookie` header into individual name/value pairs anywhere in the codebase today.
+
+### 401 vs. 403 in HTML mode
+
+The generic `HtmlRenderingProcessor` (§1) special-cases `401` specifically: in HTML mode, rewrite
+it to a `303` redirect to `/ui/login?next=<original path>` instead of rendering a 401 page — the
+caller simply isn't authenticated yet, and login is one click away. `403` is different (authenticated,
+but not permitted) and still gets an actual small rendered "forbidden" page, the same
+hand-written-not-schema-driven way as the login page — redirecting *that* to login would just loop
+forever, since logging in again doesn't grant a permission that was never there.
+
+### Residual risks from this choice
+
+- **Open redirect via `?next=`.** A login link crafted with `next=https://evil.example` would send
+  a *successfully authenticated* user on to an attacker's page right after they type in their real
+  credential. `next` must be validated as a same-origin relative path (starts with a single `/`, no
+  scheme, no `//`) before it's ever used as a redirect target.
+- **Login/logout CSRF is largely defused by `SameSite=Lax`, not by anything extra.** Lax cookies
+  are withheld from cross-site POSTs entirely — only attached on top-level cross-site *GET*
+  navigation — so a third-party page forging a cross-site `POST /ui/login` or `POST /ui/logout`
+  simply won't carry the victim's existing cookie, and these two endpoints don't need a victim's
+  cookie to begin with (login doesn't require being logged in; a forged logout without the cookie
+  just fails harmlessly). Worth stating explicitly now because it's the reason v1 doesn't need a
+  CSRF-token layer — and it's also why `SameSite=Lax` (not `None`) was chosen, not an incidental
+  detail. Once a later version adds real state-changing forms (create/edit/delete), those will
+  need to lean on the same property, so it's worth keeping that constraint intact rather than
+  loosening it later without re-examining this.
+
+## Issues and risks with this design
 
 **A schema's `x-ui` is shared everywhere that schema is referenced.** Because `x-ui` lives on the
 schema definition, not on the `$ref` call site, if `Meta_item_v1` is reused across multiple
