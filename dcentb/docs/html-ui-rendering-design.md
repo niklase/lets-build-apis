@@ -242,6 +242,35 @@ forever, since logging in again doesn't grant a permission that was never there.
   need to lean on the same property, so it's worth keeping that constraint intact rather than
   loosening it later without re-examining this.
 
+## 9. Nested objects and array-of-objects rendering — resolved
+
+One recursive "render a value" function, used everywhere a value is rendered (the detail view,
+and each column of the list view):
+
+- **scalar** → plain text (`—` for null/empty).
+- **object** → a `<dl>`, one `<dt>`/`<dd>` pair per entry in *that object's own* resolved
+  `x-ui.properties` (§3/§4 — nothing new).
+- **array** → a `<ul>`, one `<li>` per element, each rendered by calling this same function on
+  that element. An object element's `<dl>` nests inside its `<li>`.
+
+Indentation falls out of ordinary nested-block CSS (`<ul>`/`<dl>` margin/padding); "this is another
+element" falls out of the `<li>` bullet itself — no custom marker needed, and it's a free
+accessibility win (screen readers announce list semantics, "list of 3 items", automatically).
+
+This also answers §4's open question: the effective-`x-ui` walk **does** recurse into an array
+property's `items` schema when it's an object, exactly like any nested object property — just
+reached through the array wrapper instead of a named key. An array property's own label is still
+just its own entry in the parent's `x-ui.properties`; nothing new there either.
+
+A nested `<ul>`/`<dl>` crammed into a list-view table cell looks bad, but that's not a renderer
+problem — §3 already lets the collection response schema declare a different, independent
+`x-ui.properties` than the item schema, so the fix is "don't list a heavy nested/array property in
+the collection schema's `x-ui.properties`," not a code change.
+
+Left open, low priority for v1: no truncation for large arrays — a 500-element array renders as a
+500-`<li>` list on the detail page. Acceptable known limitation (no pagination-within-item yet),
+not a blocker.
+
 ## Issues and risks with this design
 
 **A schema's `x-ui` is shared everywhere that schema is referenced.** Because `x-ui` lives on the
@@ -250,15 +279,6 @@ collections, all of them get identical `meta` labels/ordering. Almost certainly 
 source of truth) — but it means "same field, different label per collection" isn't expressible
 without duplicating the schema under a different name. Worth knowing in advance rather than
 discovering it as a limitation later.
-
-**Array-valued properties are undesigned.** The worked example (`classSummary`) is an object, not
-an array, so "every object-typed schema gets its own `x-ui`" never had to answer what happens for
-`{"type": "array", "items": {"type": "object", ...}}`. The effective-x-ui walk needs to decide
-whether it recurses into `items` the same way, and the renderer needs a default for an
-array-of-objects value in a list/detail view (e.g. a nested table, a count + link, or a raw
-fallback) rather than crashing or silently dropping it. Flagging now since some existing schema in
-this repo likely already has one (worth checking `dcentb-students-demo`'s schema before this is
-built, not after).
 
 **Locale key format mismatch.** `Accept-Language` arrives hyphenated per RFC (`sv-SE`); the
 `displayName` convention here is underscored, Java-`Locale`-style (`sv_SE`). The render-time
