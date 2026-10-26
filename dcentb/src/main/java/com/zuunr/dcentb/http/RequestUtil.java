@@ -63,8 +63,19 @@ public class RequestUtil {
         return new Request(requestModelBuilder.build());
     }
 
+    /**
+     * Defaults "content-type" to "application/json" only when the response hasn't already
+     * set one of its own - see HtmlRenderingProcessor, the one processor that does (content
+     * negotiation on Accept: text/html). Every existing JSON-only processor sets no
+     * content-type at all, so this changes nothing for them.
+     */
     public ResponseEntity<String> createJsonResponseEntity(Response response) {
-        return createResponseEntity(new Response(response.asJsonObject().put(JsonArray.of("headers", "content-type"), JsonArray.of("application/json"))));
+        JsonObject responseObject = response.asJsonObject();
+        JsonObject headers = responseObject.get("headers", JsonObject.EMPTY).getJsonObject();
+        if (!headers.containsKey("content-type")) {
+            responseObject = responseObject.put(JsonArray.of("headers", "content-type"), JsonArray.of("application/json"));
+        }
+        return createResponseEntity(new Response(responseObject));
     }
 
     public ResponseEntity<String> createResponseEntity(Response response) {

@@ -5,6 +5,7 @@ import com.zuunr.dcentb.rest.Response;
 import com.zuunr.dcentb.rest.processor.Processor;
 import com.zuunr.dcentb.rest.processor.accesscontrol.CredentialHeaderRedactor;
 import com.zuunr.dcentb.rest.processor.accesscontrol.ResponseAccessController;
+import com.zuunr.dcentb.rest.processor.html.HtmlRenderingProcessor;
 import com.zuunr.json.JsonArray;
 import com.zuunr.json.JsonObject;
 import com.zuunr.json.JsonValue;
@@ -21,12 +22,14 @@ public abstract class RequestHandlerBase implements RequestHandler {
     Logger logger = org.slf4j.LoggerFactory.getLogger(RequestHandlerBase.class);
 
     public ResponseAccessController responseAccessController;
+    public HtmlRenderingProcessor htmlRenderingProcessor;
 
     public abstract Processor[] getProcessors();
 
 
     public RequestHandlerBase(JsonValue config) {
         responseAccessController = new ResponseAccessController(config);
+        htmlRenderingProcessor = new HtmlRenderingProcessor(config);
     }
 
 
@@ -62,6 +65,7 @@ public abstract class RequestHandlerBase implements RequestHandler {
                     processor = responseAccessController;
                     logRequestContext(processor.getClass().getSimpleName(), updatedRequestContext);
                     updatedRequestContext = responseAccessController.process(updatedRequestContext);
+                    updatedRequestContext = htmlRenderingProcessor.process(updatedRequestContext);
                     response = updatedRequestContext.get(Processor.RESPONSE, JsonValue.NULL).getJsonObject();
                     JsonObject headers = updatedRequestContext.get(Processor.RESPONSE, JsonObject.EMPTY).getJsonObject().get("headers", JsonObject.EMPTY).getJsonObject();
                     response = response.put("headers", withRequestId(headers, requestId));

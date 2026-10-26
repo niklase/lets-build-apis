@@ -21,10 +21,23 @@ public abstract class Processor {
     public static final String SUPERUSER_PERMISSION = "SUPERUSER";
 
     /**
-     * Internal requestContext key set by PreOperationAccessController when the caller is
-     * SUPERUSER, telling ResponseAccessController to skip response filtering entirely.
+     * Internal requestContext key telling ResponseAccessController to skip response
+     * filtering entirely - set by PreOperationAccessController when the caller is
+     * SUPERUSER, and also by the HTML UI's own framework-owned handlers (the "/ui"
+     * dashboard, login, logout - see html-ui-rendering-design.md section 2/8) whose
+     * response is never a per-collection API resource with a field-level response schema
+     * to filter against in the first place.
      */
     public static final String UNRESTRICTED_ACCESS = "unrestrictedAccess";
+
+    /**
+     * Internal requestContext key: this response's body is already a complete, final HTML
+     * string, not JSON data for HtmlRenderingProcessor to render - set by the HTML UI's
+     * hand-written pages (login, logout) that have no JSON resource behind them, the same
+     * way "/swagger" is hand-written outside the generic rendering machinery entirely. See
+     * html-ui-rendering-design.md section 8.
+     */
+    public static final String HTML_ALREADY_RENDERED = "htmlAlreadyRendered";
 
     /**
      * Top-level key on the request JsonObject (a sibling of "method"/"uri"/"headers"/"body"),
